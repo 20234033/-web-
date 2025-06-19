@@ -1,0 +1,22 @@
+{
+  "name": "geoguess-game",
+  "version": "1.0.0",
+  "description": "GeoGuess風ゲーム用のNode.jsサーバ",
+  "main": "api/server.js",
+  "scripts": {
+    "start": "node api/server.js",
+    "dev": "npx nodemon api/server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "dotenv": "^16.5.0",
+    "express": "^4.18.2",
+    "multer": "^2.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}

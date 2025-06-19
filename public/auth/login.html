@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ログイン</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="dark">
+  <!-- ナビゲーションバー -->
+  <div class="navbar">
+    <div class="brand">🌍</div>
+    <button id="themeToggle">🌙</button>
+  </div>
+
+  <!-- ログインフォーム -->
+  <div class="auth-container">
+    <h2>ログイン</h2>
+    <form id="loginForm">
+      <input type="text" name="identifier" placeholder="ユーザーIDまたはメールアドレス" required>
+      <input type="password" name="password" placeholder="パスワード" required>
+      <button type="submit">ログイン</button>
+    </form>
+
+    <div class="auth-links">
+      <a href="register.html">新規登録</a> |
+      <a href="forgot.html">パスワードをお忘れですか？</a>
+    </div>
+  </div>
+
+  <script>
+    // ダミーログイン処理（実際はサーバー側で認証）
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const identifier = e.target.identifier.value;
+      const password = e.target.password.value;
+      alert(`ログイン試行: ${identifier} / ${password}`);
+      window.location.href = '../home.html';
+    });
+  </script>
+
+  <div id="navbar-placeholder"></div>
+  <script src="../js/navbar.js"></script>
+</body>
+</html>

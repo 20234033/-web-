@@ -1,0 +1,139 @@
+/* ===== 共通スタイル ===== */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Arial', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+/* ===== ダークモード ===== */
+body.dark {
+  background-color: #0e1a2b;
+  color: #e0e0e0;
+}
+
+body.dark .auth-container {
+  background: linear-gradient(145deg, #1e2a38, #121a26);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+}
+
+body.dark .auth-container input {
+  background-color: #2c3e50;
+  color: #ecf0f1;
+}
+
+body.dark .auth-container button {
+  background-color: #1abc9c;
+  color: white;
+}
+
+body.dark .auth-container button:hover {
+  background-color: #16a085;
+}
+
+body.dark .auth-links a {
+  color: #1abc9c;
+}
+
+/* ===== ライトモード ===== */
+body.light {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+body.light .auth-container {
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+body.light .auth-container input {
+  background-color: #ecf0f1;
+  color: #2c3e50;
+}
+
+body.light .auth-container button {
+  background-color: #3498db;
+  color: white;
+}
+
+body.light .auth-container button:hover {
+  background-color: #2980b9;
+}
+
+body.light .auth-links a {
+  color: #3498db;
+}
+
+/* ===== 共通レイアウト ===== */
+.auth-container {
+  padding: 40px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 400px;
+  box-sizing: border-box;
+}
+
+.auth-container h2 {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.auth-container form {
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-container input {
+  padding: 12px;
+  margin-bottom: 16px;
+  border: none;
+  border-radius: 8px;
+}
+
+.auth-container button {
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.auth-links {
+  text-align: center;
+  margin-top: 16px;
+}
+
+.auth-links a {
+  text-decoration: none;
+  margin: 0 8px;
+}
+
+.auth-links a:hover {
+  text-decoration: underline;
+}
+
+/* === 地図オーバーレイ（共通） === */
+.map-overlay {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 300px;
+  height: 250px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+.auth-container input {
+  padding: 10px;
+  font-size: 16px;
+  border: none;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>追加結果 | GeoGuess風ゲーム</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Arial', sans-serif;
+}
+
+#result-map {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+}
+
+.info-box {
+  position: absolute;
+  top: 80px; /* ← 少し下にずらした */
+  right: 20px;
+  width: 320px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  z-index: 1001;
+}
+
+.info-box h3 {
+  margin: 0 0 8px;
+  color: #ff9800;
+  font-size: 20px;
+}
+
+.info-box p {
+  margin: 6px 0;
+  font-size: 14px;
+}
+
+.info-box img {
+  width: 100%;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+#streetview-container {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 320px;
+  height: 200px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  z-index: 1001;
+  transition: transform 0.3s ease;
+}
+
+#streetview-container:hover {
+  transform: scale(1.2); /* ← ストリートビューを拡大 */
+}
+
+#streetview-container iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.bottom-buttons {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 16px;
+  z-index: 1001;
+}
+
+.bottom-buttons button {
+  padding: 10px 18px;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  background-color: #1976d2;
+  color: white;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.bottom-buttons button:hover {
+  background-color: #0d47a1;
+}
+  </style>
+</head>
+<body>
+<div id="navbar-placeholder"></div>
+  <div id="result-map"></div>
+
+  <div class="info-box" id="infoBox">
+    <!-- JSで内容を挿入 -->
+  </div>
+
+  <div id="streetview-container">
+    <iframe id="streetview" allowfullscreen loading="lazy"></iframe>
+  </div>
+
+  <div class="bottom-buttons">
+    <button onclick="location.href='addition.html'">➕ 観光地をさらに追加</button>
+    <button onclick="location.href='home.html'">🏠 ホームに戻る</button>
+  </div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="js/navbar.js"></script>
+  <script src="js/add_result.js"></script>
+</body>
+</html>

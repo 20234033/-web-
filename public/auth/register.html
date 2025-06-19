@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>新規登録 | GeoGuess風ゲーム</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+
+  <div class="auth-container">
+    <h2>新規登録</h2>
+    <form id="registerForm">
+      <input type="text" id="reg-id" placeholder="ユーザーID" required>
+      <input type="email" id="reg-email" placeholder="メールアドレス" required>
+      <input type="password" id="reg-pass" placeholder="パスワード" required>
+      <input type="password" id="reg-confirm" placeholder="パスワード確認" required>
+      <button type="submit">登録</button>
+    </form>
+    <div class="auth-links">
+      <a href="login.html">ログインへ戻る</a>
+    </div>
+  </div>
+
+  <script src="../js/navbar.js"></script>
+  <script>
+    document.getElementById('registerForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const id = document.getElementById('reg-id').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const pass = document.getElementById('reg-pass').value;
+      const confirm = document.getElementById('reg-confirm').value;
+
+      if (pass !== confirm) {
+        alert("パスワードが一致しません。");
+        return;
+      }
+
+      // ✅ 仮登録完了のアラート
+      alert(`ユーザー「${id}」が登録されました。\nメール: ${email}`);
+
+      // ✅ メール送信API呼び出し（仮）
+      try {
+        const response = await fetch('/api/send-welcome-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, email })
+        });
+
+        if (!response.ok) {
+          throw new Error('送信失敗');
+        }
+
+        alert("確認メールを送信しました！");
+      } catch (error) {
+        console.error('メール送信エラー:', error);
+        alert("メール送信に失敗しました。");
+      }
+
+      window.location.href = 'login.html';
+    });
+  </script>
+</body>
+</html>

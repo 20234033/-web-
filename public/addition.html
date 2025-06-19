@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>観光地を追加 | GeoGuess風ゲーム</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+    #map {
+      height: 100%;
+      width: 100%;
+      position: absolute;
+      top: 60px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 0;
+    }
+    #streetview-container {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      width: 320px;
+      height: 240px;
+      border-radius: 8px;
+      overflow: hidden;
+      z-index: 1000;
+      box-shadow: 0 0 8px rgba(0,0,0,0.4);
+      background: white;
+      transition: transform 0.3s ease;
+    }
+    #streetview-container:hover {
+      transform: scale(1.1);
+    }
+    #streetview {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    #control-panel {
+      position: absolute;
+      top: 70px;
+      left: 20px;
+      z-index: 1001;
+      background: rgba(255,255,255,0.95);
+      padding: 12px;
+      border-radius: 10px;
+      max-width: 300px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    #control-panel input[type="text"],
+    #control-panel textarea,
+    #control-panel select {
+      width: 100%;
+      margin-top: 8px;
+      margin-bottom: 8px;
+      padding: 6px;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    #preview {
+      max-width: 100%;
+      display: none;
+      margin-top: 8px;
+      border-radius: 6px;
+    }
+    #deleteImage {
+      display: none;
+      margin-top: 4px;
+      padding: 6px 12px;
+      background-color: #f44336;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #confirmBtn {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    #confirmBtn:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+  <div id="map"></div>
+
+  <div id="streetview-container">
+    <iframe id="streetview" src="" allowfullscreen></iframe>
+  </div>
+
+  <div id="control-panel">
+    <label>📍 観光地のタイトル：</label>
+    <input type="text" id="title" placeholder="例：白川郷" />
+
+    <label>🎨 ジャンル：</label>
+    <select id="genre">
+      <option value="歴史的建造物">歴史的建造物</option>
+      <option value="自然">自然</option>
+      <option value="都市景観">都市景観</option>
+      <option value="文化的名所">文化的名所</option>
+    </select>
+
+    <label>📝 観光地の説明：</label>
+    <textarea id="description" placeholder="ここに観光地の説明を入力してください..."></textarea>
+
+    <label>🖼 観光地の写真をアップロード：</label>
+    <input type="file" id="imageUpload" accept="image/*" />
+    <img id="preview" src="" />
+    <button id="deleteImage">削除</button>
+
+    <button id="confirmBtn">✅ この観光地を追加</button>
+  </div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="js/navbar.js"></script>
+  <script src="js/addition.js"></script>
+</body>
+</html>

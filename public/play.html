@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>プレイ | GeoGuess風ゲーム</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background-color: #0e1a2b;
+      color: #e0e0e0;
+      font-family: 'Orbitron', sans-serif;
+      overflow: hidden;
+    }
+
+    #navbar-placeholder {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      z-index: 2000;
+    }
+
+    .streetview-wrapper {
+      position: absolute;
+      top: 60px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: calc(100% - 60px);
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .streetview-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    .map-overlay {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      width: 150px;
+      height: 125px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      z-index: 1000;
+      transition: all 0.3s ease;
+    }
+
+    .map-overlay:hover {
+      width: 300px;
+      height: 250px;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    #submitAnswer {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      background-color: #43a047;
+      color: white;
+      cursor: pointer;
+      z-index: 1001;
+      transition: background 0.3s ease;
+    }
+
+    #submitAnswer:hover {
+      background-color: #388e3c;
+    }
+
+    #submitAnswer:disabled {
+      background-color: #888;
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+
+  <div class="streetview-wrapper">
+    <iframe
+      id="streetView"
+      class="streetview-iframe"
+      src=""
+      allowfullscreen
+      loading="lazy"
+    ></iframe>
+
+    <div class="map-overlay">
+      <div id="map"></div>
+    </div>
+
+    <button id="submitAnswer" disabled>📌 回答を確定する</button>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/navbar.js"></script>
+  <script src="js/play.js"></script>
+</body>
+</html>

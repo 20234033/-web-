@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>設定 | GeoGuess風ゲーム</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script defer src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script defer src="js/settings.js"></script>
+  <script defer src="js/navbar.js"></script>
+  <style>
+
+
+
+  </style>
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+
+  <div class="settings-container">
+    <h1>⚙ 設定</h1>
+
+    <div class="setting-section">
+    <label for="volume">🔊 音量：</label>
+    <input type="range" id="volume" min="0" max="100">
+    <span id="volumeValue">50%</span>
+    </div>
+
+    <div class="setting-section">
+      <label for="fontSize">🔠 文字の大きさ：</label>
+      <select id="fontSize">
+        <option value="small">小</option>
+        <option value="medium" selected>中</option>
+        <option value="large">大</option>
+      </select>
+    </div>
+
+    <div class="setting-section">
+      <label>📍 住所の設定（地図でピンを動かす）：</label>
+      <div id="map"></div>
+      <p id="locationDisplay">選択された位置：--</p>
+      <button id="confirmLocation">✅ 住所を確定</button>
+    </div>
+  </div>
+</body>
+</html>

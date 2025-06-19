@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>パスワードリセット | GeoGuess風ゲーム</title>
+  <link rel="stylesheet" href="css/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+
+  <div class="auth-container">
+    <h1>🔑 パスワードをお忘れですか？</h1>
+    <p class="description">
+      ご登録時のユーザーIDまたはメールアドレスを入力してください。<br>
+      パスワードリセットリンクをお送りします。
+    </p>
+
+    <form class="auth-form" onsubmit="handlePasswordReset(event)">
+      <label for="identifier">🆔 ユーザーID または 📧 メールアドレス</label>
+      <input type="text" id="identifier" name="identifier" placeholder="ユーザーID または メールアドレス" required>
+
+      <button type="submit">パスワードをリセット</button>
+    </form>
+
+    <div class="auth-links">
+      <a href="login.html">← ログインに戻る</a>
+    </div>
+  </div>
+
+  <script src="../js/navbar.js"></script>
+  <script>
+    function handlePasswordReset(event) {
+      event.preventDefault();
+      const identifier = document.getElementById('identifier').value;
+
+      // メール形式判定（簡易）
+      const isEmail = identifier.includes("@");
+
+      alert(
+        isEmail
+          ? `「${identifier}」宛にリセットリンクを送信しました（※仮処理）`
+          : `ユーザー「${identifier}」の登録メールアドレス宛にリセットリンクを送信しました（※仮処理）`
+      );
+
+      // 実装例（APIにPOSTする場合）：
+      // fetch('/api/reset-password', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ identifier }) // IDまたはメール
+      // })
+    }
+  </script>
+</body>
+</html>

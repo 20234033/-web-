@@ -9,8 +9,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   const map = L.map('map', {
     zoomControl: false,
     attributionControl: false,
-  }).setView([35.6895, 139.6917], 3);
+  }).setView([35.6895, 139.6917], 3); // 東京を中心に初期表示
 
+  // OSMタイルレイヤー
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
   let marker = null;
@@ -18,8 +19,12 @@ window.addEventListener('DOMContentLoaded', async () => {
   let correctSpot = null;
 
   try {
-    // ✅ APIから観光地情報を取得
-    const res = await fetch('/api/spots');
+    // ✅ APIから観光地データを取得
+    const res = await fetch(window.location.origin + '/api/spots');
+    if (!res.ok) {
+      throw new Error(`HTTPエラー: ${res.status} - ${await res.text()}`);
+    }
+
     const json = await res.json();
     const spots = json.data;
 
@@ -32,7 +37,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     // ✅ StreetView iframe にURLを設定
     const streetView = document.getElementById('streetView');
     try {
-      const svRes = await fetch(`/api/streetview-url?lat=${correctSpot.lat}&lng=${correctSpot.lng}`);
+      const svRes = await fetch(
+        `${window.location.origin}/api/streetview-url?lat=${correctSpot.lat}&lng=${correctSpot.lng}`
+      );
       const svData = await svRes.json();
       if (svData.success && streetView) {
         streetView.src = svData.url;
@@ -82,7 +89,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       score,
     };
 
-    // 🔄 履歴を localStorage に保存（ファイルには保存しない）
+    // 🔄 履歴を localStorage に保存
     try {
       const old = JSON.parse(localStorage.getItem('history') || '[]');
       old.push(newEntry);
@@ -99,14 +106,15 @@ window.addEventListener('DOMContentLoaded', async () => {
     }));
     localStorage.setItem('lastScore', score.toString());
 
+    // ✅ 結果画面へ遷移
     setTimeout(() => {
       location.href = 'result.html';
     }, 200);
   });
 
-  // ✅ スコア計算
+  // ✅ スコア計算（ハバーサイン距離を使用）
   function calculateScore(lat1, lng1, lat2, lng2) {
-    const R = 6371;
+    const R = 6371; // 地球の半径 km
     const toRad = deg => deg * (Math.PI / 180);
     const dLat = toRad(lat2 - lat1);
     const dLng = toRad(lng2 - lng1);

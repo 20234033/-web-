@@ -7,6 +7,18 @@ const multer = require('multer');
 const fs = require('fs');
 const crypto = require('crypto');
 
+const mariadb = require('mariadb');
+
+// DB接続プール
+const pool = mariadb.createPool({
+  host: 'localhost',
+  user: 'geoapp',
+  password: 'Password',
+  database: 'sightseeing',
+  connectionLimit: 5
+});
+
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 

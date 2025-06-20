@@ -56,6 +56,9 @@
         }
       } catch (err) {
         console.error('ログイン中のエラー:', err);
+        console.error('ログイン中のエラー:', err.name, err.message, err.stack);
+        console.error('ログイン中のエラー:', JSON.stringify(err));
+
         alert('サーバーとの通信中にエラーが発生しました。');
       }
     });

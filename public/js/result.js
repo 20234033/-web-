@@ -27,7 +27,8 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   const dist = getDistanceKm(answer.lat, answer.lng, correct.lat, correct.lng);
-  const score = Math.max(0, 5000 - Math.round(dist * 2));
+  const rawScore = Math.max(0, 5000 - Math.round(dist));
+  const score = Math.round((rawScore / 5000) * 100);
   localStorage.setItem('lastScore', score.toString());
 
   L.marker([correct.lat, correct.lng]).addTo(resultMap).bindPopup("🎯 正解地点").openPopup();
@@ -40,7 +41,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   scoreText.innerHTML = `
     距離: <span>${dist.toFixed(1)}km</span><br>
-    スコア: <span>${score}</span> / 5000
+    スコア: <span>${score}</span> / 100
     <div id="place-info" style="margin-top: 16px;">
       <h3>${correctSpot.title}</h3>
       <p>${correctSpot.description}</p>

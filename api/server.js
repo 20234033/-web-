@@ -6,6 +6,8 @@ const bodyParser = require('body-parser');
 const multer = require('multer');
 const fs = require('fs');
 const crypto = require('crypto');
+const bcrypt = require('bcrypt');
+
 
 const mariadb = require('mariadb');
 
@@ -61,11 +63,32 @@ app.post('/api/register', (req, res) => {
   res.json({ message: '登録が成功しました（仮）' });
 });
 
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
   const { identifier, password } = req.body;
-  console.log(`[LOGIN] Identifier: ${identifier}, Password: ${password}`);
-  res.json({ message: 'ログイン成功（仮）' });
+  if (!identifier || !password) {
+    return res.status(400).json({ error: 'IDまたはメールアドレスとパスワードを入力してください。' });
+  }
+
+  try {
+    const conn = await pool.getConnection();
+    const rows = await conn.query(
+      'SELECT * FROM users WHERE id = ? OR mail_address = ? LIMIT 1',
+      [identifier, identifier]
+    );
+    conn.release();
+
+    const user = rows[0];
+    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+      return res.status(401).json({ error: 'ログイン情報が正しくありません。' });
+    }
+
+    res.json({ message: 'ログイン成功', user: { id: user.id, avatar_url: user.avatar_url } });
+  } catch (err) {
+    console.error('[ログイン失敗]', err);
+    res.status(500).json({ error: 'ログイン処理中にエラーが発生しました。' });
+  }
 });
+
 
 app.post('/api/reset-password', (req, res) => {
   const { identifier } = req.body;

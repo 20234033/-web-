@@ -179,6 +179,12 @@ app.get('/api/streetview', async (req, res) => {
   }
 });
 
+app.get('/api/spots', (req, res) => {
+  const jsonData = fs.readFileSync(jsonFilePath, 'utf-8');
+  const spots = JSON.parse(jsonData);
+  res.json({ data: spots });
+});
+
 
 // ✅ 全観光地一覧取得API（オプション拡張用）
 app.get('/api/spots', (req, res) => {

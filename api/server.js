@@ -2,10 +2,11 @@
 const express = require('express');
 require('dotenv').config(); // これをファイルの最上部付近に追加
 const path = require('path');
-const bodyParser = require('body-parser');
 const multer = require('multer');
 const fs = require('fs');
 const crypto = require('crypto');
+
+const port = 3000; // APIサーバーが稼働するポート番号
 
 const mariadb = require('mariadb');
 
@@ -34,8 +35,8 @@ if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 if (!fs.existsSync(jsonFilePath)) fs.writeFileSync(jsonFilePath, '[]', 'utf-8');
 
 // 🧰 ミドルウェア設定
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static(publicPath));
 
 // 🖼 multer 設定（画像保存）
@@ -168,6 +169,11 @@ app.get('/api/spots', (req, res) => {
     res.status(500).json({ error: '読み込みエラー' });
   }
 });
+
+
+//スコア計算用API
+app.get
+
 
 // ✅ エラー用HTMLページを返す関数
 const renderErrorPage = (statusCode = 500) => `

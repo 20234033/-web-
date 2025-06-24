@@ -29,7 +29,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   });
 
   // ✅ ユーザー名
-  const username = localStorage.getItem('user_id');
+  const username = localStorage.getItem('username');
   const welcomeEl = document.getElementById('welcome');
   if (welcomeEl) {
     if (username) {

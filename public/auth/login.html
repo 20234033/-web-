@@ -49,6 +49,7 @@
           alert('ログイン成功');
           // 必要に応じてユーザー情報をローカルストレージに保存するなど
           localStorage.setItem('user_id', result.user.id);
+          localStorage.setItem('username', result.user.username); 
           localStorage.setItem('avatar_url', result.user.avatar_url || '');
           window.location.href = '../home.html';
         } else {

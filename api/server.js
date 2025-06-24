@@ -134,16 +134,24 @@ app.post('/api/reset-password', (req, res) => {
 });
 
 // ✅ 新しい観光地を保存するAPI
-// 観光地保存エンドポイント
 app.post('/api/save-spot', upload.single('image'), async (req, res) => {
-  const conn = await pool.getConnection();
+  let conn;
 
   try {
+    conn = await pool.getConnection(); // try内に移動
+
     const { title, genre, description, lat, lng, streetViewUrl } = req.body;
     const image = req.file;
 
+    // 入力チェック
     if (!title || !description || !lat || !lng || !image) {
       return res.status(400).json({ success: false, error: '必須項目が不足しています' });
+    }
+
+    const latNum = parseFloat(lat);
+    const lngNum = parseFloat(lng);
+    if (isNaN(latNum) || isNaN(lngNum)) {
+      return res.status(400).json({ success: false, error: '緯度経度が数値ではありません' });
     }
 
     const imagePath = `/uploads/${image.filename}`;
@@ -151,25 +159,26 @@ app.post('/api/save-spot', upload.single('image'), async (req, res) => {
     const result = await conn.query(
       `INSERT INTO spots (title, genre, description, lat, lng, image_path, street_view_url)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [title, genre || null, description, parseFloat(lat), parseFloat(lng), imagePath, streetViewUrl || null]
+      [title, genre || null, description, latNum, lngNum, imagePath, streetViewUrl || null]
     );
 
     res.json({
       success: true,
       data: {
-        id: result.insertId,
-        title, genre, description, lat, lng,
+        id: result.insertId || null,
+        title, genre, description, lat: latNum, lng: lngNum,
         imagePath, streetViewUrl
       }
     });
 
   } catch (err) {
     console.error('保存エラー:', err);
-    res.status(500).json({ success: false, error: 'DB保存に失敗しました' });
+    res.status(500).json({ success: false, error: err.message || 'DB保存に失敗しました' });
   } finally {
     if (conn) conn.release();
   }
 });
+
 
 app.get('/api/streetview-url', (req, res) => {
   const { lat, lng } = req.query;

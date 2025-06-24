@@ -57,11 +57,48 @@ app.get('/', (req, res) => {
 });
 
 // 🔐 認証API（仮）
-app.post('/api/register', (req, res) => {
+app.post('/api/register', async (req, res) => {
   const { id, email, password } = req.body;
-  console.log(`[REGISTER] ID: ${id}, Email: ${email}, Password: ${password}`);
-  res.json({ message: '登録が成功しました（仮）' });
+
+  if (!id || !email || !password) {
+    return res.status(400).json({ error: '全ての項目を入力してください。' });
+  }
+
+  try {
+    const conn = await pool.getConnection();
+
+    // 既存ユーザー確認
+    const exists = await conn.query(
+      'SELECT id FROM users WHERE id = ? OR mail_address = ?',
+      [id, email]
+    );
+    if (exists.length > 0) {
+      conn.release();
+      return res.status(409).json({ error: '既に使用されているIDまたはメールアドレスです。' });
+    }
+
+    // パスワードハッシュ化
+    const hash = await bcrypt.hash(password, 10);
+
+    // 登録
+    await conn.query(
+      'INSERT INTO users (id, mail_address, password_hash) VALUES (?, ?, ?)',
+      [id, email, hash]
+    );
+    conn.release();
+
+    console.log(`[✅ 登録完了] ID: ${id} / Email: ${email}`);
+
+    // 仮のメール送信成功を返す
+    res.json({ message: '登録が完了しました（仮）' });
+
+  } catch (err) {
+    console.error('[❌ 登録エラー]', err);
+    res.status(500).json({ error: '登録中にエラーが発生しました。' });
+  }
 });
+
+
 
 app.post('/api/login', async (req, res) => {
   const { identifier, password } = req.body;

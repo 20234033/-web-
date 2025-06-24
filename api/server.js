@@ -69,7 +69,7 @@ app.post('/api/register', async (req, res) => {
 
     // 既存ユーザー確認
     const exists = await conn.query(
-      'SELECT id FROM users WHERE id = ? OR mail_address = ?',
+      'SELECT id FROM USERS WHERE id = ? OR mail_address = ?',
       [id, email]
     );
     if (exists.length > 0) {
@@ -82,7 +82,7 @@ app.post('/api/register', async (req, res) => {
 
     // 登録
     await conn.query(
-      'INSERT INTO users (id, mail_address, password_hash) VALUES (?, ?, ?)',
+      'INSERT INTO USERS (id, mail_address, password_hash) VALUES (?, ?, ?)',
       [id, email, hash]
     );
     conn.release();

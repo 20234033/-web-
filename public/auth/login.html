@@ -34,33 +34,35 @@
       const identifier = e.target.identifier.value;
       const password = e.target.password.value;
 
-      try {
-        const response = await fetch('/api/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ identifier, password })
-        });
+try {
+  const response = await fetch('/api/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ identifier, password })
+  });
 
-        const result = await response.json();
+  console.log('レスポンスステータス:', response.status);
 
-        if (response.ok) {
-        console.log("✅ ログイン成功", result); // ← この行を追加
-        localStorage.setItem('user_id', user.id);             // ← ID（"test"）
-        localStorage.setItem('username', user.id);            // ← 表示名に使う
-        localStorage.setItem('avatar_url', user.avatar_url || '');
-        window.location.href = '../home.html';
-        }else {
-          alert(result.error || 'ログインに失敗しました。');
-        }
-      } catch (err) {
-        console.error('ログイン中のエラー:', err);
-        console.error('ログイン中のエラー:', err.name, err.message, err.stack);
-        console.error('ログイン中のエラー:', JSON.stringify(err));
+  const result = await response.json();
+  console.log('レスポンスJSON:', result);
 
-        alert('サーバーとの通信中にエラーが発生しました。');
-      }
+  if (response.ok) {
+    const user = result.user;
+    localStorage.setItem('user_id', user.id);
+    localStorage.setItem('username', user.id);
+    localStorage.setItem('avatar_url', user.avatar_url || '');
+    alert('ログイン成功');
+    window.location.href = '../home.html';
+  } else {
+    alert(result.error || 'ログインに失敗しました。');
+  }
+} catch (err) {
+  console.error('ログイン中のエラー:', err.name, err.message);
+  alert('サーバーとの通信中にエラーが発生しました。');
+}
+
     });
   </script>
 

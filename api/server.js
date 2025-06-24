@@ -117,6 +117,8 @@ app.post('/api/save-spot', upload.single('image'), (req, res) => {
     res.status(500).json({ error: '保存中にエラーが発生しました。' });
   }
 });
+
+//URL設定
 app.get('/api/streetview-url', (req, res) => {
   const { lat, lng } = req.query;
   const apiKey = process.env.GOOGLE_API_KEY;
@@ -158,7 +160,7 @@ app.get('/api/streetview', async (req, res) => {
 });
 
 
-// ✅ 全観光地一覧取得API（オプション拡張用）
+// 全観光地一覧取得API（オプション拡張用）
 app.get('/api/spots', (req, res) => {
   try {
     const data = fs.readFileSync(jsonFilePath, 'utf-8');
@@ -172,10 +174,52 @@ app.get('/api/spots', (req, res) => {
 
 
 //スコア計算用API
-app.get
+app.get('/api/score', (req, res) => {
+
+    //文字列からfloat型へ変換
+    const SelLat = parseFloat(req.query.SelLat);
+    const SelLng = parseFloat(req.query.SelLng);
+    const CorLat = parseFloat(req.query.CorLat);
+    const CorLng = parseFloat(req.query.CorLng);
+    if (isNaN(SelLat) || isNaN(SelLng) || isNaN(CorLat) || isNaN(CorLng)) {
+        return res.status(400).json({ 
+            success: false, 
+            message: '緯度経度のパラメータが不正です。数値で指定してください。' 
+        });
+    }
+    const R = 6371; 
+    const toRad = deg => deg * (Math.PI / 180);
+    const dLat = toRad(CorLat - SelLat);
+    const dLng = toRad(CorLng - SelLng);
+    const a = Math.sin(dLat / 2) ** 2 +
+              Math.cos(toRad(SelLat)) * Math.cos(toRad(CorLat)) *
+              Math.sin(dLng / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+    const score = Math.max(0, 100 - Math.round(distance));
+    
+    res.json({
+      success:true,
+      SelectedLat: SelLat,
+      SelectedLng: SelLng,
+      CorrectLat: CorLat,
+      CorrectLng: CorLng,
+      Distance: parseFloat(distance.toFixed(2)),//小数点以下２桁に丸める
+      score: score
+      });
+  });
 
 
-// ✅ エラー用HTMLページを返す関数
+
+
+
+
+
+
+
+
+
+// エラー用HTMLページを返す関数
 const renderErrorPage = (statusCode = 500) => `
 <!DOCTYPE html>
 <html lang="ja">

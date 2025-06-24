@@ -165,7 +165,7 @@ app.post('/api/save-spot', upload.single('image'), async (req, res) => {
     res.json({
       success: true,
       data: {
-        id: result.insertId || null,
+        id: Number(result.insertId),
         title, genre, description, lat: latNum, lng: lngNum,
         imagePath, streetViewUrl
       }

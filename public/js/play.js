@@ -58,7 +58,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // ✅ 地図をクリックして位置を選択
+  // 地図をクリックして位置を選択
   map.on('click', (e) => {
     const { lat, lng } = e.latlng;
     selectedLatLng = { lat, lng };
@@ -72,24 +72,39 @@ window.addEventListener('DOMContentLoaded', async () => {
     submitBtn.disabled = false;
   });
 
-  // ✅ 回答送信ボタン
+  // 回答送信ボタン
   submitBtn.addEventListener('click', async () => {
     if (!selectedLatLng || !correctSpot) return;
+    //スコア計算処理 変数scoreにスコアを入れる
+    const baseUrl = window.location.origin;
+    const queryParamsObject = {
+      SelLat: selectedLatLng.SelLat,
+      SelLng: selectedLatLng.SelLng,
+      CorLat: correctSpot.CorLat,
+      CorLng: correctSpot.CorLng
+    };
 
-    const score = calculateScore(
-      selectedLatLng.lat,
-      selectedLatLng.lng,
-      correctSpot.lat,
-      correctSpot.lng
-    );
+    const queryParams = new URLSearchParams(queryParamsObject).toString();
+    const apiUrl = `${window.location.origin}/api/score?${queryParams}`;
+    let data = {};
+    try{
+      const response = await fetch(apiUrl);
+      data = await response.json();
+    }catch(error){
+      console.error("スコア計算API呼び出しエラー");
+      alert('APIの呼び出しに失敗しました')
+      return;
+    }
 
+    const score = data.score;
+    
     const newEntry = {
       id: Date.now(),
       timestamp: new Date().toISOString(),
       score,
     };
 
-    // 🔄 履歴を localStorage に保存
+    // 履歴をlocalStorageに保存
     try {
       const old = JSON.parse(localStorage.getItem('history') || '[]');
       old.push(newEntry);
@@ -113,6 +128,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   });
 
   // ✅ スコア計算（ハバーサイン距離を使用）
+  /*
   function calculateScore(lat1, lng1, lat2, lng2) {
     const R = 6371; // 地球の半径 km
     const toRad = deg => deg * (Math.PI / 180);
@@ -126,4 +142,5 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     return Math.max(0, 100 - Math.round(distance));
   }
+    */
 });

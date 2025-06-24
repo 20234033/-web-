@@ -16,7 +16,7 @@ const pool = mariadb.createPool({
   host: 'localhost',
   user: 'geoapp',
   password: 'Password',
-  database: 'sheeting',
+  database: 'Sheeting',
   connectionLimit: 5
 });
 

@@ -134,48 +134,43 @@ app.post('/api/reset-password', (req, res) => {
 });
 
 // ✅ 新しい観光地を保存するAPI
-// ✅ 新しい観光地を保存するAPI
-app.post('/api/save-spot', upload.single('image'), (req, res) => {
+// 観光地保存エンドポイント
+app.post('/api/save-spot', upload.single('image'), async (req, res) => {
+  const conn = await pool.getConnection();
+
   try {
-    const { title, genre, description, lat, lng } = req.body;
-    if (!title || !description || !lat || !lng) {
-      return res.status(400).json({ error: '必須フィールドが不足しています。' });
+    const { title, genre, description, lat, lng, streetViewUrl } = req.body;
+    const image = req.file;
+
+    if (!title || !description || !lat || !lng || !image) {
+      return res.status(400).json({ success: false, error: '必須項目が不足しています' });
     }
 
-    // JSON読み込み
-    let spots = [];
-    try {
-      const raw = fs.readFileSync(jsonFilePath, 'utf-8');
-      spots = JSON.parse(raw);
-    } catch (e) {
-      console.warn('⚠ JSON読み込み失敗 → 初期化', e);
-    }
+    const imagePath = `/uploads/${image.filename}`;
 
-    // ID割り当て（既存の最大ID + 1）
-    const maxId = spots.length > 0 ? Math.max(...spots.map(s => s.id || 0)) : 0;
-    const newId = maxId + 1;
+    const result = await conn.query(
+      `INSERT INTO spots (title, genre, description, lat, lng, image_path, street_view_url)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [title, genre || null, description, parseFloat(lat), parseFloat(lng), imagePath, streetViewUrl || null]
+    );
 
-    const newSpot = {
-      id: newId,
-      title,
-      genre: genre || '',
-      description,
-      lat: parseFloat(lat),
-      lng: parseFloat(lng),
-      image: req.file ? `/image/${req.file.filename}` : null,
-      createdAt: new Date().toISOString()
-    };
+    res.json({
+      success: true,
+      data: {
+        id: result.insertId,
+        title, genre, description, lat, lng,
+        imagePath, streetViewUrl
+      }
+    });
 
-    spots.push(newSpot);
-    fs.writeFileSync(jsonFilePath, JSON.stringify(spots, null, 2), 'utf-8');
-    console.log(`[✅ SPOT追加] ID:${newId} - ${title}`);
-
-    res.json({ success: true, data: newSpot });
   } catch (err) {
-    console.error('[❌ SAVE ERROR]', err);
-    res.status(500).json({ error: '保存中にエラーが発生しました。' });
+    console.error('保存エラー:', err);
+    res.status(500).json({ success: false, error: 'DB保存に失敗しました' });
+  } finally {
+    if (conn) conn.release();
   }
 });
+
 app.get('/api/streetview-url', (req, res) => {
   const { lat, lng } = req.query;
   const apiKey = process.env.GOOGLE_API_KEY;

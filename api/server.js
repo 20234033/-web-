@@ -109,7 +109,7 @@ app.post('/api/login', async (req, res) => {
   try {
     const conn = await pool.getConnection();
     const rows = await conn.query(
-      'SELECT * FROM users WHERE id = ? OR mail_address = ? LIMIT 1',
+      'SELECT * FROM USERS WHERE id = ? OR mail_address = ? LIMIT 1',
       [identifier, identifier]
     );
     conn.release();

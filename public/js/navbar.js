@@ -143,9 +143,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const logoutButton = document.getElementById("logoutButton");
   if (logoutButton) {
     logoutButton.addEventListener("click", () => {
-      localStorage.clear();
+      // 特定のキーだけ削除
+      localStorage.removeItem("user_id");
+      localStorage.removeItem("username"); // ← これを使っているなら
+      localStorage.removeItem("avatar_url");
+
       alert("ログアウトしました。");
-      window.location.href = "/auth/login.html";
+      window.location.href = "auth/login.html";
     });
   }
+
 });

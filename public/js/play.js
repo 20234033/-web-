@@ -75,7 +75,8 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 回答送信ボタン
   submitBtn.addEventListener('click', async () => {
     if (!selectedLatLng || !correctSpot) return;
-    //スコア計算処理 変数scoreにスコアを入れる
+
+    //スコア計算処理ここから
     const baseUrl = window.location.origin;
     const queryParamsObject = {
       SelLat: selectedLatLng.SelLat,
@@ -95,9 +96,9 @@ window.addEventListener('DOMContentLoaded', async () => {
       alert('APIの呼び出しに失敗しました')
       return;
     }
-
     const score = data.score;
-    
+    //ここまで
+
     const newEntry = {
       id: Date.now(),
       timestamp: new Date().toISOString(),

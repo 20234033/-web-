@@ -225,6 +225,27 @@ app.get('/api/spots', (req, res) => {
   const spots = JSON.parse(jsonData);
   res.json({ data: spots });
 });
+app.get('/api/spots', async (req, res) => {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const rows = await conn.query('SELECT id, title, genre, description, lat, lng FROM spots');
+
+    res.json({
+      success: true,
+      data: rows
+    });
+  } catch (err) {
+    console.error('観光地データ取得エラー:', err);
+    res.status(500).json({
+      success: false,
+      error: err.message || '観光地データの取得に失敗しました'
+    });
+  } finally {
+    if (conn) conn.release();
+  }
+});
+
 
 
 // ✅ 全観光地一覧取得API（オプション拡張用）

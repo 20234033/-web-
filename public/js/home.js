@@ -29,9 +29,15 @@ window.addEventListener('DOMContentLoaded', async () => {
   });
 
   // ✅ ユーザー名
-  const username = localStorage.getItem('username') || 'ゲスト';
+  const username = localStorage.getItem('username');
   const welcomeEl = document.getElementById('welcome');
-  if (welcomeEl) welcomeEl.textContent = `${username} さん、ようこそ！`;
+  if (welcomeEl) {
+    if (username) {
+      welcomeEl.textContent = `${username} さん、ようこそ！`;
+    } else {
+      welcomeEl.textContent = `ゲスト さん、ようこそ！`;
+    }
+  }
 
   // ✅ 各表示要素を取得
   const lastScoreEl   = document.getElementById('lastScore');

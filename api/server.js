@@ -154,7 +154,7 @@ app.post('/api/save-spot', upload.single('image'), async (req, res) => {
       return res.status(400).json({ success: false, error: '緯度経度が数値ではありません' });
     }
 
-    const imagePath = `/uploads/${image.filename}`;
+    const imagePath = `/image/${image.filename}`;
 
     const result = await conn.query(
       `INSERT INTO spots (title, genre, description, lat, lng, image_path, street_view_url)

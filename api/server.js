@@ -173,7 +173,7 @@ app.get('/api/spots', (req, res) => {
 });
 
 
-//スコア計算用API
+//スコア計算API
 app.get('/api/score', (req, res) => {
 
     //文字列からfloat型へ変換

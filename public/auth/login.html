@@ -47,9 +47,9 @@
 
         if (response.ok) {
         console.log("✅ ログイン成功", result); // ← この行を追加
-        localStorage.setItem('user_id', result.USER.id);
-        localStorage.setItem('username', result.USER.id); // ← これが undefined の可能性
-        localStorage.setItem('avatar_url', result.USER.avatar_url || '');
+        localStorage.setItem('user_id', user.id);             // ← ID（"test"）
+        localStorage.setItem('username', user.id);            // ← 表示名に使う
+        localStorage.setItem('avatar_url', user.avatar_url || '');
         window.location.href = '../home.html';
         }else {
           alert(result.error || 'ログインに失敗しました。');

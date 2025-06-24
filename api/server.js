@@ -220,31 +220,26 @@ app.get('/api/streetview', async (req, res) => {
   }
 });
 
-app.get('/api/spots', (req, res) => {
-  const jsonData = fs.readFileSync(jsonFilePath, 'utf-8');
-  const spots = JSON.parse(jsonData);
-  res.json({ data: spots });
-});
+// /api/spots: MariaDBのspotsテーブルから観光地を取得
 app.get('/api/spots', async (req, res) => {
   let conn;
   try {
     conn = await pool.getConnection();
-    const rows = await conn.query('SELECT id, title, genre, description, lat, lng FROM spots');
-
-    res.json({
-      success: true,
-      data: rows
-    });
+    const rows = await conn.query(
+      'SELECT id, title, genre, description, lat, lng FROM spots'
+    );
+    res.json({ success: true, data: rows });
   } catch (err) {
     console.error('観光地データ取得エラー:', err);
     res.status(500).json({
       success: false,
-      error: err.message || '観光地データの取得に失敗しました'
+      error: err.message || 'データベース読み込み失敗',
     });
   } finally {
     if (conn) conn.release();
   }
 });
+
 
 
 

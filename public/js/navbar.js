@@ -145,7 +145,7 @@ document.addEventListener("DOMContentLoaded", () => {
     logoutButton.addEventListener("click", () => {
       localStorage.clear();
       alert("ログアウトしました。");
-      window.location.href = "../public/auth/login.html";
+      window.location.href = "../auth/login.html";
     });
   }
 });

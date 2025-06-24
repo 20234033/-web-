@@ -28,15 +28,42 @@
   </div>
 
   <script>
-    // ダミーログイン処理（実際はサーバー側で認証）
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
+    document.getElementById('loginForm').addEventListener('submit', async function (e) {
       e.preventDefault();
+
       const identifier = e.target.identifier.value;
       const password = e.target.password.value;
-      alert(`ログイン試行: ${identifier} / ${password}`);
-      window.location.href = '../home.html';
+
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ identifier, password })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          alert('ログイン成功');
+          // 必要に応じてユーザー情報をローカルストレージに保存するなど
+          localStorage.setItem('user_id', result.user.id);
+          localStorage.setItem('avatar_url', result.user.avatar_url || '');
+          window.location.href = '../home.html';
+        } else {
+          alert(result.error || 'ログインに失敗しました。');
+        }
+      } catch (err) {
+        console.error('ログイン中のエラー:', err);
+        console.error('ログイン中のエラー:', err.name, err.message, err.stack);
+        console.error('ログイン中のエラー:', JSON.stringify(err));
+
+        alert('サーバーとの通信中にエラーが発生しました。');
+      }
     });
   </script>
+
 
   <div id="navbar-placeholder"></div>
   <script src="../js/navbar.js"></script>

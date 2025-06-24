@@ -81,6 +81,8 @@ async function updateStreetView(lat, lng) {
     formData.append('lat', latlng.lat);
     formData.append('lng', latlng.lng);
     formData.append('image', selectedImageFile);
+    formData.append('streetViewUrl', window.currentStreetViewUrl || '');
+
 
     try {
       const response = await fetch('/api/save-spot', {

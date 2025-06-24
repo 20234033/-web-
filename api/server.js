@@ -1,10 +1,11 @@
-
 const express = require('express');
 require('dotenv').config(); // これをファイルの最上部付近に追加
 const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
 const crypto = require('crypto');
+const bcrypt = require('bcrypt');
+
 
 const port = 3000; // APIサーバーが稼働するポート番号
 
@@ -15,7 +16,7 @@ const pool = mariadb.createPool({
   host: 'localhost',
   user: 'geoapp',
   password: 'Password',
-  database: 'sightseeing',
+  database: 'website',
   connectionLimit: 5
 });
 
@@ -56,17 +57,75 @@ app.get('/', (req, res) => {
 });
 
 // 🔐 認証API（仮）
-app.post('/api/register', (req, res) => {
+app.post('/api/register', async (req, res) => {
   const { id, email, password } = req.body;
-  console.log(`[REGISTER] ID: ${id}, Email: ${email}, Password: ${password}`);
-  res.json({ message: '登録が成功しました（仮）' });
+
+  if (!id || !email || !password) {
+    return res.status(400).json({ error: '全ての項目を入力してください。' });
+  }
+
+  try {
+    const conn = await pool.getConnection();
+
+    // 既存ユーザー確認
+    const exists = await conn.query(
+      'SELECT id FROM USERS WHERE id = ? OR mail_address = ?',
+      [id, email]
+    );
+    if (exists.length > 0) {
+      conn.release();
+      return res.status(409).json({ error: '既に使用されているIDまたはメールアドレスです。' });
+    }
+
+    // パスワードハッシュ化
+    const hash = await bcrypt.hash(password, 10);
+
+    // 登録
+    await conn.query(
+      'INSERT INTO USERS (id, mail_address, password_hash) VALUES (?, ?, ?)',
+      [id, email, hash]
+    );
+    conn.release();
+
+    console.log(`[✅ 登録完了] ID: ${id} / Email: ${email}`);
+
+    // 仮のメール送信成功を返す
+    res.json({ message: '登録が完了しました（仮）' });
+
+  } catch (err) {
+    console.error('[❌ 登録エラー]', err);
+    res.status(500).json({ error: '登録中にエラーが発生しました。' });
+  }
 });
 
-app.post('/api/login', (req, res) => {
+
+
+app.post('/api/login', async (req, res) => {
   const { identifier, password } = req.body;
-  console.log(`[LOGIN] Identifier: ${identifier}, Password: ${password}`);
-  res.json({ message: 'ログイン成功（仮）' });
+  if (!identifier || !password) {
+    return res.status(400).json({ error: 'IDまたはメールアドレスとパスワードを入力してください。' });
+  }
+
+  try {
+    const conn = await pool.getConnection();
+    const rows = await conn.query(
+      'SELECT * FROM USERS WHERE id = ? OR mail_address = ? LIMIT 1',
+      [identifier, identifier]
+    );
+    conn.release();
+
+    const user = rows[0];
+    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+      return res.status(401).json({ error: 'ログイン情報が正しくありません。' });
+    }
+
+    res.json({ message: 'ログイン成功', user: { id: user.id, avatar_url: user.avatar_url } });
+  } catch (err) {
+    console.error('[ログイン失敗]', err);
+    res.status(500).json({ error: 'ログイン処理中にエラーが発生しました。' });
+  }
 });
+
 
 app.post('/api/reset-password', (req, res) => {
   const { identifier } = req.body;
@@ -75,46 +134,48 @@ app.post('/api/reset-password', (req, res) => {
 });
 
 // ✅ 新しい観光地を保存するAPI
-// ✅ 新しい観光地を保存するAPI
-app.post('/api/save-spot', upload.single('image'), (req, res) => {
+app.post('/api/save-spot', upload.single('image'), async (req, res) => {
+  let conn;
+
   try {
-    const { title, genre, description, lat, lng } = req.body;
-    if (!title || !description || !lat || !lng) {
-      return res.status(400).json({ error: '必須フィールドが不足しています。' });
+    conn = await pool.getConnection(); // try内に移動
+
+    const { title, genre, description, lat, lng, streetViewUrl } = req.body;
+    const image = req.file;
+
+    // 入力チェック
+    if (!title || !description || !lat || !lng || !image) {
+      return res.status(400).json({ success: false, error: '必須項目が不足しています' });
     }
 
-    // JSON読み込み
-    let spots = [];
-    try {
-      const raw = fs.readFileSync(jsonFilePath, 'utf-8');
-      spots = JSON.parse(raw);
-    } catch (e) {
-      console.warn('⚠ JSON読み込み失敗 → 初期化', e);
+    const latNum = parseFloat(lat);
+    const lngNum = parseFloat(lng);
+    if (isNaN(latNum) || isNaN(lngNum)) {
+      return res.status(400).json({ success: false, error: '緯度経度が数値ではありません' });
     }
 
-    // ID割り当て（既存の最大ID + 1）
-    const maxId = spots.length > 0 ? Math.max(...spots.map(s => s.id || 0)) : 0;
-    const newId = maxId + 1;
+    const imagePath = `/uploads/${image.filename}`;
 
-    const newSpot = {
-      id: newId,
-      title,
-      genre: genre || '',
-      description,
-      lat: parseFloat(lat),
-      lng: parseFloat(lng),
-      image: req.file ? `/image/${req.file.filename}` : null,
-      createdAt: new Date().toISOString()
-    };
+    const result = await conn.query(
+      `INSERT INTO spots (title, genre, description, lat, lng, image_path, street_view_url)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [title, genre || null, description, latNum, lngNum, imagePath, streetViewUrl || null]
+    );
 
-    spots.push(newSpot);
-    fs.writeFileSync(jsonFilePath, JSON.stringify(spots, null, 2), 'utf-8');
-    console.log(`[✅ SPOT追加] ID:${newId} - ${title}`);
+    res.json({
+      success: true,
+      data: {
+        id: Number(result.insertId),
+        title, genre, description, lat: latNum, lng: lngNum,
+        imagePath, streetViewUrl
+      }
+    });
 
-    res.json({ success: true, data: newSpot });
   } catch (err) {
-    console.error('[❌ SAVE ERROR]', err);
-    res.status(500).json({ error: '保存中にエラーが発生しました。' });
+    console.error('保存エラー:', err);
+    res.status(500).json({ success: false, error: err.message || 'DB保存に失敗しました' });
+  } finally {
+    if (conn) conn.release();
   }
 });
 
@@ -158,6 +219,28 @@ app.get('/api/streetview', async (req, res) => {
     res.status(500).json({ error: 'StreetView取得中にエラーが発生しました。' });
   }
 });
+
+// /api/spots: MariaDBのspotsテーブルから観光地を取得
+app.get('/api/spots', async (req, res) => {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const rows = await conn.query(
+      'SELECT id, title, genre, description, lat, lng FROM spots'
+    );
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    console.error('観光地データ取得エラー:', err);
+    res.status(500).json({
+      success: false,
+      error: err.message || 'データベース読み込み失敗',
+    });
+  } finally {
+    if (conn) conn.release();
+  }
+});
+
+
 
 
 // 全観光地一覧取得API（オプション拡張用）

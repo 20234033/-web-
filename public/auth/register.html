@@ -24,42 +24,40 @@
 
   <script src="../js/navbar.js"></script>
   <script>
-    document.getElementById('registerForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
+document.getElementById('registerForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
 
-      const id = document.getElementById('reg-id').value.trim();
-      const email = document.getElementById('reg-email').value.trim();
-      const pass = document.getElementById('reg-pass').value;
-      const confirm = document.getElementById('reg-confirm').value;
+  const id = document.getElementById('reg-id').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const pass = document.getElementById('reg-pass').value;
+  const confirm = document.getElementById('reg-confirm').value;
 
-      if (pass !== confirm) {
-        alert("パスワードが一致しません。");
-        return;
-      }
+  if (pass !== confirm) {
+    alert("パスワードが一致しません。");
+    return;
+  }
 
-      // ✅ 仮登録完了のアラート
-      alert(`ユーザー「${id}」が登録されました。\nメール: ${email}`);
-
-      // ✅ メール送信API呼び出し（仮）
-      try {
-        const response = await fetch('/api/send-welcome-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, email })
-        });
-
-        if (!response.ok) {
-          throw new Error('送信失敗');
-        }
-
-        alert("確認メールを送信しました！");
-      } catch (error) {
-        console.error('メール送信エラー:', error);
-        alert("メール送信に失敗しました。");
-      }
-
-      window.location.href = 'login.html';
+  try {
+    const response = await fetch('/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, email, password: pass })
     });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      alert("登録が完了しました。ログイン画面へ移動します。");
+      window.location.href = 'login.html';
+    } else {
+      alert(result.error || "登録に失敗しました。");
+    }
+  } catch (error) {
+    console.error('登録エラー:', error);
+    alert("サーバーとの通信に失敗しました。");
+  }
+});
+
   </script>
 </body>
 </html>

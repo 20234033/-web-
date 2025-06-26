@@ -1,7 +1,11 @@
 const jwt = require('jsonwebtoken');
-const SECRET_KEY = process.env.SECRET_KEY; // .envで定義
+const express = require('express');
+const router = express.Router();
 
-app.get('/api/me', async (req, res) => {
+const SECRET_KEY = process.env.SECRET_KEY;
+const pool = require('./db'); // ← これは pool を export しているファイル（必要に応じて調整）
+
+router.get('/api/me', async (req, res) => {
   const token = req.cookies.token;
   if (!token) return res.status(401).json({ error: 'トークンがありません。' });
 
@@ -22,3 +26,5 @@ app.get('/api/me', async (req, res) => {
     res.status(401).json({ error: '無効なトークンです。' });
   }
 });
+
+module.exports = router;

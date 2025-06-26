@@ -13,6 +13,7 @@ const jwt = require('jsonwebtoken');
 const app = express();
 app.use(cookieParser());
 const meRoute = require('./me');
+app.use(meRoute);
 
 
 

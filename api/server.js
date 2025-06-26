@@ -8,8 +8,10 @@ const fs = require('fs');
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const cookieParser = require('cookie-parser');
+const app = express();
 app.use(cookieParser());
 const meRoute = require('./me');
+
 
 
 
@@ -24,8 +26,6 @@ const pool = mariadb.createPool({
   connectionLimit: 5
 });
 
-
-const app = express();
 const PORT = process.env.PORT || 3000;
 
 // 📁 パス定義

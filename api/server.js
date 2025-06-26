@@ -8,9 +8,13 @@ const fs = require('fs');
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const cookieParser = require('cookie-parser');
+const SECRET_KEY = process.env.SECRET_KEY || 'your-default-secret';
+const jwt = require('jsonwebtoken');
 const app = express();
 app.use(cookieParser());
 const meRoute = require('./me');
+
+
 
 
 

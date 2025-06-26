@@ -1,25 +1,29 @@
 window.addEventListener('DOMContentLoaded', async () => {
     // ✅ サーバー側のトークン確認（認証チェック）
  try {
-    // Cookie 内の token をサーバーで検証
     const res = await fetch('/api/me', { credentials: 'include' });
+    if (!res.ok) throw new Error('トークン無効');
+    const user = await res.json();
 
-    if (!res.ok) throw new Error('認証失敗');        // トークンが無い・無効 → エラー
-
-    const user = await res.json();                    // { id: 'test', avatar_url: ... }
-
-    // 認証に成功したときだけ localStorage を更新
+    // 成功したら localStorage に記録
     localStorage.setItem('user_id', user.id);
     localStorage.setItem('username', user.id);
     localStorage.setItem('avatar_url', user.avatar_url || '');
 
+    // 「ようこそ」メッセージ更新
+    const welcomeEl = document.getElementById('welcome');
+    if (welcomeEl) {
+      welcomeEl.textContent = `${user.id} さん、ようこそ！`;
+    }
+
   } catch (err) {
-    // ここに入ったら未認証扱い
-    localStorage.clear();                             // 残っているゲスト情報を掃除
+    // 認証失敗時は即ログイン画面へ
+    localStorage.clear(); // 念のため
     alert('ログインが必要です。ログインページへ移動します。');
     window.location.href = 'auth/login.html';
-    return;                                           // これ以降の処理を止める
+    return; // それ以降を中断
   }
+
 
   // 🌙 テーマ適用
   const theme = localStorage.getItem('theme') || 'light';
@@ -61,8 +65,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (welcomeEl) {
     if (username) {
       welcomeEl.textContent = `${username} さん、ようこそ！`;
-    } else {
-      welcomeEl.textContent = `ゲスト さん、ようこそ！`;
     }
   }
 

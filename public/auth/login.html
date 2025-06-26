@@ -34,19 +34,20 @@
       const identifier = e.target.identifier.value;
       const password = e.target.password.value;
 
-try {
-  const response = await fetch('/api/login', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ identifier, password })
-  });
+  try {
+    await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identifier, password }),
+      credentials: 'include' // ✅ Cookieを送信・受信できるように必須
+    });
+
 
   console.log('レスポンスステータス:', response.status);
 
   const result = await response.json();
   console.log('レスポンスJSON:', result);
+  
 
   if (response.ok) {
     const user = result.user;

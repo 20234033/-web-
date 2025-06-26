@@ -5,6 +5,16 @@ const multer = require('multer');
 const fs = require('fs');
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
+const cookieParser = require('cookie-parser');
+const SECRET_KEY = process.env.SECRET_KEY || 'your-default-secret';
+const jwt = require('jsonwebtoken');
+const app = express();
+app.use(cookieParser());
+const meRoute = require('./me');
+
+
+
+
 
 
 const port = 3000; // APIサーバーが稼働するポート番号
@@ -20,8 +30,6 @@ const pool = mariadb.createPool({
   connectionLimit: 5
 });
 
-
-const app = express();
 const PORT = process.env.PORT || 3000;
 
 // 📁 パス定義
@@ -119,12 +127,24 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ error: 'ログイン情報が正しくありません。' });
     }
 
-    res.json({ message: 'ログイン成功', user: { id: user.id, avatar_url: user.avatar_url } });
+    // ✅ JWTトークン生成
+    const token = jwt.sign({ id: user.id }, SECRET_KEY, { expiresIn: '7d' });
+
+    // ✅ Cookieとしてクライアントに送信
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: false, // ローカル開発環境では false、本番では true にしてください（HTTPS必須）
+      sameSite: 'Lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7日間
+    });
+
+    res.json({ message: 'ログイン成功' });
   } catch (err) {
     console.error('[ログイン失敗]', err);
     res.status(500).json({ error: 'ログイン処理中にエラーが発生しました。' });
   }
 });
+
 
 
 app.post('/api/reset-password', (req, res) => {
@@ -154,7 +174,7 @@ app.post('/api/save-spot', upload.single('image'), async (req, res) => {
       return res.status(400).json({ success: false, error: '緯度経度が数値ではありません' });
     }
 
-    const imagePath = `/uploads/${image.filename}`;
+    const imagePath = `/image/${image.filename}`;
 
     const result = await conn.query(
       `INSERT INTO spots (title, genre, description, lat, lng, image_path, street_view_url)

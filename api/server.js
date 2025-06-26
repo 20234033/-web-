@@ -110,38 +110,51 @@ app.post('/api/register', async (req, res) => {
 
 app.post('/api/login', async (req, res) => {
   const { identifier, password } = req.body;
+
   if (!identifier || !password) {
     return res.status(400).json({ error: 'IDまたはメールアドレスとパスワードを入力してください。' });
   }
 
+  let conn;
   try {
-    const conn = await pool.getConnection();
+    conn = await pool.getConnection();
+
     const rows = await conn.query(
       'SELECT * FROM USERS WHERE id = ? OR mail_address = ? LIMIT 1',
       [identifier, identifier]
     );
-    conn.release();
 
     const user = rows[0];
+
     if (!user || !(await bcrypt.compare(password, user.password_hash))) {
       return res.status(401).json({ error: 'ログイン情報が正しくありません。' });
     }
 
-    // ✅ JWTトークン生成
+    // ✅ JWT トークンの生成
     const token = jwt.sign({ id: user.id }, SECRET_KEY, { expiresIn: '7d' });
 
-    // ✅ Cookieとしてクライアントに送信
+    // ✅ Cookie に保存（httpOnly）
     res.cookie('token', token, {
       httpOnly: true,
-      secure: false, // ローカル開発環境では false、本番では true にしてください（HTTPS必須）
+      secure: false,           // 本番では true（HTTPS）
       sameSite: 'Lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7日間
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7日間
     });
 
-    res.json({ message: 'ログイン成功' });
+    // ✅ ユーザー情報を返す（IDとアバターなど）
+    res.json({
+      message: 'ログイン成功',
+      user: {
+        id: user.id,
+        avatar_url: user.avatar_url || null,
+      },
+    });
+
   } catch (err) {
     console.error('[ログイン失敗]', err);
     res.status(500).json({ error: 'ログイン処理中にエラーが発生しました。' });
+  } finally {
+    if (conn) conn.release();
   }
 });
 

@@ -1,23 +1,24 @@
 window.addEventListener('DOMContentLoaded', async () => {
     // ✅ サーバー側のトークン確認（認証チェック）
-  try {
-    const res = await fetch('/api/me', {
-      credentials: 'include'
-    });
+ try {
+    // Cookie 内の token をサーバーで検証
+    const res = await fetch('/api/me', { credentials: 'include' });
 
-    if (!res.ok) throw new Error('認証失敗');
+    if (!res.ok) throw new Error('認証失敗');        // トークンが無い・無効 → エラー
 
-    const result = await res.json();
-    const username = result.id; // サーバーから返されるユーザーID
+    const user = await res.json();                    // { id: 'test', avatar_url: ... }
 
-    localStorage.setItem('user_id', result.id);
-    localStorage.setItem('username', result.id);
-    localStorage.setItem('avatar_url', result.avatar_url || '');
+    // 認証に成功したときだけ localStorage を更新
+    localStorage.setItem('user_id', user.id);
+    localStorage.setItem('username', user.id);
+    localStorage.setItem('avatar_url', user.avatar_url || '');
 
   } catch (err) {
+    // ここに入ったら未認証扱い
+    localStorage.clear();                             // 残っているゲスト情報を掃除
     alert('ログインが必要です。ログインページへ移動します。');
     window.location.href = 'auth/login.html';
-    return;
+    return;                                           // これ以降の処理を止める
   }
 
   // 🌙 テーマ適用

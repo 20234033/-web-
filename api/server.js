@@ -7,6 +7,10 @@ const multer = require('multer');
 const fs = require('fs');
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
+const meRoute = require('./me');
+
 
 
 const mariadb = require('mariadb');
@@ -119,12 +123,24 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ error: 'ログイン情報が正しくありません。' });
     }
 
-    res.json({ message: 'ログイン成功', user: { id: user.id, avatar_url: user.avatar_url } });
+    // ✅ JWTトークン生成
+    const token = jwt.sign({ id: user.id }, SECRET_KEY, { expiresIn: '7d' });
+
+    // ✅ Cookieとしてクライアントに送信
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: false, // ローカル開発環境では false、本番では true にしてください（HTTPS必須）
+      sameSite: 'Lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7日間
+    });
+
+    res.json({ message: 'ログイン成功' });
   } catch (err) {
     console.error('[ログイン失敗]', err);
     res.status(500).json({ error: 'ログイン処理中にエラーが発生しました。' });
   }
 });
+
 
 
 app.post('/api/reset-password', (req, res) => {

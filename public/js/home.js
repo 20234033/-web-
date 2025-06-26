@@ -1,4 +1,25 @@
 window.addEventListener('DOMContentLoaded', async () => {
+    // ✅ サーバー側のトークン確認（認証チェック）
+  try {
+    const res = await fetch('/api/me', {
+      credentials: 'include'
+    });
+
+    if (!res.ok) throw new Error('認証失敗');
+
+    const result = await res.json();
+    const username = result.id; // サーバーから返されるユーザーID
+
+    localStorage.setItem('user_id', result.id);
+    localStorage.setItem('username', result.id);
+    localStorage.setItem('avatar_url', result.avatar_url || '');
+
+  } catch (err) {
+    alert('ログインが必要です。ログインページへ移動します。');
+    window.location.href = 'auth/login.html';
+    return;
+  }
+
   // 🌙 テーマ適用
   const theme = localStorage.getItem('theme') || 'light';
   document.body.className = theme;
@@ -29,7 +50,12 @@ window.addEventListener('DOMContentLoaded', async () => {
   });
 
   // ✅ ユーザー名
-  const username = localStorage.getItem('username');
+    const username = localStorage.getItem('username');
+    if (!username) {
+      alert('ログインが必要です。ログインページへ移動します。');
+      window.location.href = 'auth/login.html';
+      return; // それ以上の処理を防ぐ
+    }
   const welcomeEl = document.getElementById('welcome');
   if (welcomeEl) {
     if (username) {

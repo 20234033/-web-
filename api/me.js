@@ -1,19 +1,24 @@
-const express = require('express');
 const jwt = require('jsonwebtoken');
+const SECRET_KEY = process.env.SECRET_KEY; // .envで定義
 
-const router = express.Router();
-const SECRET_KEY = 'abcde12345';
-
-router.get('/', (req, res) => {
+app.get('/api/me', async (req, res) => {
   const token = req.cookies.token;
-  if (!token) return res.status(401).json({ error: '未認証です。' });
+  if (!token) return res.status(401).json({ error: 'トークンがありません。' });
 
   try {
     const decoded = jwt.verify(token, SECRET_KEY);
-    res.json({ id: decoded.id }); // 必要に応じてユーザ情報を返してもOK
+
+    const conn = await pool.getConnection();
+    const rows = await conn.query('SELECT id, avatar_url FROM USERS WHERE id = ? LIMIT 1', [decoded.id]);
+    conn.release();
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'ユーザーが見つかりません。' });
+    }
+
+    res.json(rows[0]);
   } catch (err) {
-    res.status(401).json({ error: 'トークンが無効です。' });
+    console.error('[認証エラー]', err);
+    res.status(401).json({ error: '無効なトークンです。' });
   }
 });
-
-module.exports = router;

@@ -10,6 +10,7 @@ const bcrypt = require('bcrypt');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 const mariadb = require('mariadb');
+const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -40,6 +41,11 @@ app.use(cookieParser()); // JWT読み取り用
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(publicPath)); // 静的ファイル
+
+app.use(cors({
+  origin: true, // ← フロントのURLポート番号を正確に指定
+  credentials: true
+}));
 
 // ✅ APIルート読み込み（cookieParserの後に）
 const meRoute = require('./me');
@@ -130,18 +136,18 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ error: 'ログイン情報が正しくありません。' });
     }
 
-    // ✅ JWT トークンの生成
+    // ✅ JWT トークン生成
     const token = jwt.sign({ id: user.id }, SECRET_KEY, { expiresIn: '7d' });
 
-    // ✅ Cookie に保存（httpOnly）
+    // ✅ Cookie に保存
     res.cookie('token', token, {
       httpOnly: true,
-      secure: false,           // 本番では true（HTTPS）
+      secure: false, // ← ✅ HTTP環境ではfalseにする
       sameSite: 'Lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7日間
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    // ✅ ユーザー情報を返す（IDとアバターなど）
+    // ✅ 応答
     res.json({
       message: 'ログイン成功',
       user: {
@@ -156,6 +162,17 @@ app.post('/api/login', async (req, res) => {
   } finally {
     if (conn) conn.release();
   }
+});
+
+
+
+app.post('/api/logout', (req, res) => {
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'Lax'
+  });
+  res.json({ message: 'ログアウトしました' });
 });
 
 

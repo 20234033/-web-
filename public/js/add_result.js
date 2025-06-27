@@ -1,4 +1,6 @@
-window.addEventListener('DOMContentLoaded', () => {
+
+window.addEventListener('DOMContentLoaded',() => {
+
   const spot = JSON.parse(localStorage.getItem('newSpot') || '{}');
 
   if (!spot || !spot.title || !spot.lat || !spot.lng) {

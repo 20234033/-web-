@@ -1,4 +1,5 @@
 window.addEventListener('DOMContentLoaded', async () => {
+
   // 🌙 テーマ適用
   const theme = localStorage.getItem('theme') || 'light';
   document.body.className = theme;

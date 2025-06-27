@@ -1,3 +1,4 @@
+
 function getDistanceKm(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const toRad = deg => deg * (Math.PI / 180);
@@ -11,6 +12,7 @@ function getDistanceKm(lat1, lon1, lat2, lon2) {
 }
 
 window.addEventListener('DOMContentLoaded', async () => {
+
   const resultMap = L.map('result-map').setView([35.7, 139.7], 10);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
@@ -45,8 +47,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     <div id="place-info" style="margin-top: 16px;">
       <h3>${correctSpot.title}</h3>
       <p>${correctSpot.description}</p>
-      ${correctSpot.image ? `<img src="${correctSpot.image}" alt="観光地画像" style="max-width:100%; border-radius:10px; margin-top:10px;">` : ''}
-    </div>
+      ${correctSpot.image_path ? `<img src="${correctSpot.image_path}" alt="観光地画像" style="max-width:100%; border-radius:10px; margin-top:10px;">` : ''}
+
+  </div>
   `;
 
   // ✅ サーバー経由でStreet ViewのURLを取得

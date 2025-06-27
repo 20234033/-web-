@@ -1,4 +1,7 @@
-window.addEventListener('DOMContentLoaded', () => {
+import { checkAuthOrRedirect } from './auth.js';
+window.addEventListener('DOMContentLoaded', async () => {
+
+  await checkAuthOrRedirect();
   // 音量設定
 const volumeEl = document.getElementById('volume');
 const volumeValue = document.getElementById('volumeValue');

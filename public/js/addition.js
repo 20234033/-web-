@@ -1,4 +1,5 @@
 window.addEventListener('DOMContentLoaded', () => {
+
   const map = L.map('map').setView([35.6812, 139.7671], 5); // 東京駅付近
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'

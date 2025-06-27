@@ -79,7 +79,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    //スコア計算ここから
+    //スコア計算ここからーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
     const queryParamsObject = {
       SelLat: selectedLatLng.lat,
       SelLng: selectedLatLng.lng,
@@ -106,7 +106,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     const distanceKm = scoreData.Distance;
     const score = scoreData.score;
 
-    // 回答履歴テーブルへの保存ここから
+    //回答履歴テーブルへの保存ここからーーーーーーーーーーーーーーーーーーーーーーーーーー
     const currentUserId = localStorage.getItem('user_id'); 
     
     if (!currentUserId) {
@@ -143,6 +143,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       console.error('回答のデータベース保存に失敗しました:', err);
       alert('回答の保存中にエラーが発生しました。');
     }
+    //ここまでーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
 
     const newEntry = {
       id: Date.now(),

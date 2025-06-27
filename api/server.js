@@ -330,7 +330,7 @@ app.post('/api/submit-answers', async (req, res) => {
     if (!userId || !spotId || !answerLat || !answerLng || distanceKm === undefined || score === undefined) {
       return res.status(400).json({
         success: false,
-        message: '必要なパラメータ（userId, spotId, answerLat, answerLng, distanceKm, score）が不足しています。',
+        message: '必要なパラメータ（userId, spotId, answerLat, answerLng, distanceKm, score,）が不足しています。',
       });
     }
 
@@ -366,7 +366,7 @@ app.post('/api/submit-answers', async (req, res) => {
       },
     });
   } catch (err) {
-    console.error('[回答提出エラー]', err);
+    console.error('回答保存エラー', err);
     res.status(500).json({ success: false, message: '回答のデータベースへの保存に失敗しました。', error: err.message });
   } finally {
     if (conn) conn.release();

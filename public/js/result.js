@@ -49,8 +49,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     <div id="place-info" style="margin-top: 16px;">
       <h3>${correctSpot.title}</h3>
       <p>${correctSpot.description}</p>
-      ${correctSpot.image ? `<img src="${correctSpot.image}" alt="観光地画像" style="max-width:100%; border-radius:10px; margin-top:10px;">` : ''}
-    </div>
+      ${correctSpot.image_path ? `<img src="${correctSpot.image_path}" alt="観光地画像" style="max-width:100%; border-radius:10px; margin-top:10px;">` : ''}
+
+  </div>
   `;
 
   // ✅ サーバー経由でStreet ViewのURLを取得

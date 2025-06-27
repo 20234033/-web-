@@ -291,21 +291,6 @@ app.get('/api/spots', async (req, res) => {
   }
 });
 
-
-
-
-// ✅ 全観光地一覧取得API（オプション拡張用）
-app.get('/api/spots', (req, res) => {
-  try {
-    const data = fs.readFileSync(jsonFilePath, 'utf-8');
-    const spots = JSON.parse(data);
-    res.json({ success: true, data: spots });
-  } catch (err) {
-    console.error('[❌ LOAD ERROR]', err);
-    res.status(500).json({ error: '読み込みエラー' });
-  }
-});
-
 // ✅ エラー用HTMLページを返す関数
 const renderErrorPage = (statusCode = 500) => `
 <!DOCTYPE html>

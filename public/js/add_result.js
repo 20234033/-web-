@@ -25,6 +25,7 @@ window.addEventListener('DOMContentLoaded',() => {
     ${spot.image ? `<img src="${spot.image}" alt="観光地画像">` : ''}
   `;
 
+
   // ストリートビュー埋め込み
   const streetView = document.getElementById('streetview');
   if (spot.streetViewUrl) {

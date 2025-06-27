@@ -18,8 +18,6 @@ const meRoute = require('./me');
 
 const mariadb = require('mariadb');
 const cors = require('cors');
-
-const app = express();
 const PORT = process.env.PORT || 3000;
 const SECRET_KEY = process.env.SECRET_KEY || 'your-default-secret';
 

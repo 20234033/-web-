@@ -1,5 +1,4 @@
 .env
 package-lock.json
 package.json
-api/package-lock.json
-api/package.json
+api/node_modules/

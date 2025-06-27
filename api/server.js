@@ -1,12 +1,11 @@
+
 const express = require('express');
-require('dotenv').config(); // これをファイルの最上部付近に追加
 const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const cookieParser = require('cookie-parser');
-const SECRET_KEY = process.env.SECRET_KEY || 'your-default-secret';
 const jwt = require('jsonwebtoken');
 const app = express();
 app.use(cookieParser());
@@ -17,11 +16,14 @@ const meRoute = require('./me');
 
 
 
-const port = 3000; // APIサーバーが稼働するポート番号
-
 const mariadb = require('mariadb');
+const cors = require('cors');
 
-// DB接続プール
+const app = express();
+const PORT = process.env.PORT || 3000;
+const SECRET_KEY = process.env.SECRET_KEY || 'your-default-secret';
+
+// ✅ DB接続プール（poolは後で使えるようにmodule.exportsしてもOK）
 const pool = mariadb.createPool({
   host: 'localhost',
   user: 'geoapp',
@@ -30,22 +32,20 @@ const pool = mariadb.createPool({
   connectionLimit: 5
 });
 
-const PORT = process.env.PORT || 3000;
-
 // 📁 パス定義
 const publicPath = path.join(__dirname, '..', 'public');
 const imageDir = path.join(publicPath, 'image');
 const dataDir = path.join(publicPath, 'data');
 const jsonFilePath = path.join(dataDir, 'sightseeing.json');
 
-// 📁 ディレクトリ作成（存在しない場合）
+// 📁 ディレクトリ作成（初回用）
 if (!fs.existsSync(imageDir)) fs.mkdirSync(imageDir, { recursive: true });
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 if (!fs.existsSync(jsonFilePath)) fs.writeFileSync(jsonFilePath, '[]', 'utf-8');
 
 // 🧰 ミドルウェア設定
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(publicPath));
 
 // 🖼 multer 設定（画像保存）
@@ -110,40 +110,65 @@ app.post('/api/register', async (req, res) => {
 
 app.post('/api/login', async (req, res) => {
   const { identifier, password } = req.body;
+
   if (!identifier || !password) {
     return res.status(400).json({ error: 'IDまたはメールアドレスとパスワードを入力してください。' });
   }
 
+  let conn;
   try {
-    const conn = await pool.getConnection();
+    conn = await pool.getConnection();
+
     const rows = await conn.query(
       'SELECT * FROM USERS WHERE id = ? OR mail_address = ? LIMIT 1',
       [identifier, identifier]
     );
-    conn.release();
 
     const user = rows[0];
+
     if (!user || !(await bcrypt.compare(password, user.password_hash))) {
       return res.status(401).json({ error: 'ログイン情報が正しくありません。' });
     }
 
-    // ✅ JWTトークン生成
+    // ✅ JWT トークン生成
     const token = jwt.sign({ id: user.id }, SECRET_KEY, { expiresIn: '7d' });
 
-    // ✅ Cookieとしてクライアントに送信
+    // ✅ Cookie に保存
     res.cookie('token', token, {
       httpOnly: true,
-      secure: false, // ローカル開発環境では false、本番では true にしてください（HTTPS必須）
+      secure: false, // ← ✅ HTTP環境ではfalseにする
       sameSite: 'Lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7日間
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    res.json({ message: 'ログイン成功' });
+    // ✅ 応答
+    res.json({
+      message: 'ログイン成功',
+      user: {
+        id: user.id,
+        avatar_url: user.avatar_url || null,
+      },
+    });
+
   } catch (err) {
     console.error('[ログイン失敗]', err);
     res.status(500).json({ error: 'ログイン処理中にエラーが発生しました。' });
+  } finally {
+    if (conn) conn.release();
   }
 });
+
+
+
+app.post('/api/logout', (req, res) => {
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: false, // 本番では true（HTTPS）
+    sameSite: 'Lax'
+  });
+  res.json({ message: 'ログアウト完了' });
+});
+
 
 
 

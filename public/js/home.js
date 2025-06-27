@@ -1,4 +1,36 @@
+import { checkAuthOrRedirect } from './js/auth.js';
 window.addEventListener('DOMContentLoaded', async () => {
+  const user = await checkAuthOrRedirect();
+  console.log(`ようこそ ${user.username} さん`);
+
+    // ✅ サーバー側のトークン確認（認証チェック）
+ try {
+    const res = await fetch('/api/me', { credentials: 'include' });
+    if (!res.ok) throw new Error('トークン無効');
+    const user = await res.json();
+
+    // 成功したら localStorage に記録
+    localStorage.setItem('user_id', user.id ?? user.username);
+    localStorage.setItem('username', user.username ?? user.id);   // ←★ここを修正
+    localStorage.setItem('avatar_url', user.avatar_url || '');
+
+
+    // 「ようこそ」メッセージ更新
+// 「ようこそ」メッセージ更新
+  const welcomeEl = document.getElementById('welcome');
+  if (welcomeEl) {
+    const nameToShow = user.username ?? user.id; // usernameがなければidを使う
+    welcomeEl.textContent = `${nameToShow} さん、ようこそ！`;
+  }
+  } catch (err) {
+    // 認証失敗時は即ログイン画面へ
+    localStorage.clear(); // 念のため
+    alert('ログインが必要です。ログインページへ移動します。');
+    window.location.href = 'auth/login.html';
+    return; // それ以降を中断
+  }
+
+
   // 🌙 テーマ適用
   const theme = localStorage.getItem('theme') || 'light';
   document.body.className = theme;
@@ -29,13 +61,16 @@ window.addEventListener('DOMContentLoaded', async () => {
   });
 
   // ✅ ユーザー名
-  const username = localStorage.getItem('username');
+    const username = localStorage.getItem('username');
+    if (!username) {
+      alert('ログインが必要です。ログインページへ移動します。');
+      window.location.href = 'auth/login.html';
+      return; // それ以上の処理を防ぐ
+    }
   const welcomeEl = document.getElementById('welcome');
   if (welcomeEl) {
     if (username) {
       welcomeEl.textContent = `${username} さん、ようこそ！`;
-    } else {
-      welcomeEl.textContent = `ゲスト さん、ようこそ！`;
     }
   }
 

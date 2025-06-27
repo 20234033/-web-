@@ -140,17 +140,29 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // 🔓 ログアウト処理
-  const logoutButton = document.getElementById("logoutButton");
-  if (logoutButton) {
-    logoutButton.addEventListener("click", () => {
-      // 特定のキーだけ削除
-      localStorage.removeItem("user_id");
-      localStorage.removeItem("username"); // ← これを使っているなら
-      localStorage.removeItem("avatar_url");
+// 🔓 ログアウト処理（サーバーにもリクエスト送信）
+const logoutButton = document.getElementById("logoutButton");
+if (logoutButton) {
+  logoutButton.addEventListener("click", async () => {
+    try {
+      // サーバー側にトークン削除を要求（Cookie削除）
+      await fetch('/api/logout', {
+        method: 'POST',
+        credentials: 'include' // ✅ Cookieを含めて送信
+      });
+    } catch (err) {
+      console.error('ログアウトAPIエラー:', err);
+    }
 
-      alert("ログアウトしました。");
-      window.location.href = "auth/login.html";
-    });
-  }
+    // クライアント側の状態も削除
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("username");
+    localStorage.removeItem("avatar_url");
+
+    alert("ログアウトしました。");
+    window.location.href = "auth/login.html";
+  });
+}
+
 
 });

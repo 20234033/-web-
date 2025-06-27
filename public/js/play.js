@@ -1,4 +1,3 @@
-import { checkAuthOrRedirect } from './auth.js'; // 相対パスはHTMLの場所により調整
 window.addEventListener('DOMContentLoaded', async () => {
 
   // 🌙 テーマ適用

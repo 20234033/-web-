@@ -1,4 +1,4 @@
-import { checkAuthOrRedirect } from './auth.js';
+
 window.addEventListener('DOMContentLoaded',() => {
 
   const spot = JSON.parse(localStorage.getItem('newSpot') || '{}');

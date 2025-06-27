@@ -1,4 +1,3 @@
-import { checkAuthOrRedirect } from './auth.js'; // または適切な相対パス
 window.addEventListener('DOMContentLoaded', () => {
 
   const map = L.map('map').setView([35.6812, 139.7671], 5); // 東京駅付近

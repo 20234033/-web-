@@ -1,4 +1,7 @@
-document.addEventListener("DOMContentLoaded", async () => {
+import { checkAuthOrRedirect } from './js/auth.js';
+window.addEventListener('DOMContentLoaded', async () => {
+  const user = await checkAuthOrRedirect();
+  console.log(`ようこそ ${user.username} さん`);
   const ul = document.getElementById("history-ul");
   if (!ul) return;
 

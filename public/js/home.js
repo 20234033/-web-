@@ -1,4 +1,8 @@
+import { checkAuthOrRedirect } from './js/auth.js';
 window.addEventListener('DOMContentLoaded', async () => {
+  const user = await checkAuthOrRedirect();
+  console.log(`ようこそ ${user.username} さん`);
+
     // ✅ サーバー側のトークン確認（認証チェック）
  try {
     const res = await fetch('/api/me', { credentials: 'include' });

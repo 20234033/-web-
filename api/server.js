@@ -312,7 +312,59 @@ app.get('/api/score', (req, res) => {
       });
   });
 
+//回答を回答履歴テーブルへ保存するAPI
+app.post('/api/submit-answers', async (req, res) => {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const { userId, spotId, answerLat, answerLng, distanceKm, score } = req.body;
 
+    if (!userId || !spotId || !answerLat || !answerLng || distanceKm === undefined || score === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: '必要なパラメータ（userId, spotId, answerLat, answerLng, distanceKm, score）が不足しています。',
+      });
+    }
+
+    const parsedSpotId = parseInt(spotId);
+    const parsedAnswerLat = parseFloat(answerLat);
+    const parsedAnswerLng = parseFloat(answerLng);
+    const parsedDistanceKm = parseFloat(distanceKm);
+    const parsedScore = parseInt(score);
+
+    if (isNaN(parsedSpotId) || isNaN(parsedAnswerLat) || isNaN(parsedAnswerLng) || isNaN(parsedDistanceKm) || isNaN(parsedScore)) {
+      return res.status(400).json({
+        success: false,
+        message: '1つ以上のパラメータのデータ型が不正です。spotId, answerLat, answerLng, distanceKm, score が数値であることを確認してください。',
+      });
+    }
+
+    const result = await conn.query(
+      `INSERT INTO user_answers (user_id, spot_id, answer_lat, answer_lng, distance_km, score)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [userId, parsedSpotId, parsedAnswerLat, parsedAnswerLng, parsedDistanceKm, parsedScore]
+    );
+
+    res.json({
+      success: true,
+      message: '回答が正常に保存されました。',
+      data: {
+        id: result.insertId,
+        userId: userId,
+        spotId: parsedSpotId,
+        answerLat: parsedAnswerLat,
+        answerLng: parsedAnswerLng,
+        distanceKm: parsedDistanceKm,
+        score: parsedScore,
+      },
+    });
+  } catch (err) {
+    console.error('[回答提出エラー]', err);
+    res.status(500).json({ success: false, message: '回答のデータベースへの保存に失敗しました。', error: err.message });
+  } finally {
+    if (conn) conn.release();
+  }
+});
 
 
 

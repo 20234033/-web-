@@ -19,7 +19,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   let correctSpot = null;
 
   try {
-    // ✅ APIから観光地データを取得
+    // APIから観光地データを取得
     const res = await fetch(window.location.origin + '/api/spots');
     if (!res.ok) {
       throw new Error(`HTTPエラー: ${res.status} - ${await res.text()}`);
@@ -31,10 +31,10 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (!spots || !spots.length) throw new Error('観光地データが空です');
     correctSpot = spots[Math.floor(Math.random() * spots.length)];
 
-    // ✅ 正解スポットを localStorage に保存
+    // 正解スポットを localStorage に保存
     localStorage.setItem('correctSpot', JSON.stringify(correctSpot));
 
-    // ✅ StreetView iframe にURLを設定
+    // StreetView iframe にURLを設定
     const streetView = document.getElementById('streetView');
     try {
       const svRes = await fetch(
@@ -74,30 +74,75 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   // 回答送信ボタン
   submitBtn.addEventListener('click', async () => {
-    if (!selectedLatLng || !correctSpot) return;
+    if (!selectedLatLng || !correctSpot) {
+        console.warn('selectedLatLng または correctSpot が未設定です。');
+        return;
+    }
 
-    //スコア計算処理ここから
-    const baseUrl = window.location.origin;
+    //スコア計算ここから
     const queryParamsObject = {
-      SelLat: selectedLatLng.SelLat,
-      SelLng: selectedLatLng.SelLng,
-      CorLat: correctSpot.CorLat,
-      CorLng: correctSpot.CorLng
+      SelLat: selectedLatLng.lat,
+      SelLng: selectedLatLng.lng,
+      CorLat: correctSpot.lat,
+      CorLng: correctSpot.lng
     };
 
     const queryParams = new URLSearchParams(queryParamsObject).toString();
     const apiUrl = `${window.location.origin}/api/score?${queryParams}`;
-    let data = {};
-    try{
+    let scoreData = {};
+
+    try {
       const response = await fetch(apiUrl);
-      data = await response.json();
-    }catch(error){
-      console.error("スコア計算API呼び出しエラー");
-      alert('APIの呼び出しに失敗しました')
+      if (!response.ok) {
+        throw new Error(`スコア計算APIエラー: ${response.status} - ${await response.text()}`);
+      }
+      scoreData = await response.json();
+    } catch (error) {
+      console.error("スコア計算API呼び出しエラー:", error);
+      alert('スコア計算APIの呼び出しに失敗しました');
       return;
     }
-    const score = data.score;
     //ここまで
+    const distanceKm = scoreData.Distance;
+    const score = scoreData.score;
+
+    // 回答履歴テーブルへの保存ここから
+    const currentUserId = localStorage.getItem('user_id'); 
+    
+    if (!currentUserId) {
+        alert('ユーザー情報が見つかりません。ログインし直してください。');
+        location.href = '../auth/login.html';
+        return;
+    }
+
+    try {//API呼び出し
+      const submitAnswerResponse = await fetch(`${window.location.origin}/api/submit-answers`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: currentUserId,
+          spotId: correctSpot.spot_id,
+          answerLat: selectedLatLng.lat,
+          answerLng: selectedLatLng.lng,
+          distanceKm: distanceKm,
+          score: score,
+        }),
+      });
+
+      if (!submitAnswerResponse.ok) {
+        const errorText = await submitAnswerResponse.text();
+        throw new Error(`回答保存APIエラー: ${submitAnswerResponse.status} - ${errorText}`);
+      }
+      /*
+      const submitAnswerJson = await submitAnswerResponse.json();
+      console.log('回答が正常に保存されました:', submitAnswerJson);
+      */
+    } catch (err) {
+      console.error('回答のデータベース保存に失敗しました:', err);
+      alert('回答の保存中にエラーが発生しました。');
+    }
 
     const newEntry = {
       id: Date.now(),
@@ -114,7 +159,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       console.warn('履歴保存失敗:', err);
     }
 
-    // ✅ 次画面に必要な情報を保存
+    // 次画面に必要な情報を保存
     localStorage.setItem('lastAnswerCoords', JSON.stringify(selectedLatLng));
     localStorage.setItem('correctCoords', JSON.stringify({
       lat: correctSpot.lat,
@@ -122,26 +167,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     }));
     localStorage.setItem('lastScore', score.toString());
 
-    // ✅ 結果画面へ遷移
+    // 結果画面へ遷移
     setTimeout(() => {
       location.href = 'result.html';
     }, 200);
   });
-
-  // ✅ スコア計算（ハバーサイン距離を使用）
-  /*
-  function calculateScore(lat1, lng1, lat2, lng2) {
-    const R = 6371; // 地球の半径 km
-    const toRad = deg => deg * (Math.PI / 180);
-    const dLat = toRad(lat2 - lat1);
-    const dLng = toRad(lng2 - lng1);
-    const a = Math.sin(dLat / 2) ** 2 +
-              Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-              Math.sin(dLng / 2) ** 2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = R * c;
-
-    return Math.max(0, 100 - Math.round(distance));
-  }
-    */
 });

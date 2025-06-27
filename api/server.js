@@ -18,6 +18,7 @@ const meRoute = require('./me');
 
 const mariadb = require('mariadb');
 const cors = require('cors');
+
 const PORT = process.env.PORT || 3000;
 const SECRET_KEY = process.env.SECRET_KEY || 'your-default-secret';
 
@@ -269,7 +270,7 @@ app.get('/api/spots', async (req, res) => {
   try {
     conn = await pool.getConnection();
     const rows = await conn.query(
-      'SELECT id, title, genre, description, lat, lng FROM spots'
+      'SELECT spot_id, title, genre, description, lat, lng FROM spots'
     );
     res.json({ success: true, data: rows });
   } catch (err) {
@@ -282,22 +283,6 @@ app.get('/api/spots', async (req, res) => {
     if (conn) conn.release();
   }
 });
-
-
-
-
-// 全観光地一覧取得API（オプション拡張用）
-app.get('/api/spots', (req, res) => {
-  try {
-    const data = fs.readFileSync(jsonFilePath, 'utf-8');
-    const spots = JSON.parse(data);
-    res.json({ success: true, data: spots });
-  } catch (err) {
-    console.error('[❌ LOAD ERROR]', err);
-    res.status(500).json({ error: '読み込みエラー' });
-  }
-});
-
 
 //スコア計算API
 app.get('/api/score', (req, res) => {
@@ -372,7 +357,6 @@ app.post('/api/submit-answers', async (req, res) => {
       success: true,
       message: '回答が正常に保存されました。',
       data: {
-        id: result.insertId,
         userId: userId,
         spotId: parsedSpotId,
         answerLat: parsedAnswerLat,

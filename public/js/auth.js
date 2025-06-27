@@ -1,12 +1,12 @@
-function requireAuth(req, res, next) {
-  const token = req.cookies.token;
-  if (!token) return res.status(401).json({ error: '未認証' });
-
+export async function checkAuthOrRedirect() {
   try {
-    const decoded = jwt.verify(token, SECRET_KEY);
-    req.user = decoded;
-    next();
-  } catch {
-    res.status(401).json({ error: 'トークン無効' });
+    const res = await fetch('/api/me');
+    const json = await res.json();
+    if (!json.success) {
+      location.href = 'login.html';
+    }
+  } catch (err) {
+    console.error('認証チェック失敗:', err);
+    location.href = 'login.html';
   }
 }

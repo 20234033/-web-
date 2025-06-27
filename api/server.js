@@ -169,11 +169,12 @@ app.post('/api/login', async (req, res) => {
 app.post('/api/logout', (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: false, // 本番では true（HTTPS）
     sameSite: 'Lax'
   });
-  res.json({ message: 'ログアウトしました' });
+  res.json({ message: 'ログアウト完了' });
 });
+
 
 
 

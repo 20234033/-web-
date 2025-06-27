@@ -41,6 +41,8 @@ app.use(cookieParser()); // JWT読み取り用
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(publicPath)); // 静的ファイル
+app.use('/image', express.static(path.join(__dirname, '..', 'public', 'image')));
+
 
 app.use(cors({
   origin: true, // ← フロントのURLポート番号を正確に指定
@@ -189,7 +191,7 @@ app.post('/api/save-spot', upload.single('image'), async (req, res) => {
   let conn;
 
   try {
-    conn = await pool.getConnection(); // try内に移動
+    conn = await pool.getConnection();
 
     const { title, genre, description, lat, lng, streetViewUrl } = req.body;
     const image = req.file;
@@ -216,9 +218,14 @@ app.post('/api/save-spot', upload.single('image'), async (req, res) => {
     res.json({
       success: true,
       data: {
-        id: Number(result.insertId),
-        title, genre, description, lat: latNum, lng: lngNum,
-        imagePath, streetViewUrl
+        spot_id: Number(result.insertId),
+        title,
+        genre,
+        description,
+        lat: latNum,
+        lng: lngNum,
+        imagePath,
+        streetViewUrl
       }
     });
 
@@ -229,6 +236,7 @@ app.post('/api/save-spot', upload.single('image'), async (req, res) => {
     if (conn) conn.release();
   }
 });
+
 
 
 app.get('/api/streetview-url', (req, res) => {
@@ -277,7 +285,7 @@ app.get('/api/spots', async (req, res) => {
   try {
     conn = await pool.getConnection();
     const rows = await conn.query(
-      'SELECT spot_id AS id, title, genre, description, lat, lng FROM spots'
+      'SELECT spot_id AS id, title, genre, description, lat, lng, image_path FROM spots'
     );
     res.json({ success: true, data: rows });
   } catch (err) {

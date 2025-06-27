@@ -6,16 +6,18 @@ window.addEventListener('DOMContentLoaded', async () => {
     const user = await res.json();
 
     // 成功したら localStorage に記録
-    localStorage.setItem('user_id', user.id);
-    localStorage.setItem('username', user.id);
+    localStorage.setItem('user_id', user.id ?? user.username);
+    localStorage.setItem('username', user.username ?? user.id);   // ←★ここを修正
     localStorage.setItem('avatar_url', user.avatar_url || '');
 
-    // 「ようこそ」メッセージ更新
-    const welcomeEl = document.getElementById('welcome');
-    if (welcomeEl) {
-      welcomeEl.textContent = `${user.id} さん、ようこそ！`;
-    }
 
+    // 「ようこそ」メッセージ更新
+// 「ようこそ」メッセージ更新
+  const welcomeEl = document.getElementById('welcome');
+  if (welcomeEl) {
+    const nameToShow = user.username ?? user.id; // usernameがなければidを使う
+    welcomeEl.textContent = `${nameToShow} さん、ようこそ！`;
+  }
   } catch (err) {
     // 認証失敗時は即ログイン画面へ
     localStorage.clear(); // 念のため

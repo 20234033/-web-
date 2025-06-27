@@ -1,7 +1,6 @@
 import { checkAuthOrRedirect } from './auth.js'; // または適切な相対パス
-window.addEventListener('DOMContentLoaded', async () => {
+window.addEventListener('DOMContentLoaded', () => {
 
-  await checkAuthOrRedirect();
   const map = L.map('map').setView([35.6812, 139.7671], 5); // 東京駅付近
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'

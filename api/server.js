@@ -277,7 +277,7 @@ app.get('/api/spots', async (req, res) => {
   try {
     conn = await pool.getConnection();
     const rows = await conn.query(
-      'SELECT spot_id, title, genre, description, lat, lng FROM spots'
+      'SELECT spot_id AS id, title, genre, description, lat, lng FROM spots'
     );
     res.json({ success: true, data: rows });
   } catch (err) {

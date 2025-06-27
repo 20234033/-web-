@@ -1,4 +1,7 @@
-window.addEventListener('DOMContentLoaded', () => {
+import { checkAuthOrRedirect } from './auth.js';
+window.addEventListener('DOMContentLoaded', async () => {
+
+  await checkAuthOrRedirect();
   const spot = JSON.parse(localStorage.getItem('newSpot') || '{}');
 
   if (!spot || !spot.title || !spot.lat || !spot.lng) {

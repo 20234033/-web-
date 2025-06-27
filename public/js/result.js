@@ -1,3 +1,5 @@
+import { checkAuthOrRedirect } from './auth.js'; // または適切な相対パス
+
 function getDistanceKm(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const toRad = deg => deg * (Math.PI / 180);
@@ -11,6 +13,8 @@ function getDistanceKm(lat1, lon1, lat2, lon2) {
 }
 
 window.addEventListener('DOMContentLoaded', async () => {
+
+  await checkAuthOrRedirect();
   const resultMap = L.map('result-map').setView([35.7, 139.7], 10);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'

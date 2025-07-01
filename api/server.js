@@ -327,39 +327,51 @@ app.get('/api/spots_genre', async (req, res) => {
 
 //スコア計算API
 app.get('/api/score', (req, res) => {
-
     //文字列からfloat型へ変換
     const SelLat = parseFloat(req.query.SelLat);
     const SelLng = parseFloat(req.query.SelLng);
     const CorLat = parseFloat(req.query.CorLat);
     const CorLng = parseFloat(req.query.CorLng);
+
     if (isNaN(SelLat) || isNaN(SelLng) || isNaN(CorLat) || isNaN(CorLng)) {
-        return res.status(400).json({ 
-            success: false, 
-            message: '緯度経度のパラメータが不正です。数値で指定してください。' 
+        return res.status(400).json({
+            success: false,
+            message: '緯度経度のパラメータが不正です。数値で指定してください。'
         });
     }
-    const R = 6371; 
+
+    // 地球の半径 (km)
+    const R = 6371;
     const toRad = deg => deg * (Math.PI / 180);
+
     const dLat = toRad(CorLat - SelLat);
     const dLng = toRad(CorLng - SelLng);
+
     const a = Math.sin(dLat / 2) ** 2 +
               Math.cos(toRad(SelLat)) * Math.cos(toRad(CorLat)) *
               Math.sin(dLng / 2) ** 2;
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = R * c;
-    const score = Math.max(0, 100 - Math.round(distance));
-    
+
+    const distanceKm = R * c;
+
+    // 減衰係数k 係数を上げたら、減衰率が上がって、高スコアが出にくい
+    const k = 0.6;
+    const maxScore = 100;
+
+    let score = maxScore * Math.exp(-k * distanceKm);
+
+    score = Math.max(0, Math.round(score));
+
     res.json({
-      success:true,
-      SelectedLat: SelLat,
-      SelectedLng: SelLng,
-      CorrectLat: CorLat,
-      CorrectLng: CorLng,
-      Distance: parseFloat(distance.toFixed(2)),//小数点以下２桁に丸める
-      score: score
-      });
-  });
+        success: true,
+        SelectedLat: SelLat,
+        SelectedLng: SelLng,
+        CorrectLat: CorLat,
+        CorrectLng: CorLng,
+        Distance: parseFloat(distanceKm.toFixed(2)), // 小数点以下２桁に丸める
+        score: score
+    });
+});
 
 //回答を回答履歴テーブルへ保存するAPI
 app.post('/api/submit-answers', async (req, res) => {

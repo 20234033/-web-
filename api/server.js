@@ -304,6 +304,27 @@ app.get('/api/spots', async (req, res) => {
   }
 });
 
+// /api/spots: MariaDBのspotsテーブルからジャンルを指定して観光地を取得
+app.get('/api/spots_genre', async (req, res) => {
+  let conn;
+  try {
+    const genre = req.query.genre;
+    conn = await pool.getConnection();
+    const rows = await conn.query(
+      `SELECT spot_id AS id, title, genre, description, lat, lng, image_path FROM spots WHERE genre = ?`, [genre]
+    );
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    console.error('観光地データ取得エラー:', err);
+    res.status(500).json({
+      success: false,
+      error: err.message || 'データベース読み込み失敗',
+    });
+  } finally {
+    if (conn) conn.release();
+  }
+});
+
 //スコア計算API
 app.get('/api/score', (req, res) => {
 

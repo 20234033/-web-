@@ -77,18 +77,42 @@ window.addEventListener('DOMContentLoaded', async () => {
   submitBtn.addEventListener('click', async () => {
     if (!selectedLatLng || !correctSpot) return;
 
-    const score = calculateScore(
-      selectedLatLng.lat,
-      selectedLatLng.lng,
-      correctSpot.lat,
-      correctSpot.lng
-    );
+  // 距離とスコアを両方計算
+  const { distanceKm, score } = calcDistanceAndScore(
+    selectedLatLng.lat,
+    selectedLatLng.lng,
+    correctSpot.lat,
+    correctSpot.lng
+  );
 
     const newEntry = {
       id: Date.now(),
       timestamp: new Date().toISOString(),
       score,
     };
+
+ /* ──────────────── 🔽 ① DB へ保存 ──────────────── */
+ try {
+   // 👤 ログイン済みなら cookie/JWT から userId を取り出す想定
+   const userId = localStorage.getItem('userId') || 'guest';
+
+   await fetch('/api/answer', {
+     method: 'POST',
+     headers: { 'Content-Type': 'application/json' },
+     body: JSON.stringify({
+       user_id: userId,
+       spot_id: correctSpot.spot_id,    // ← spots テーブルの主キー
+       answer_lat: selectedLatLng.lat,
+       answer_lng: selectedLatLng.lng,
+       distance_km: distanceKm,         // 小数点 2 桁で OK
+       score
+     })
+   });
+   console.log('✅ DB 保存完了');
+ } catch (err) {
+   console.warn('DB 保存失敗:', err);
+ }
+ /* ─────────────────────────────────────────────── */
 
     // 🔄 履歴を localStorage に保存
     try {

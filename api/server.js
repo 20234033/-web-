@@ -237,6 +237,35 @@ app.post('/api/save-spot', upload.single('image'), async (req, res) => {
   }
 });
 
+app.post('/api/answer', async (req, res) => {
+  const { user_id, spot_id, answer_lat, answer_lng, distance_km, score } = req.body;
+  let conn;
+
+  // バリデーション
+  if (!user_id || !spot_id || answer_lat == null || answer_lng == null || distance_km == null || score == null) {
+    return res.status(400).json({ success: false, error: 'すべての項目が必須です' });
+  }
+
+  try {
+    conn = await pool.getConnection();
+
+    await conn.query(`
+      INSERT INTO user_answers (user_id, spot_id, answer_lat, answer_lng, distance_km, score)
+      VALUES (?, ?, ?, ?, ?, ?)`,
+      [user_id, spot_id, answer_lat, answer_lng, distance_km, score]
+    );
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error('[保存エラー]', err);
+    res.status(500).json({ success: false, error: 'DB保存に失敗しました' });
+  } finally {
+    if (conn) conn.release();
+  }
+});
+
+
 
 
 app.get('/api/streetview-url', (req, res) => {
@@ -285,7 +314,7 @@ app.get('/api/spots', async (req, res) => {
   try {
     conn = await pool.getConnection();
     const rows = await conn.query(
-      'SELECT spot_id AS id, title, genre, description, lat, lng, image_path FROM spots'
+      'SELECT spot_id as id, title, genre, description, lat, lng, image_path FROM spots'
     );
     res.json({ success: true, data: rows });
   } catch (err) {

@@ -106,7 +106,7 @@ app.post('/api/register', async (req, res) => {
 });
 
 
-
+//ログインAPI
 app.post('/api/login', async (req, res) => {
   const { identifier, password } = req.body;
 
@@ -158,7 +158,7 @@ app.post('/api/login', async (req, res) => {
 });
 
 
-
+//ログアウトAPI
 app.post('/api/logout', (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,
@@ -170,7 +170,7 @@ app.post('/api/logout', (req, res) => {
 
 
 
-
+//パスワードリセットAPI
 app.post('/api/reset-password', (req, res) => {
   const { identifier } = req.body;
   console.log(`[RESET] Identifier: ${identifier}`);

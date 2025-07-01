@@ -11,8 +11,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     localStorage.setItem('username', user.username ?? user.id);   // ←★ここを修正
     localStorage.setItem('avatar_url', user.avatar_url || '');
 
-
-    // 「ようこそ」メッセージ更新
 // 「ようこそ」メッセージ更新
   const welcomeEl = document.getElementById('welcome');
   if (welcomeEl) {

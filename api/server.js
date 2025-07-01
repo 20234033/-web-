@@ -304,14 +304,14 @@ app.get('/api/spots', async (req, res) => {
   }
 });
 
-// /api/spots: MariaDBのspotsテーブルからジャンルを指定して観光地を取得
+// /api/spots: MariaDBのspotsテーブルからジャンルを指定して観光地を取得(作成中)
 app.get('/api/spots_genre', async (req, res) => {
   let conn;
   try {
     const genre = req.query.genre;
     conn = await pool.getConnection();
     const rows = await conn.query(
-      `SELECT spot_id AS id, title, genre, description, lat, lng, image_path FROM spots WHERE genre = ?`, [genre]
+      `SELECT spot_id AS id, title, genre, description, lat, lng, image_path FROM spots WHERE genre = '?'`, [genre]
     );
     res.json({ success: true, data: rows });
   } catch (err) {

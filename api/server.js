@@ -265,6 +265,36 @@ app.post('/api/answer', async (req, res) => {
   }
 });
 
+app.get('/api/history/:user_id', async (req, res) => {
+  const userId = req.params.user_id;
+  let conn;
+
+  try {
+    conn = await pool.getConnection();
+
+    const rows = await conn.query(
+      `SELECT 
+          ua.score, ua.answered_at, 
+          s.title, s.genre, s.description, 
+          s.lat, s.lng, s.image_path
+       FROM user_answers ua
+       JOIN spots s ON ua.spot_id = s.spot_id
+       WHERE ua.user_id = ?
+       ORDER BY ua.answered_at DESC`,
+      [userId]
+    );
+
+    res.json({ success: true, history: rows });
+  } catch (err) {
+    console.error('履歴取得エラー:', err);
+    res.status(500).json({ success: false, error: '履歴取得に失敗しました' });
+  } finally {
+    if (conn) conn.release();
+  }
+});
+
+
+
 
 
 

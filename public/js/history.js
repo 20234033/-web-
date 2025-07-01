@@ -1,31 +1,32 @@
-import { checkAuthOrRedirect } from './auth.js'; // または適切な相対パス
 document.addEventListener("DOMContentLoaded", async () => {
-  await checkAuthOrRedirect();
   const ul = document.getElementById("history-ul");
   if (!ul) return;
 
+  const userId = localStorage.getItem('user_id');
+  if (!userId) {
+    ul.innerHTML = "<li>ユーザーIDが見つかりません。</li>";
+    return;
+  }
+
   try {
-    const [historyRes, sightseeingRes] = await Promise.all([
-      fetch('/data/history.json'),
-      fetch('/data/sightseeing.json')
-    ]);
+    const res = await fetch(`/api/history/${userId}`);
+    const data = await res.json();
 
-    const historyData = await historyRes.json();
-    const sightseeingData = await sightseeingRes.json();
+    if (!data.success || !data.history || data.history.length === 0) {
+      ul.innerHTML = "<li>履歴がありません。</li>";
+      return;
+    }
 
-    historyData.forEach(entry => {
-      const spot = sightseeingData.find(s => s.id === entry.id);
-      if (!spot) return;
-
-      const region = getRegionFromLatLng(spot.lat, spot.lng); // 地方名取得
+    data.history.forEach(entry => {
+      const region = getRegionFromLatLng(entry.lat, entry.lng);
 
       const li = document.createElement("li");
       li.innerHTML = `
-        <div><strong>${spot.title}</strong>（スコア: ${entry.score}）</div>
-        <div><small>${entry.timestamp}</small></div>
-        <div>🗾 地方: ${region}　|　📚 ジャンル: ${spot.genre || '不明'}</div>
-        <div><img src="${spot.image}" alt="${spot.title}" style="max-width: 100%; border-radius: 6px; margin: 5px 0;"></div>
-        <div>${spot.description}</div>
+        <div><strong>${entry.title}</strong>（スコア: ${entry.score}）</div>
+        <div><small>${formatDate(entry.answered_at)}</small></div>
+        <div>🗾 地方: ${region}　|　📚 ジャンル: ${entry.genre || '不明'}</div>
+        <div><img src="${entry.image_path}" alt="${entry.title}" style="max-width: 100%; border-radius: 6px; margin: 5px 0;"></div>
+        <div>${entry.description}</div>
         <hr style="margin: 10px 0;" />
       `;
       ul.appendChild(li);
@@ -37,7 +38,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-// 🌏 緯度経度 → 地方名に変換する関数（簡易版）
+function formatDate(str) {
+  const d = new Date(str);
+  return d.toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
+}
+
 function getRegionFromLatLng(lat, lng) {
   if (lat >= 43) return '北海道';
   if (lat >= 38 && lng >= 139) return '東北';

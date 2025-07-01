@@ -45,7 +45,21 @@ if (!fs.existsSync(jsonFilePath)) fs.writeFileSync(jsonFilePath, '[]', 'utf-8');
 // 🧰 ミドルウェア設定
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(publicPath));
+app.use(express.static(publicPath)); // 静的ファイル
+app.use('/image', express.static(path.join(__dirname, '..', 'public', 'image')));
+
+
+app.use(cors({
+  origin: true, // ← フロントのURLポート番号を正確に指定
+  credentials: true
+}));
+
+// ✅ APIルート読み込み（cookieParserの後に）
+const meRoute = require('./me');
+app.use(meRoute);
+
+// 💡 必要であれば pool も他ファイルで使えるようにexport可能
+module.exports = { app, pool, SECRET_KEY };
 
 // 🖼 multer 設定（画像保存）
 const storage = multer.diskStorage({
@@ -182,7 +196,7 @@ app.post('/api/save-spot', upload.single('image'), async (req, res) => {
   let conn;
 
   try {
-    conn = await pool.getConnection(); // try内に移動
+    conn = await pool.getConnection();
 
     const { title, genre, description, lat, lng, streetViewUrl } = req.body;
     const image = req.file;
@@ -209,9 +223,14 @@ app.post('/api/save-spot', upload.single('image'), async (req, res) => {
     res.json({
       success: true,
       data: {
-        id: Number(result.insertId),
-        title, genre, description, lat: latNum, lng: lngNum,
-        imagePath, streetViewUrl
+        spot_id: Number(result.insertId),
+        title,
+        genre,
+        description,
+        lat: latNum,
+        lng: lngNum,
+        imagePath,
+        streetViewUrl
       }
     });
 
@@ -223,7 +242,8 @@ app.post('/api/save-spot', upload.single('image'), async (req, res) => {
   }
 });
 
-//URL設定
+
+
 app.get('/api/streetview-url', (req, res) => {
   const { lat, lng } = req.query;
   const apiKey = process.env.GOOGLE_API_KEY;
@@ -270,7 +290,7 @@ app.get('/api/spots', async (req, res) => {
   try {
     conn = await pool.getConnection();
     const rows = await conn.query(
-      'SELECT spot_id AS id, title, genre, description, lat, lng FROM spots'
+      'SELECT spot_id AS id, title, genre, description, lat, lng, image_path FROM spots'
     );
     res.json({ success: true, data: rows });
   } catch (err) {

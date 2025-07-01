@@ -159,7 +159,6 @@ window.addEventListener('DOMContentLoaded', async () => {
       location.href = 'result.html';
     }, 200);
   });
-
   // ✅ スコア計算（ハバーサイン距離を使用）
   function calculateScore(lat1, lng1, lat2, lng2) {
     const R = 6371; // 地球の半径 km
@@ -175,3 +174,4 @@ window.addEventListener('DOMContentLoaded', async () => {
     return Math.max(0, 100 - Math.round(distance));
   }
 });
+

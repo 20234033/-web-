@@ -1,8 +1,26 @@
 window.addEventListener('DOMContentLoaded', async () => {
 
+  function getRegionFromLatLng(lat, lng) {
+  if (lat >= 43) return 'hokkaidou';
+  if (lat >= 38 && lng >= 139) return 'touhoku';
+  if (lat >= 35 && lng >= 138 && lng < 141) return 'kantou';
+  if (lat >= 34 && lng >= 135 && lng < 138) return 'chubu';
+  if (lat >= 34 && lng >= 133 && lng < 135) return 'kinki'; // ← kansai を kinki に合わせました
+  if (lat >= 33 && lng >= 130) return 'kyusyu';
+  if (lat < 30) return 'okinawa';
+  return 'etc';
+}
+
+
   // 🌙 テーマ適用
   const theme = localStorage.getItem('theme') || 'light';
   document.body.className = theme;
+
+  // ✅ ① クエリパラメータ取得をここに追加
+  const urlParams   = new URLSearchParams(window.location.search);
+  const genreParam  = urlParams.get('genre');
+  const regionParam = urlParams.get('region');
+  console.log('🔍 条件:', { genreParam, regionParam });
 
   const submitBtn = document.getElementById('submitAnswer');
   submitBtn.disabled = true;
@@ -30,7 +48,19 @@ window.addEventListener('DOMContentLoaded', async () => {
     const spots = json.data;
 
     if (!spots || !spots.length) throw new Error('観光地データが空です');
-    correctSpot = spots[Math.floor(Math.random() * spots.length)];
+        // ✅ ③ フィルタ処理をここに追加（追記ポイント）
+    const filteredSpots = spots.filter(spot => {
+      const genreOK = !genreParam || genreParam === 'null' || spot.genre === genreParam;
+
+      const regionName = getRegionFromLatLng(spot.lat, spot.lng);
+      const regionOK = !regionParam || regionParam === 'null' || regionName === regionParam;
+
+      return genreOK && regionOK;
+    });
+
+    const candidateSpots = filteredSpots.length ? filteredSpots : spots;
+    correctSpot = candidateSpots[Math.floor(Math.random() * candidateSpots.length)];
+    //correctSpot = spots[Math.floor(Math.random() * spots.length)];
 
     // ✅ 正解スポットを localStorage に保存
     localStorage.setItem('correctSpot', JSON.stringify(correctSpot));

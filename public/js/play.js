@@ -59,6 +59,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  //ジャンル選択してDBから取得
+  
+
   // 地図をクリックして位置を選択
   map.on('click', (e) => {
     const { lat, lng } = e.latlng;

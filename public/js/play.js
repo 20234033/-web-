@@ -58,6 +58,13 @@ window.addEventListener('DOMContentLoaded', async () => {
     alert('観光地データの読み込みに失敗しました');
     return;
   }
+  const username = localStorage.getItem('username');
+  if (!username) {
+    alert('ログインが必要です');
+    location.href = 'auth/login.html';
+    return;
+  }
+
 
   //ジャンル選択してDBから取得
   
@@ -75,6 +82,21 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     submitBtn.disabled = false;
   });
+  function calcDistanceAndScore(lat1, lng1, lat2, lng2) {
+  const R = 6371; // 地球の半径（km）
+  const toRad = deg => deg * (Math.PI / 180);
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+            Math.sin(dLng / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distanceKm = +(R * c).toFixed(2); // 小数点2桁に丸め
+
+  const score = Math.max(0, 100 - Math.round(distanceKm));
+  return { distanceKm, score };
+}
+
 
   // 回答送信ボタン
   submitBtn.addEventListener('click', async () => {
@@ -155,7 +177,31 @@ window.addEventListener('DOMContentLoaded', async () => {
       score,
     };
 
-    // 履歴をlocalStorageに保存
+ /* ──────────────── 🔽 ① DB へ保存 ──────────────── */
+ try {
+   // 👤 ログイン済みなら cookie/JWT から userId を取り出す想定
+   const userId = localStorage.getItem('user_id') || 'guest';
+
+   await fetch('/api/answer', {
+     method: 'POST',
+     headers: { 'Content-Type': 'application/json' },
+     body: JSON.stringify({
+       user_id: userId,
+       spot_id: correctSpot.id,    // ← spots テーブルの主キー
+       answer_lat: selectedLatLng.lat,
+       answer_lng: selectedLatLng.lng,
+       distance_km: distanceKm,         // 小数点 2 桁で OK
+       score
+     })
+   });
+   console.log('✅ DB 保存完了');
+ } catch (err) {
+   console.warn('DB 保存失敗:', err);
+ }
+ /* ─────────────────────────────────────────────── */
+ 
+
+    // 🔄 履歴を localStorage に保存
     try {
       const old = JSON.parse(localStorage.getItem('history') || '[]');
       old.push(newEntry);
@@ -178,3 +224,4 @@ window.addEventListener('DOMContentLoaded', async () => {
     }, 200);
   });
 });
+

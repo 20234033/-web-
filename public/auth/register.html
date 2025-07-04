@@ -12,6 +12,7 @@
     <h2>新規登録</h2>
     <form id="registerForm">
       <input type="text" id="reg-id" placeholder="ユーザーID" required>
+      <input type="email" id="reg-email" placeholder="メールアドレス" required>
       <input type="password" id="reg-pass" placeholder="パスワード" required>
       <input type="password" id="reg-confirm" placeholder="パスワード確認" required>
       <button type="submit">登録</button>
@@ -27,6 +28,7 @@ document.getElementById('registerForm').addEventListener('submit', async functio
   e.preventDefault();
 
   const id = document.getElementById('reg-id').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
   const pass = document.getElementById('reg-pass').value;
   const confirm = document.getElementById('reg-confirm').value;
 
@@ -39,7 +41,7 @@ document.getElementById('registerForm').addEventListener('submit', async functio
     const response = await fetch('/api/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: id,  password: pass })
+      body: JSON.stringify({ id: id, email: email, password: pass })
     });
 
     const result = await response.json();

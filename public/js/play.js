@@ -95,10 +95,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-
-  //ジャンル選択してDBから取得
-  
-
   // 地図をクリックして位置を選択
   map.on('click', (e) => {
     const { lat, lng } = e.latlng;
@@ -112,20 +108,6 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     submitBtn.disabled = false;
   });
-  function calcDistanceAndScore(lat1, lng1, lat2, lng2) {
-  const R = 6371; // 地球の半径（km）
-  const toRad = deg => deg * (Math.PI / 180);
-  const dLat = toRad(lat2 - lat1);
-  const dLng = toRad(lng2 - lng1);
-  const a = Math.sin(dLat / 2) ** 2 +
-            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-            Math.sin(dLng / 2) ** 2;
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distanceKm = +(R * c).toFixed(2); // 小数点2桁に丸め
-
-  const score = Math.max(0, 100 - Math.round(distanceKm));
-  return { distanceKm, score };
-}
 
 
   // 回答送信ボタン

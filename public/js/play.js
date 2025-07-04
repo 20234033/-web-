@@ -1,15 +1,27 @@
 window.addEventListener('DOMContentLoaded', async () => {
 
-  function getRegionFromLatLng(lat, lng) {
-  if (lat >= 43) return 'hokkaidou';
-  if (lat >= 38 && lng >= 139) return 'touhoku';
-  if (lat >= 35 && lng >= 138 && lng < 141) return 'kantou';
-  if (lat >= 34 && lng >= 135 && lng < 138) return 'chubu';
-  if (lat >= 34 && lng >= 133 && lng < 135) return 'kinki'; // ← kansai を kinki に合わせました
-  if (lat >= 33 && lng >= 130) return 'kyusyu';
-  if (lat < 30) return 'okinawa';
-  return 'etc';
+function getRegionFromLatLng(lat, lng) {
+  if (lat >= 43) {
+    return 'hokkaidou';
+  } else if (lat >= 37 && lat < 43 && lng >= 139) {
+    return 'touhoku';
+  } else if (lat >= 35 && lat < 37 && lng >= 138 && lng < 141) {
+    return 'kantou';
+  } else if (lat >= 34 && lat < 37 && lng >= 136 && lng < 138) {
+    return 'chubu';
+  } else if (lat >= 34 && lat < 35 && lng >= 135 && lng < 136) {
+    return 'kinki';
+  } else if (lat >= 33 && lat < 35 && lng >= 132 && lng < 135) {
+    return 'chugoku';
+  } else if (lat >= 32 && lat < 34 && lng >= 132 && lng < 134) {
+    return 'shikoku';
+  } else if (lat >= 30 && lat < 33 && lng >= 129 && lng < 132) {
+    return 'kyusyu';
+  } else {
+    return 'etc';
+  }
 }
+
 
 
   // 🌙 テーマ適用

@@ -156,6 +156,7 @@ function getRegionFromLatLng(lat, lng) {
     const distanceKm = scoreData.Distance;
     const score = scoreData.score;
     localStorage.setItem('lastDistance', scoreData.Distance);
+    localStorage.setItem('lastScore', scoreData.score);
 
     //回答履歴テーブルへの保存ここからーーーーーーーーーーーーーーーーーーーーーーーーーー
     const currentUserId = localStorage.getItem('user_id'); 
@@ -241,8 +242,7 @@ function getRegionFromLatLng(lat, lng) {
       lat: correctSpot.lat,
       lng: correctSpot.lng,
     }));
-    localStorage.setItem('lastScore', score.toString());
-
+    
     // 結果画面へ遷移
     setTimeout(() => {
       location.href = 'result.html';

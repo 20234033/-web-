@@ -138,8 +138,50 @@ document.addEventListener("DOMContentLoaded", () => {
       localStorage.setItem("theme", newTheme);
     });
   }
+if (!isAuthPage) {
+  (async () => {
+    try {
+      const res = await fetch('/api/has_location', { credentials: 'include' });
+      if (!res.ok) return;
 
-  // 🔓 ログアウト処理
+      const data = await res.json();
+
+      if (!data.hasLocation && !document.getElementById('location-alert-bar')) {
+        const alertBar = document.createElement('div');
+        alertBar.id = 'location-alert-bar';
+        alertBar.textContent = '📍 現在、住所が設定されていません。設定ページから登録してください。';
+
+        const navbar = document.querySelector('.navbar');
+        const topOffset = navbar ? navbar.offsetHeight : 60;
+
+        alertBar.style.cssText = `
+          position: fixed;
+          top: ${topOffset}px;
+          left: 0;
+          right: 0;
+          background-color: #e74c3c;
+          color: white;
+          text-align: center;
+          padding: 10px;
+          font-weight: bold;
+          font-family: 'Orbitron', sans-serif;
+          z-index: 1999;
+          border-bottom: 2px solid #c0392b;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        `;
+
+        document.body.appendChild(alertBar);
+      }
+    } catch (err) {
+      console.error('住所確認エラー:', err);
+    }
+  })();
+}
+
+
+
+
+
 // 🔓 ログアウト処理（サーバーにもリクエスト送信）
 const logoutButton = document.getElementById("logoutButton");
 if (logoutButton) {

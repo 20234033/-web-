@@ -1,10 +1,10 @@
 document.addEventListener("DOMContentLoaded", async () => {
   const genreMap = {
-  historic: '歴史的建造物',
-  nature: '自然',
-  city: '都市景観',
-  culture: '文化的名所'
-};
+    historic: '歴史的建造物',
+    nature: '自然',
+    city: '都市景観',
+    culture: '文化的名所'
+  };
 
   const ul = document.getElementById("history-ul");
   if (!ul) return;
@@ -13,6 +13,23 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (!userId) {
     ul.innerHTML = "<li>ユーザーIDが見つかりません。</li>";
     return;
+  }
+
+  let userLat = null;
+  let userLng = null;
+
+  // ✅ ユーザー住所（緯度経度）の取得
+  try {
+    const locRes = await fetch('/api/has_location', { credentials: 'include' });
+    if (locRes.ok) {
+      const locData = await locRes.json();
+      if (locData.hasLocation) {
+        userLat = locData.lat;
+        userLng = locData.lng;
+      }
+    }
+  } catch (err) {
+    console.warn("住所取得に失敗:", err);
   }
 
   try {
@@ -24,21 +41,33 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-data.history.forEach(entry => {
-  const region = getRegionFromLatLng(entry.lat, entry.lng);
-  const genreDisplay = genreMap[entry.genre] || '不明';
+    data.history.forEach(entry => {
+      const region = getRegionFromLatLng(entry.lat, entry.lng);
+      const genreDisplay = genreMap[entry.genre] || '不明';
+      const li = document.createElement("li");
 
-  const li = document.createElement("li");
-  li.innerHTML = `
-    <div><strong>${entry.title}</strong>（スコア: ${entry.score}）</div>
-    <div><small>${formatDate(entry.answered_at)}</small></div>
-    <div>🗾 地方: ${region}　|　📚 ジャンル: ${genreDisplay}</div>
-    <div><img src="${entry.image_path}" alt="${entry.title}" style="max-width: 100%; border-radius: 6px; margin: 5px 0;"></div>
-    <div>${entry.description}</div>
-    <hr style="margin: 10px 0;" />
-  `;
-  ul.appendChild(li);
-});
+      let travelText = "";
+      if (userLat !== null && userLng !== null) {
+        const dist = getDistanceKm(userLat, userLng, entry.lat, entry.lng);
+        const hours = (dist / 60).toFixed(1);
+        travelText = `
+          <div style="margin-top: 6px;">
+            🚗 自宅から <strong>${dist.toFixed(1)}km</strong>、約 <strong>${hours}時間</strong>
+          </div>
+        `;
+      }
+
+      li.innerHTML = `
+        <div><strong>${entry.title}</strong>（スコア: ${entry.score}）</div>
+        <div><small>${formatDate(entry.answered_at)}</small></div>
+        <div>🗾 地方: ${region}　|　📚 ジャンル: ${genreDisplay}</div>
+        <div><img src="${entry.image_path}" alt="${entry.title}" style="max-width: 100%; border-radius: 6px; margin: 5px 0;"></div>
+        <div>${entry.description}</div>
+        ${travelText}
+        <hr style="margin: 10px 0;" />
+      `;
+      ul.appendChild(li);
+    });
 
   } catch (err) {
     ul.innerHTML = "<li>履歴の読み込みに失敗しました。</li>";
@@ -75,3 +104,14 @@ function getRegionFromLatLng(lat, lng) {
   }
 }
 
+function getDistanceKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const toRad = deg => deg * (Math.PI / 180);
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2 +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+            Math.sin(dLon / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}

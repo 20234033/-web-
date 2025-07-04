@@ -155,6 +155,7 @@ function getRegionFromLatLng(lat, lng) {
     //ここまで
     const distanceKm = scoreData.Distance;
     const score = scoreData.score;
+    localStorage.setItem('lastDistance', scoreData.Distance);
 
     //回答履歴テーブルへの保存ここからーーーーーーーーーーーーーーーーーーーーーーーーーー
     const currentUserId = localStorage.getItem('user_id'); 

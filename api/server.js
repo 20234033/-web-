@@ -11,12 +11,6 @@ const jwt = require('jsonwebtoken');
 const app = express();
 app.use(cookieParser());
 const meRoute = require('./me');
-
-
-
-
-
-
 const mariadb = require('mariadb');
 const cors = require('cors');
 const db = require('./db.js'); // もしくは './database' など、正しいパスで
@@ -395,7 +389,7 @@ app.get('/api/spots', async (req, res) => {
   }
 });
 
-//スコア計算API
+//スコア計算API 返り値SelectedLat,SelectedLng,CorrectLat,CorrectLng,Distance,score
 app.get('/api/score', (req, res) => {
     //文字列からfloat型へ変換
     const SelLat = parseFloat(req.query.SelLat);

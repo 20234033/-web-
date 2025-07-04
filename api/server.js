@@ -19,6 +19,8 @@ const meRoute = require('./me');
 
 const mariadb = require('mariadb');
 const cors = require('cors');
+const db = require('./db.js'); // もしくは './database' など、正しいパスで
+
 
 const PORT = process.env.PORT || 3000;
 const SECRET_KEY = process.env.SECRET_KEY || 'your-default-secret';
@@ -118,6 +120,19 @@ app.post('/api/register', async (req, res) => {
     res.status(500).json({ error: '登録中にエラーが発生しました。' });
   }
 });
+
+const authenticate = (req, res, next) => {
+  const token = req.cookies?.token;
+  if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
+  try {
+    const decoded = jwt.verify(token, SECRET_KEY);
+    req.user = decoded; // JWTに { user_id } が含まれていることが前提
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+};
 
 
 //ログインAPI
@@ -342,6 +357,23 @@ app.get('/api/streetview', async (req, res) => {
     res.status(500).json({ error: 'StreetView取得中にエラーが発生しました。' });
   }
 });
+
+app.get('/api/user_answers', authenticate, async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const rows = await db.query(
+      'SELECT * FROM user_answers WHERE user_id = ? ORDER BY answered_at DESC',
+      [userId]
+    );
+    res.json({ success: true, history: rows });  // ← 修正ポイント
+  } catch (err) {
+    console.error('DBエラー:', err);
+    res.status(500).json({ success: false, error: 'DB error' });
+  }
+});
+
+
 
 // /api/spots: MariaDBのspotsテーブルから観光地を取得
 app.get('/api/spots', async (req, res) => {

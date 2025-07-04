@@ -79,9 +79,9 @@ app.get('/', (req, res) => {
 
 // 🔐 認証API（仮）
 app.post('/api/register', async (req, res) => {
-  const { id, email, password } = req.body;
+  const { id, password } = req.body;
 
-  if (!id || !email || !password) {
+  if (!id || !password) {
     return res.status(400).json({ error: '全ての項目を入力してください。' });
   }
 
@@ -90,12 +90,12 @@ app.post('/api/register', async (req, res) => {
 
     // 既存ユーザー確認
     const exists = await conn.query(
-      'SELECT id FROM USERS WHERE id = ? OR mail_address = ?',
-      [id, email]
+      'SELECT id FROM USERS WHERE id = ?',
+      [id]
     );
     if (exists.length > 0) {
       conn.release();
-      return res.status(409).json({ error: '既に使用されているIDまたはメールアドレスです。' });
+      return res.status(409).json({ error: '既に使用されているIDです。' });
     }
 
     // パスワードハッシュ化
@@ -103,12 +103,12 @@ app.post('/api/register', async (req, res) => {
 
     // 登録
     await conn.query(
-      'INSERT INTO USERS (id, mail_address, password_hash) VALUES (?, ?, ?)',
-      [id, email, hash]
+      'INSERT INTO USERS (id, password_hash) VALUES (?, ?)',
+      [id, hash]
     );
     conn.release();
 
-    console.log(`[✅ 登録完了] ID: ${id} / Email: ${email}`);
+    console.log(`[✅ 登録完了] ID: ${id}`);
 
     // 仮のメール送信成功を返す
     res.json({ message: '登録が完了しました（仮）' });
@@ -125,7 +125,7 @@ app.post('/api/login', async (req, res) => {
   const { identifier, password } = req.body;
 
   if (!identifier || !password) {
-    return res.status(400).json({ error: 'IDまたはメールアドレスとパスワードを入力してください。' });
+    return res.status(400).json({ error: 'IDとパスワードを入力してください。' });
   }
 
   let conn;

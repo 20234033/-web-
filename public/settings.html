@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <script defer src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script defer src="js/navbar.js"></script>
-  <script defer type="module" src="js/settings.js"></script>
+  <script defer src="js/settings.js"></script>
 
   <style>
 
@@ -43,6 +43,13 @@
       <p id="locationDisplay">選択された位置：--</p>
       <button id="confirmLocation">✅ 住所を確定</button>
     </div>
+    <div class="setting-section">
+      <label>📍 現在設定されている住所：</label>
+      <div class="location-display-row">
+        <p id="savedLocationDisplay" class="location-text">--</p>
+        <button id="deleteLocation" class="delete-btn">🗑️ 削除</button>
+    </div>
+</div>
   </div>
 </body>
 </html>

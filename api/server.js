@@ -127,6 +127,35 @@ const authenticate = (req, res, next) => {
     return res.status(401).json({ error: 'Invalid token' });
   }
 };
+// me.js や /api/me の中
+app.get('/api/me', authenticate, async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const [rows] = await pool.query(
+      'SELECT username, avatar_url, location_lat, location_lng FROM USERS WHERE id = ?',
+      [userId]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = rows[0]; // ← ここ重要
+
+    res.json({
+      id: userId,
+      username: user.username,
+      avatar_url: user.avatar_url,
+      location_lat: user.location_lat,
+      location_lng: user.location_lng
+    });
+  } catch (err) {
+    console.error('ユーザー情報取得エラー:', err);
+    res.status(500).json({ error: 'DB error' });
+  }
+});
+
 
 
 //ログインAPI
@@ -250,6 +279,52 @@ app.post('/api/save-spot', upload.single('image'), async (req, res) => {
     if (conn) conn.release();
   }
 });
+// これより上に authenticate を定義しておく必要があります
+
+app.get('/api/has_location', authenticate, async (req, res) => {
+  console.log("📍 /api/has_location called");
+
+  const userId = req.user?.id;
+  console.log("🔑 userId:", userId);
+
+  if (!userId) {
+    console.warn("⚠️ userId が undefined です。JWTの構造を確認してください。");
+    return res.status(400).json({ error: 'User ID missing from token' });
+  }
+
+  try {
+    const rows = await pool.query(
+      'SELECT location_lat, location_lng FROM USERS WHERE id = ?',
+      [userId]
+    );
+
+    console.log("📦 DB Query Raw Result:", rows);
+
+    // ✅ MariaDBのドライバが1件のみ返す形式なら、rows自体がその1件になる
+    const user = Array.isArray(rows) ? rows[0] : rows;
+    console.log("🧍‍♂️ user:", user);
+
+    if (!user || user.location_lat === undefined) {
+      console.warn("⚠️ 該当ユーザーが見つかりません");
+      return res.json({ hasLocation: false });
+    }
+
+    const hasLocation = user.location_lat !== null && user.location_lng !== null;
+
+    return res.json({
+      hasLocation,
+      lat: user.location_lat,
+      lng: user.location_lng
+    });
+
+  } catch (err) {
+    console.error('❌ DBアクセスエラー (/api/has_location):', err);
+    return res.status(500).json({ error: 'DB error' });
+  }
+});
+
+
+
 
 app.post('/api/answer', async (req, res) => {
   const { user_id, spot_id, answer_lat, answer_lng, distance_km, score } = req.body;
@@ -366,6 +441,41 @@ app.get('/api/user_answers', authenticate, async (req, res) => {
     res.status(500).json({ success: false, error: 'DB error' });
   }
 });
+// ユーザーの住所を取得
+app.get('/api/user_location', authenticate, async (req, res) => {
+  try {
+    const [row] = await db.query('SELECT location_lat, location_lng FROM USERS WHERE id = ?', [req.user.id]);
+    res.json({ lat: row?.location_lat, lng: row?.location_lng });
+  } catch (err) {
+    console.error('住所取得エラー:', err);
+    res.status(500).json({ error: '住所取得に失敗しました' });
+  }
+});
+
+// ユーザーの住所を保存
+app.post('/api/user_location', authenticate, async (req, res) => {
+  const { lat, lng } = req.body;
+  try {
+    await db.query('UPDATE USERS SET location_lat = ?, location_lng = ? WHERE id = ?', [lat, lng, req.user.id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('住所保存エラー:', err);
+    res.status(500).json({ error: '住所保存に失敗しました' });
+  }
+});
+app.delete('/api/user_location', authenticate, async (req, res) => {
+  try {
+    await db.query(
+      'UPDATE users SET location_lat = NULL, location_lng = NULL WHERE id = ?',
+      [req.user.id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('住所削除エラー:', err);
+    res.status(500).json({ error: '住所削除に失敗しました' });
+  }
+});
+
 
 
 

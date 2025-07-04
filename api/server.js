@@ -540,7 +540,7 @@ app.get('/api/spots', async (req, res) => {
     console.error('観光地データ取得エラー:', err);
     res.status(500).json({
       success: false,
-      error: err.message || 'データベース読み込み失敗',
+      error: err.message || 'データベース,読み込み失敗',
     });
   } finally {
     if (conn) conn.release();

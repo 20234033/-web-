@@ -150,7 +150,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
-/* ----------- 既存のボタン関数 ----------- */
+/* ------------ 既存のボタン関数 ----------- */
 function retry() {
   const fromAddition = localStorage.getItem('fromAddition');
   localStorage.removeItem('fromAddition');

@@ -77,32 +77,55 @@ window.addEventListener('DOMContentLoaded', async () => {
   const lastInfoEl    = document.getElementById('lastInfo');
   const lastPlayedEl  = document.getElementById('lastPlayed');
 
-  // ✅ 履歴データの読み込みと表示
-  try {
-    const [historyRes, spotsRes] = await Promise.all([
-      fetch('data/history.json'),
-      fetch('data/sightseeing.json')
-    ]);
-    const history = await historyRes.json();
-    const spots = await spotsRes.json();
+try {
+  const [answersRes, spotsRes] = await Promise.all([
+    fetch('/api/user_answers', { credentials: 'include' }),
+    fetch('/api/spots')
+  ]);
+  if (!answersRes.ok || !spotsRes.ok) throw new Error('データ取得に失敗');
 
-    const latest = history.reduce((a, b) => (a.id > b.id ? a : b));
-    const matchedSpot = spots.find(s => s.id === latest.id);
+ const answersJson = await answersRes.json();   // { success:true, history:[...] }
+ const spotsJson   = await spotsRes.json();     // { success:true, data:[...] }
 
-    if (!matchedSpot) throw new Error("該当する観光地が sightseeing.json に見つかりません");
+ if (!answersJson.success) throw new Error('回答履歴APIに失敗');
+ if (!spotsJson.success)   throw new Error('スポットAPIに失敗');
 
-    const region = getRegionFromLatLng(matchedSpot.lat, matchedSpot.lng);
+ const answers = answersJson.history;           // ← ここを .history に
+ const spots   = spotsJson.data;                // ← ここを .data に
 
-    if (lastScoreEl) lastScoreEl.textContent = `前回のスコア：${latest.score} / 5000`;
-    if (lastGenreEl) lastGenreEl.textContent = `ジャンル：${matchedSpot.genre || '--'}`;
-    if (lastRegionEl) lastRegionEl.textContent = `地域：${region}`;
-    if (lastPlaceEl)  lastPlaceEl.textContent = `観光地：${matchedSpot.title || '--'}`;
-    if (lastInfoEl)   lastInfoEl.textContent = `説明：${matchedSpot.description || '--'}`;
-    if (lastPlayedEl) lastPlayedEl.textContent = `最終プレイ日：${new Date(latest.timestamp).toLocaleDateString('ja-JP')}`;
+  console.log('answers:', answers);
+  console.log('spots:', spots);
 
-  } catch (err) {
-    console.error('履歴読み込み失敗', err);
-  }
+  const validAnswers = answers.filter(a => a.answered_at && a.spot_id); // null を除外
+  if (!validAnswers.length) throw new Error('有効な回答が存在しません');
+
+  const latest = validAnswers.reduce((a, b) =>
+    new Date(a.answered_at) > new Date(b.answered_at) ? a : b
+  );
+
+  const matchedSpot = spots.find(s => String(s.id) === String(latest.spot_id));
+  if (!matchedSpot) throw new Error('該当する観光地が見つかりません');
+
+  const region = getRegionFromLatLng(matchedSpot.lat, matchedSpot.lng);
+
+  const genreMap = {
+    historic: '歴史的建造物',
+    nature: '自然',
+    city: '都市景観',
+    culture: '文化的名所'
+  };
+
+  if (lastScoreEl)  lastScoreEl.textContent  = `前回のスコア：${latest.score} / 5000`;
+  if (lastGenreEl)  lastGenreEl.textContent  = `ジャンル：${genreMap[matchedSpot.genre] || '不明'}`;
+  if (lastRegionEl) lastRegionEl.textContent = `地域：${region}`;
+  if (lastPlaceEl)  lastPlaceEl.textContent  = `観光地：${matchedSpot.title || '--'}`;
+  if (lastInfoEl)   lastInfoEl.textContent   = `説明：${matchedSpot.description || '--'}`;
+  if (lastPlayedEl) lastPlayedEl.textContent = `最終プレイ日：${new Date(latest.answered_at).toLocaleDateString('ja-JP')}`;
+} catch (err) {
+  console.error('履歴読み込み失敗:', err);
+}
+
+
 
   // ✅ 地方名取得（簡易版）
   function getRegionFromLatLng(lat, lng) {

@@ -2,6 +2,7 @@
 const express = require('express');
 const path = require('path');
 const multer = require('multer');
+const bodyParser = require('body-parser');
 const fs = require('fs');
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
@@ -55,7 +56,6 @@ app.use(cors({
 }));
 
 // ✅ APIルート読み込み（cookieParserの後に）
-const meRoute = require('./me');
 app.use(meRoute);
 
 // 💡 必要であれば pool も他ファイルで使えるようにexport可能

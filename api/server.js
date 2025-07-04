@@ -407,7 +407,11 @@ app.get('/api/score', (req, res) => {
               Math.sin(dLng / 2) ** 2;
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const distance = R * c;
-    const score = Math.max(0, 100 - Math.round(distance));
+    //減衰係数
+    const k = 0.7;
+    const maxScore = 100;
+    let score = maxScore * Math.exp(-k * distance)
+    score = Math.max(0, 100 - Math.round(score));
     
     res.json({
       success:true,

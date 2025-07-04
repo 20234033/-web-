@@ -16,9 +16,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   const dist = JSON.parse(localStorage.getItem('lastDistance'));
-  const rawScore = Math.max(0, 5000 - Math.round(dist));
-  const score = Math.round((rawScore / 5000) * 100);
-  localStorage.setItem('lastScore', score.toString());
+  const score = JSON.parse(localStorage.getItem('lastScore'));
 
   L.marker([correct.lat, correct.lng]).addTo(resultMap).bindPopup("🎯 正解地点").openPopup();
   L.marker([answer.lat, answer.lng]).addTo(resultMap).bindPopup("📍 あなたのピン");

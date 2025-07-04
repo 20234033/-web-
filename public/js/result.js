@@ -1,5 +1,33 @@
+function decodePolyline(encoded) {
+  let points = [];
+  let index = 0, lat = 0, lng = 0;
+
+  while (index < encoded.length) {
+    let b, shift = 0, result = 0;
+    do {
+      b = encoded.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    let dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+    lat += dlat;
+
+    shift = 0;
+    result = 0;
+    do {
+      b = encoded.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    let dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+    lng += dlng;
+
+    points.push([lat / 1e5, lng / 1e5]);
+  }
+  return points;
+}
+
 window.addEventListener('DOMContentLoaded', async () => {
-  /* ---------------- 地図とスコア表示 ---------------- */
   const resultMap = L.map('result-map').setView([35.7, 139.7], 10);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
@@ -32,9 +60,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     </div>
   `;
 
-  /* -------------- Street View -------------- */
+  // Street View 表示
   try {
-    const res  = await fetch(`/api/streetview-url?lat=${correct.lat}&lng=${correct.lng}`);
+    const res = await fetch(`/api/streetview-url?lat=${correct.lat}&lng=${correct.lng}`);
     const data = await res.json();
     if (data.success && data.url) {
       const streetview = document.createElement("div");
@@ -55,7 +83,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     console.warn("Street View 取得エラー:", err);
   }
 
-  /* ------------ 住所があれば移動情報を表示 ------------ */
+  // 住所があれば移動距離・時間・ルートを表示
+ // ✅ 住所があれば移動情報を表示 + 経路を描画
   try {
     const locRes = await fetch('/api/has_location', { credentials: 'include' });
     if (!locRes.ok) throw new Error("住所情報取得に失敗");
@@ -65,28 +94,49 @@ window.addEventListener('DOMContentLoaded', async () => {
       const userLat = locData.lat;
       const userLng = locData.lng;
 
+      // 🏠 自宅マーカーを地図に追加
+      const houseIcon = L.icon({
+        iconUrl: 'https://cdn-icons-png.flaticon.com/512/25/25694.png',
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -30]
+      });
+
+      L.marker([userLat, userLng], { icon: houseIcon }).addTo(resultMap).bindPopup("🏠 自宅");
+
+      // 🧭 概算距離と時間
       const homeToSpotDist = getDistanceKm(userLat, userLng, correct.lat, correct.lng);
-      const estimatedHours = (homeToSpotDist / 60).toFixed(1); // 時速60km想定
+      const estimatedCarHours = (homeToSpotDist / 60).toFixed(1);
+      const estimatedTrainHours = (homeToSpotDist / 80).toFixed(1);
+      const estimatedCost = Math.round(homeToSpotDist * 15); // 仮に15円/kmで電車代換算
 
       const travelInfo = document.createElement('div');
       travelInfo.innerHTML = `
         <hr style="margin: 20px 0;">
         <h4>🧭 自宅からの移動情報</h4>
         <p>
-          あなたの登録住所からこの観光地（${correctSpot.title}）までは
-          約 <strong>${homeToSpotDist.toFixed(1)}km</strong> 離れています。<br>
-          一般的な交通手段（電車・車）で移動した場合、
-          およそ <strong>${estimatedHours}時間</strong> かかると想定されます。
+          🏠 登録住所 ➡ ${correctSpot.title}（観光地）<br>
+          距離: 約 <strong>${homeToSpotDist.toFixed(1)}km</strong><br>
+          🚗 車：約 <strong>${estimatedCarHours}時間</strong><br>
+          🚃 電車：約 <strong>${estimatedTrainHours}時間</strong>・運賃 約 <strong>${estimatedCost}円</strong>
         </p>`;
       scoreText.appendChild(travelInfo);
-      
+
+      // ✅ Directions API 経路取得（ルート線表示）
+      const directionsRes = await fetch(`/api/directions?fromLat=${userLat}&fromLng=${userLng}&toLat=${correct.lat}&toLng=${correct.lng}`);
+      const directionsData = await directionsRes.json();
+      if (directionsData.success && directionsData.route) {
+        const polylineEncoded = directionsData.route.overview_polyline.points;
+        const points = decodePolyline(polylineEncoded);
+        L.polyline(points, { color: 'blue', weight: 4 }).addTo(resultMap).bindPopup("🚗 経路（車）");
+      }
     }
   } catch (err) {
     console.warn("移動情報の取得に失敗:", err);
   }
 });
 
-/* ----------- 既存のボタン関数 ----------- */
+/* ------------ 既存のボタン関数 ----------- */
 function retry() {
   const fromAddition = localStorage.getItem('fromAddition');
   localStorage.removeItem('fromAddition');

@@ -163,7 +163,7 @@ app.post('/api/login', async (req, res) => {
   const { identifier, password } = req.body;
 
   if (!identifier || !password) {
-    return res.status(400).json({ error: 'IDとパスワードを入力してください。' });
+    return res.status(400).json({ error: 'IDまたはメールアドレスとパスワードを入力してください。' });
   }
 
   let conn;
@@ -171,7 +171,7 @@ app.post('/api/login', async (req, res) => {
     conn = await pool.getConnection();
 
     const rows = await conn.query(
-      'SELECT * FROM USERS WHERE id = ? LIMIT 1',
+      'SELECT * FROM USERS WHERE id = ? OR mail_address = ? LIMIT 1',
       [identifier, identifier]
     );
 

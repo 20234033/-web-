@@ -1,7 +1,7 @@
 {
   "name": "geoguess-game",
   "version": "1.0.0",
-  "description": "GeoGuess風ゲーム用のNode.jsサーバ",
+  "description": "旅行先提案Webシステム用のNode.jsサーバ",
   "main": "api/server.js",
   "scripts": {
     "start": "node api/server.js",

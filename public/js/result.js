@@ -105,7 +105,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       L.marker([userLat, userLng], { icon: houseIcon }).addTo(resultMap).bindPopup("🏠 自宅");
 
       // 🧭 概算距離と時間
-      const homeToSpotDist = getDistanceKm(userLat, userLng, correct.lat, correct.lng);
+      const homeToSpotDist = JSON.parse(localStorage.getItem('lastDistance'));
       const estimatedCarHours = (homeToSpotDist / 60).toFixed(1);
       const estimatedTrainHours = (homeToSpotDist / 80).toFixed(1);
       const estimatedCost = Math.round(homeToSpotDist * 15); // 仮に15円/kmで電車代換算

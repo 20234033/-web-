@@ -133,6 +133,8 @@ function getRegionFromLatLng(lat, lng) {
   const distanceKm = +(R * c).toFixed(2); // 小数点2桁に丸め
 
   const score = Math.max(0, 100 - Math.round(distanceKm));
+  console.log("📏 計算距離:", distanceKm, "km");
+  console.log("🎯 計算スコア:", score);
   return { distanceKm, score };
 }
 
@@ -201,19 +203,5 @@ function getRegionFromLatLng(lat, lng) {
       location.href = 'result.html';
     }, 200);
   });
-  // ✅ スコア計算（ハバーサイン距離を使用）
-  function calculateScore(lat1, lng1, lat2, lng2) {
-    const R = 6371; // 地球の半径 km
-    const toRad = deg => deg * (Math.PI / 180);
-    const dLat = toRad(lat2 - lat1);
-    const dLng = toRad(lng2 - lng1);
-    const a = Math.sin(dLat / 2) ** 2 +
-              Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-              Math.sin(dLng / 2) ** 2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = R * c;
-
-    return Math.max(0, 100 - Math.round(distance));
-  }
 });
 

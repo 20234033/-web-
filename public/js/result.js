@@ -55,24 +55,40 @@ window.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  const dist      = getDistanceKm(answer.lat, answer.lng, correct.lat, correct.lng);
-  const rawScore  = Math.max(0, 5000 - Math.round(dist));
-  const score     = Math.round((rawScore / 5000) * 100);
+  try {
+  const res = await fetch(`/api/score?SelLat=${answer.lat}&SelLng=${answer.lng}&CorLat=${correct.lat}&CorLng=${correct.lng}`);
+  const data = await res.json();
+
+  if (!data.success) throw new Error("スコア取得に失敗");
+
+  const distanceKm = data.Distance;
+  const score = data.score;
   localStorage.setItem('lastScore', score.toString());
+
+  console.log("📏 API計算距離:", distanceKm, "km");
+  console.log("🎯 API計算スコア:", score);
+
+scoreText.innerHTML = `
+  距離: <span>${distanceKm.toFixed(1)}km</span><br>
+  スコア: <span>${score}</span> / 100
+  <div id="place-info" style="margin-top: 16px;">
+    <h3>${correctSpot.title}</h3>
+    <p>${correctSpot.description}</p>
+    ${correctSpot.image_path ? `<img src="${window.location.origin}${correctSpot.image_path}" alt="観光地画像" style="max-width:100%; border-radius:10px; margin-top:10px;">` : ''}
+  </div>
+`;
+} catch (err) {
+  console.error("スコアAPI通信エラー:", err);
+  scoreText.innerHTML = "<p>スコア情報の取得に失敗しました。</p>";
+}
+
+
+
+
 
   L.marker([correct.lat, correct.lng]).addTo(resultMap).bindPopup("🎯 正解地点").openPopup();
   L.marker([answer.lat, answer.lng]).addTo(resultMap).bindPopup("📍 あなたのピン");
   L.polyline([[answer.lat, answer.lng], [correct.lat, correct.lng]], { color: 'red', weight: 2 }).addTo(resultMap);
-
-  scoreText.innerHTML = `
-    距離: <span>${dist.toFixed(1)}km</span><br>
-    スコア: <span>${score}</span> / 100
-    <div id="place-info" style="margin-top: 16px;">
-      <h3>${correctSpot.title}</h3>
-      <p>${correctSpot.description}</p>
-      ${correctSpot.image_path ? `<img src="${window.location.origin}${correctSpot.image_path}" alt="観光地画像" style="max-width:100%; border-radius:10px; margin-top:10px;">` : ''}
-    </div>
-  `;
 
   // Street View 表示
   try {

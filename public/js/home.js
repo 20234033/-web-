@@ -114,7 +114,7 @@ try {
     culture: '文化的名所'
   };
 
-  if (lastScoreEl)  lastScoreEl.textContent  = `前回のスコア：${latest.score} / 5000`;
+  if (lastScoreEl)  lastScoreEl.textContent  = `前回のスコア：${latest.score} / 100`;
   if (lastGenreEl)  lastGenreEl.textContent  = `ジャンル：${genreMap[matchedSpot.genre] || '不明'}`;
   if (lastRegionEl) lastRegionEl.textContent = `地域：${region}`;
   if (lastPlaceEl)  lastPlaceEl.textContent  = `観光地：${matchedSpot.title || '--'}`;

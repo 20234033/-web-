@@ -19,37 +19,25 @@
 <body>
   <div id="navbar-placeholder"></div>
 
-  <div class="settings-container">
-    <h1>⚙ 設定</h1>
+<div class="settings-container">
+  <h1>⚙ 設定</h1>
 
-    <div class="setting-section">
-    <!--<label for="volume">🔊 音量：</label>
-    <input type="range" id="volume" min="0" max="100">
-    <span id="volumeValue">50%</span>-->
-    </div>
+  <div class="setting-section">
+    <label>📍 住所の設定（地図でピンを動かす）：</label>
+    <div id="map"></div>
+    <p id="locationDisplay">選択された位置：--</p>
+    <button id="confirmLocation">✅ 住所を確定</button>
+  </div>
 
-    <div class="setting-section">
-      <!-- <label for="fontSize">🔠 文字の大きさ：</label>
-      <select id="fontSize">
-        <option value="small">小</option>
-        <option value="medium" selected>中</option>
-        <option value="large">大</option>
-      </select>-->
-    </div>  
-
-    <div class="setting-section">
-      <label>📍 住所の設定（地図でピンを動かす）：</label>
-      <div id="map"></div>
-      <p id="locationDisplay">選択された位置：--</p>
-      <button id="confirmLocation">✅ 住所を確定</button>
+  <div class="setting-section">
+    <label>📍 現在設定されている住所：</label>
+    <div class="location-display-row">
+      <p id="savedLocationDisplay" class="location-text">--</p>
+      <button id="deleteLocation" class="delete-btn">🗑️ 削除</button>
     </div>
-    <div class="setting-section">
-      <label>📍 現在設定されている住所：</label>
-      <div class="location-display-row">
-        <p id="savedLocationDisplay" class="location-text">--</p>
-        <button id="deleteLocation" class="delete-btn">🗑️ 削除</button>
-    </div>
+  </div>
 </div>
+
   </div>
 </body>
 </html>

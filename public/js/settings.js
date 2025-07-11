@@ -103,7 +103,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // 📍 表示更新関数
+  // 📍 表示更新関数aa
   function updateDisplay([lat, lng]) {
     locationDisplay.textContent = `選択された位置：${lat.toFixed(5)}, ${lng.toFixed(5)}`;
   }

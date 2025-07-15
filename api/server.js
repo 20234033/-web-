@@ -12,7 +12,13 @@ const jwt = require('jsonwebtoken');
 const mariadb = require('mariadb');
 const cors = require('cors');
 const db = require('./db.js'); // もしくは './database' など、正しいパスで
+const S3_BASE_URL = 'https://5-s3.s3.ap-southeast-2.amazonaws.com/';
 
+const AWS = require('aws-sdk');
+
+const s3 = new AWS.S3({
+  region: process.env.AWS_REGION
+});
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -59,15 +65,7 @@ app.use(meRoute);
 module.exports = { app, pool, SECRET_KEY };
 
 // 🖼 multer 設定（画像保存）
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, imageDir),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const filename = crypto.randomBytes(8).toString('hex') + ext;
-    cb(null, filename);
-  }
-});
-const upload = multer({ storage });
+const upload = multer({ storage: multer.memoryStorage() });
 
 // 🔐 初期リダイレクト（例：ログインページ）
 app.get('/', (req, res) => {
@@ -231,6 +229,7 @@ app.post('/api/reset-password', (req, res) => {
 });
 
 // ✅ 新しい観光地を保存するAPI
+// ✅ 新しい観光地を保存するAPI（S3対応）
 app.post('/api/save-spot', upload.single('image'), async (req, res) => {
   let conn;
 
@@ -238,10 +237,10 @@ app.post('/api/save-spot', upload.single('image'), async (req, res) => {
     conn = await pool.getConnection();
 
     const { title, genre, description, lat, lng, streetViewUrl } = req.body;
-    const image = req.file;
+    const file = req.file;
 
     // 入力チェック
-    if (!title || !description || !lat || !lng || !image) {
+    if (!title || !description || !lat || !lng || !file) {
       return res.status(400).json({ success: false, error: '必須項目が不足しています' });
     }
 
@@ -251,12 +250,25 @@ app.post('/api/save-spot', upload.single('image'), async (req, res) => {
       return res.status(400).json({ success: false, error: '緯度経度が数値ではありません' });
     }
 
-    const imagePath = `/image/${image.filename}`;
+    // ✅ S3 にアップロード
+    const s3Key = `image/${Date.now()}_${file.originalname}`;
+    const uploadParams = {
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: s3Key,
+      Body: file.buffer, // ← ✅ memoryStorageによりbuffer使用可能
+      ContentType: file.mimetype,
+    };
 
+    await s3.upload(uploadParams).promise();
+
+    // ✅ S3のURL生成
+    const imageUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${s3Key}`;
+
+    // ✅ DB保存
     const result = await conn.query(
       `INSERT INTO spots (title, genre, description, lat, lng, image_path, street_view_url)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [title, genre || null, description, latNum, lngNum, imagePath, streetViewUrl || null]
+      [title, genre || null, description, latNum, lngNum, s3Key, streetViewUrl || null]
     );
 
     res.json({
@@ -268,7 +280,7 @@ app.post('/api/save-spot', upload.single('image'), async (req, res) => {
         description,
         lat: latNum,
         lng: lngNum,
-        imagePath,
+        imagePath: imageUrl,
         streetViewUrl
       }
     });
@@ -374,7 +386,18 @@ app.get('/api/history/:user_id', async (req, res) => {
       [userId]
     );
 
-    res.json({ success: true, history: rows });
+    // 🛠 確実なS3 URL（環境変数ミス防止のためベタ書き）
+    const S3_BASE_URL = 'https://5-s3.s3.ap-southeast-2.amazonaws.com/';
+
+    const processedRows = rows.map(row => ({
+      ...row,
+      image_path: row.image_path
+        ? S3_BASE_URL + row.image_path.replace(/^\/?image\//, 'image/')
+        : null
+    }));
+
+    res.json({ success: true, history: processedRows });
+
   } catch (err) {
     console.error('履歴取得エラー:', err);
     res.status(500).json({ success: false, error: '履歴取得に失敗しました' });
@@ -382,6 +405,8 @@ app.get('/api/history/:user_id', async (req, res) => {
     if (conn) conn.release();
   }
 });
+
+
 
 
 
@@ -570,17 +595,29 @@ app.get('/api/spots', async (req, res) => {
     const rows = await conn.query(
       'SELECT spot_id as id, title, genre, description, lat, lng, image_path FROM spots'
     );
-    res.json({ success: true, data: rows });
+
+    const S3_BASE_URL = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+
+    const processedRows = rows.map(row => ({
+      ...row,
+      image_path: row.image_path
+        ? S3_BASE_URL + row.image_path.replace(/^\/?image\//, 'image/')
+        : null
+    }));
+
+    res.json({ success: true, data: processedRows });
   } catch (err) {
     console.error('観光地データ取得エラー:', err);
     res.status(500).json({
       success: false,
-      error: err.message || 'データベース,読み込み失敗',
+      error: err.message || 'データベース読み込み失敗',
     });
   } finally {
     if (conn) conn.release();
   }
 });
+
+
 
 // ✅ エラー用HTMLページを返す関数
 const renderErrorPage = (statusCode = 500) => `

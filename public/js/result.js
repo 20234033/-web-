@@ -74,7 +74,7 @@ scoreText.innerHTML = `
   <div id="place-info" style="margin-top: 16px;">
     <h3>${correctSpot.title}</h3>
     <p>${correctSpot.description}</p>
-    ${correctSpot.image_path ? `<img src="${window.location.origin}${correctSpot.image_path}" alt="観光地画像" style="max-width:100%; border-radius:10px; margin-top:10px;">` : ''}
+    ${correctSpot.image_path ? `<img src="${correctSpot.image_path}" alt="観光地画像" style="max-width:100%; border-radius:10px; margin-top:10px;">` : ''}
   </div>
 `;
 } catch (err) {

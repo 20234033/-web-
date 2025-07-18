@@ -36,6 +36,37 @@ async function updateStreetView(lat, lng) {
 }
 
 
+const addressInput = document.getElementById('addressInput');
+const geocodeBtn = document.getElementById('geocodeBtn');
+
+geocodeBtn.addEventListener('click', async () => {
+  const address = addressInput.value.trim();
+  if (!address) {
+    alert('住所を入力してください。');
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/geocode?address=${encodeURIComponent(address)}`);
+    const data = await res.json();
+
+    if (!data.success || !data.lat || !data.lng) {
+      alert('住所が見つかりませんでした。');
+      return;
+    }
+
+    const newLatLng = [data.lat, data.lng];
+    marker.setLatLng(newLatLng);
+    map.setView(newLatLng, 15);
+    updateStreetView(data.lat, data.lng); // StreetViewも更新
+  } catch (err) {
+    console.error('ジオコーディングエラー:', err);
+    alert('住所の変換に失敗しました。');
+  }
+});
+
+
+
   const imageInput = document.getElementById('imageUpload');
   const preview = document.getElementById('preview');
   const deleteImageBtn = document.getElementById('deleteImage');

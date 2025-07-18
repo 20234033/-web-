@@ -7,13 +7,13 @@
   <link rel="stylesheet" href="css/style.css">
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="light"> <!-- ダークモードにする場合は JS で `dark` に切り替える -->
   <div id="navbar-placeholder"></div>
 
   <div class="home-layout">
-    <!-- 左: プレイボタンと設定 -->
+    <!-- 左側：設定 -->
     <div class="home-left">
-      <h2 id="welcome">ようこそ</h2>
+      <h2 id="welcome" class="heading">ようこそ</h2>
 
       <label for="region">地域を選択：</label>
       <select id="region">
@@ -28,8 +28,6 @@
         <option value="kyusyu">九州</option>
       </select>
 
-      <br><br>
-
       <label for="genre">ジャンルを選択：</label>
       <select id="genre">
         <option value="null">指定しない</option>
@@ -39,36 +37,31 @@
         <option value="culture">文化的名所</option>
       </select>
 
-      <br><br>
-
       <label for="mode">モードを選択：</label>
       <select id="mode">
         <option value="play">観光地を探す</option>
         <option value="addition">観光地を追加する</option>
       </select>
 
-      <br><br>
-
-      <button id="startButton">📌 開始する</button>
+      <button id="startButton" class="primary-btn">📌 開始する</button>
     </div>
 
-    <!-- 右: ユーザー情報 -->
+    <!-- 右側：ユーザー情報 -->
     <div class="home-right">
       <label for="avatarInput" class="avatar-wrapper" title="アイコンを変更しますか？">
         <img id="avatar" src="https://www.gravatar.com/avatar?d=mp&s=120" alt="avatar" onerror="this.style.display='none'">
       </label>
       <input type="file" id="avatarInput" accept="image/*" style="display: none;">
 
-      <p id="lastScore">--</p>
-      <p id="lastGenre">--</p>
-      <p id="lastRegion">--</p>
-      <p id="lastPlace">--</p>
-      <p id="lastInfo">--</p>
-      <p id="lastPlayed">--</p>
-      <p id="streak">--</p>
+      <p id="lastScore" class="info-text">--</p>
+      <p id="lastGenre" class="info-text">--</p>
+      <p id="lastRegion" class="info-text">--</p>
+      <p id="lastPlace" class="info-text">--</p>
+      <p id="lastInfo" class="info-text">--</p>
+      <p id="lastPlayed" class="info-text">--</p>
+      <p id="streak" class="info-text">--</p>
 
-      <br><br>
-      <button id="historyButton">📖 出題履歴を表示する</button>
+      <button id="historyButton" class="secondary-btn">📖 出題履歴を表示する</button>
     </div>
   </div>
 

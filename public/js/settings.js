@@ -71,6 +71,10 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+
+
+
+
   // 🌍 現在の住所を表示
   try {
     const res = await fetch('/api/user_location', { credentials: 'include' });
@@ -102,6 +106,38 @@ window.addEventListener('DOMContentLoaded', async () => {
       console.error(err);
     }
   });
+
+
+
+  const addressInput = document.getElementById('addressInput');
+const geocodeBtn = document.getElementById('geocodeBtn');
+
+geocodeBtn.addEventListener('click', async () => {
+  const address = addressInput.value.trim();
+  if (!address) {
+    alert('住所を入力してください。');
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/geocode?address=${encodeURIComponent(address)}`);
+    const data = await res.json();
+
+    if (!data.success) {
+      alert(data.error || '住所が見つかりませんでした。');
+      return;
+    }
+
+    const newLatLng = [data.lat, data.lng];
+    marker.setLatLng(newLatLng);
+    map.setView(newLatLng, 15);
+    updateDisplay(newLatLng);
+  } catch (err) {
+    alert('住所の変換に失敗しました。');
+    console.error(err);
+  }
+});
+
 
   // 📍 表示更新関数aa
   function updateDisplay([lat, lng]) {

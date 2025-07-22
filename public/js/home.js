@@ -1,4 +1,3 @@
-
 window.addEventListener('DOMContentLoaded', async () => {
     // ✅ サーバー側のトークン確認（認証チェック）
  try {
@@ -115,7 +114,7 @@ try {
     culture: '文化的名所'
   };
 
-  if (lastScoreEl)  lastScoreEl.textContent  = `前回のスコア：${latest.score} / 5000`;
+  if (lastScoreEl)  lastScoreEl.textContent  = `前回のスコア：${latest.score} / 100`;
   if (lastGenreEl)  lastGenreEl.textContent  = `ジャンル：${genreMap[matchedSpot.genre] || '不明'}`;
   if (lastRegionEl) lastRegionEl.textContent = `地域：${region}`;
   if (lastPlaceEl)  lastPlaceEl.textContent  = `観光地：${matchedSpot.title || '--'}`;
@@ -124,6 +123,18 @@ try {
 } catch (err) {
   console.error('履歴読み込み失敗:', err);
 }
+const modeSelect = document.getElementById('mode');
+const regionSelect = document.getElementById('region');
+const genreSelect = document.getElementById('genre');
+function updateSelectStates() {
+  const isAddition = modeSelect.value === 'addition';
+  regionSelect.disabled = isAddition;
+  genreSelect.disabled = isAddition;
+}
+// 初期状態に反映
+updateSelectStates();
+// モード変更時に反映
+modeSelect.addEventListener('change', updateSelectStates);
 
 
 

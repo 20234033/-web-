@@ -14,7 +14,13 @@ const meRoute = require('./me');
 const mariadb = require('mariadb');
 const cors = require('cors');
 const db = require('./db.js'); // もしくは './database' など、正しいパスで
+const S3_BASE_URL = 'https://5-s3.s3.ap-southeast-2.amazonaws.com/';
 
+const AWS = require('aws-sdk');
+
+const s3 = new AWS.S3({
+  region: process.env.AWS_REGION
+});
 
 const PORT = process.env.PORT || 3000;
 const SECRET_KEY = process.env.SECRET_KEY || 'your-default-secret';
@@ -57,15 +63,20 @@ app.use(meRoute);
 // 💡 必要であれば pool も他ファイルで使えるようにexport可能
 module.exports = { app, pool, SECRET_KEY };
 
-// 🖼 multer 設定（画像保存）
+// ✅ ローカル保存用の multer.diskStorage 設定
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, imageDir),
+  destination: (req, file, cb) => {
+    const dir = path.join(__dirname, 'public', 'image');
+    fs.mkdirSync(dir, { recursive: true }); // 必要ならディレクトリ作成
+    cb(null, dir);
+  },
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const filename = crypto.randomBytes(8).toString('hex') + ext;
-    cb(null, filename);
+    const uniqueName = `${Date.now()}_${file.originalname}`;
+    cb(null, uniqueName);
   }
 });
+
+// 🖼 multer 設定（画像保存）
 const upload = multer({ storage });
 
 // 🔐 初期リダイレクト（例：ログインページ）
@@ -230,6 +241,7 @@ app.post('/api/reset-password', (req, res) => {
 });
 
 // ✅ 新しい観光地を保存するAPI
+// ✅ 新しい観光地を保存するAPI（S3対応）
 app.post('/api/save-spot', upload.single('image'), async (req, res) => {
   let conn;
 
@@ -237,10 +249,10 @@ app.post('/api/save-spot', upload.single('image'), async (req, res) => {
     conn = await pool.getConnection();
 
     const { title, genre, description, lat, lng, streetViewUrl } = req.body;
-    const image = req.file;
+    const file = req.file;
 
-    // 入力チェック
-    if (!title || !description || !lat || !lng || !image) {
+    // ✅ 入力チェック
+    if (!title || !description || !lat || !lng || !file) {
       return res.status(400).json({ success: false, error: '必須項目が不足しています' });
     }
 
@@ -250,12 +262,15 @@ app.post('/api/save-spot', upload.single('image'), async (req, res) => {
       return res.status(400).json({ success: false, error: '緯度経度が数値ではありません' });
     }
 
-    const imagePath = `/image/${image.filename}`;
+    // ✅ ローカルのパスを生成
+    const relativePath = `image/${file.filename}`;
+    const imageUrl = `/image/${file.filename}`; // フロントエンドで使うパス
 
+    // ✅ DB保存
     const result = await conn.query(
       `INSERT INTO spots (title, genre, description, lat, lng, image_path, street_view_url)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [title, genre || null, description, latNum, lngNum, imagePath, streetViewUrl || null]
+      [title, genre || null, description, latNum, lngNum, relativePath, streetViewUrl || null]
     );
 
     res.json({
@@ -267,7 +282,7 @@ app.post('/api/save-spot', upload.single('image'), async (req, res) => {
         description,
         lat: latNum,
         lng: lngNum,
-        imagePath,
+        imagePath: imageUrl,
         streetViewUrl
       }
     });
@@ -373,7 +388,18 @@ app.get('/api/history/:user_id', async (req, res) => {
       [userId]
     );
 
-    res.json({ success: true, history: rows });
+    // ✅ ローカル用のベースURL（例: http://localhost:3000/image/...）
+    const BASE_URL = `${req.protocol}://${req.get('host')}/`;
+
+    const processedRows = rows.map(row => ({
+      ...row,
+      image_path: row.image_path
+        ? BASE_URL + row.image_path.replace(/^\/?/, '') // 先頭のスラッシュを除去して結合
+        : null
+    }));
+
+    res.json({ success: true, history: processedRows });
+
   } catch (err) {
     console.error('履歴取得エラー:', err);
     res.status(500).json({ success: false, error: '履歴取得に失敗しました' });
@@ -381,6 +407,9 @@ app.get('/api/history/:user_id', async (req, res) => {
     if (conn) conn.release();
   }
 });
+
+
+
 
 
 
@@ -473,6 +502,34 @@ app.get('/api/directions', async (req, res) => {
   }
 });
 
+// ✅ /api/geocode?address=〇〇
+app.get('/api/geocode', async (req, res) => {
+  const { address } = req.query;
+  const apiKey = process.env.GOOGLE_API_KEY;
+
+  if (!address) {
+    return res.status(400).json({ success: false, error: '住所を指定してください。' });
+  }
+
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
+
+  try {
+    const fetch = (await import('node-fetch')).default;
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.status !== 'OK' || !data.results || data.results.length === 0) {
+      return res.status(404).json({ success: false, error: '住所が見つかりませんでした。' });
+    }
+
+    const { lat, lng } = data.results[0].geometry.location;
+    res.json({ success: true, lat, lng });
+  } catch (err) {
+    console.error('[❌ Geocode ERROR]', err);
+    res.status(500).json({ success: false, error: 'ジオコーディングに失敗しました。' });
+  }
+});
+
 
 app.get('/api/user_answers', authenticate, async (req, res) => {
   const userId = req.user.id;
@@ -523,6 +580,41 @@ app.delete('/api/user_location', authenticate, async (req, res) => {
   }
 });
 
+app.get('/api/score', (req, res) => {
+
+    //文字列からfloat型へ変換
+    const SelLat = parseFloat(req.query.SelLat);
+    const SelLng = parseFloat(req.query.SelLng);
+    const CorLat = parseFloat(req.query.CorLat);
+    const CorLng = parseFloat(req.query.CorLng);
+    if (isNaN(SelLat) || isNaN(SelLng) || isNaN(CorLat) || isNaN(CorLng)) {
+        return res.status(400).json({ 
+            success: false, 
+            message: '緯度経度のパラメータが不正です。数値で指定してください。' 
+        });
+    }
+    const R = 6371; 
+    const toRad = deg => deg * (Math.PI / 180);
+    const dLat = toRad(CorLat - SelLat);
+    const dLng = toRad(CorLng - SelLng);
+    const a = Math.sin(dLat / 2) ** 2 +
+              Math.cos(toRad(SelLat)) * Math.cos(toRad(CorLat)) *
+              Math.sin(dLng / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+    const score = Math.max(0, 100 - Math.round(distance));
+    
+    res.json({
+      success:true,
+      SelectedLat: SelLat,
+      SelectedLng: SelLng,
+      CorrectLat: CorLat,
+      CorrectLng: CorLng,
+      Distance: parseFloat(distance.toFixed(2)),//小数点以下２桁に丸める
+      score: score
+      });
+  });
+
 
 
 
@@ -531,20 +623,37 @@ app.get('/api/spots', async (req, res) => {
   let conn;
   try {
     conn = await pool.getConnection();
+
     const rows = await conn.query(
       'SELECT spot_id as id, title, genre, description, lat, lng, image_path FROM spots'
     );
-    res.json({ success: true, data: rows });
+
+    // ✅ ローカルの image_path をフルURLに変換（例: http://localhost:3000/image/xxx.jpg）
+    const BASE_URL = `${req.protocol}://${req.get('host')}/`;
+
+    const processedRows = rows.map(row => ({
+      ...row,
+      image_path: row.image_path
+        ? BASE_URL + row.image_path.replace(/^\/?/, '') // 先頭のスラッシュを除去
+        : null
+    }));
+
+    res.json({ success: true, data: processedRows });
+
   } catch (err) {
     console.error('観光地データ取得エラー:', err);
     res.status(500).json({
       success: false,
-      error: err.message || 'データベース,読み込み失敗',
+      error: err.message || 'データベース読み込み失敗',
     });
   } finally {
     if (conn) conn.release();
   }
 });
+
+
+
+
 
 //スコア計算API 返り値SelectedLat,SelectedLng,CorrectLat,CorrectLng,Distance,score
 app.get('/api/score', (req, res) => {

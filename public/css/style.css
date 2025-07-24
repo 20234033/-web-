@@ -292,6 +292,26 @@ body.light .result-overlay {
     gap: 8px;
   }
 }
+
+/* === ストリートビュー情報オーバーレイ === */
+.streetview-info-overlay {
+  position: absolute;
+  top: 60px; /* ナビバーの高さ*/
+  left: 0px;
+  width: 300px; /* 隠したい地名ボックスの幅に合わせて調整 */
+  height: 60px; /* 隠したい地名ボックスの高さに合わせて調整 */
+  background-color: #f5f5f5;
+  z-index: 1500;
+}
+
+body.dark .streetview-info-overlay {
+  background-color: #0e1a2b; /* ダークテーマの背景色に合わせる */
+}
+
+body.light .streetview-info-overlay {
+  background-color: #f4f4f4; /* ライトテーマの背景色に合わせる */
+}
+
 /* === 履歴ページのスタイル === */
 #history-list ul {
   list-style: none;

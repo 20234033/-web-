@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const express = require('express');
 const router = express.Router();
+require('dotenv').config();
 
 const SECRET_KEY = process.env.SECRET_KEY;
 const pool = require('./db'); // ← DB接続プールをエクスポートしているファイル

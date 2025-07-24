@@ -110,7 +110,7 @@ app.post('/api/register', async (req, res) => {
 
     // 登録
     await conn.query(
-      'INSERT INTO USERS (id, mail_address, password_hash, continuous_login_days) VALUES (?, ?, ?)',
+      'INSERT INTO USERS (id, mail_address, password_hash, continuous_login_days) VALUES (?, ?, ?, ?)',
       [id, email, hash, 0]
     );
     conn.release();

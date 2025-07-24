@@ -744,3 +744,29 @@ button,
   scrollbar-width: thin;
   scrollbar-color: #888 rgba(0,0,0,0.05);
 }
+.setting-section {
+  margin: 30px 0;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: #f9f9f9;
+}
+
+.setting-section label {
+  display: block;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.setting-section input {
+  width: 100%;
+  max-width: 400px;
+  padding: 6px;
+  margin-top: 4px;
+  box-sizing: border-box;
+}
+
+.setting-section button {
+  margin-top: 15px;
+  padding: 8px 16px;
+}

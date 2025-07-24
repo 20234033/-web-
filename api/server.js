@@ -11,10 +11,10 @@ const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 const mariadb = require('mariadb');
 const cors = require('cors');
-const db = require('./db.js'); // もしくは './database' など、正しいパスで
-const S3_BASE_URL = 'https://5-s3.s3.ap-southeast-2.amazonaws.com/';
 
+const db = require('./db.js'); // もしくは './database' など、正しいパスで
 const AWS = require('aws-sdk');
+const { authenticate } = require('../middleware/authenticate'); // ← これがあること
 
 const s3 = new AWS.S3({
   region: process.env.AWS_REGION
@@ -51,15 +51,14 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(publicPath)); // 静的ファイル
 app.use('/image', express.static(path.join(__dirname, '..', 'public', 'image')));
 
-
 app.use(cors({
-  origin: true, // ← フロントのURLポート番号を正確に指定
-  credentials: true
+  origin: 'http://localhost:3000', // ← フロントのURLにする
+  credentials: true                // ← これがないとCookieが送られない
 }));
 
 // ✅ APIルート読み込み（cookieParserの後に）
 const meRoute = require('./me');
-app.use(meRoute);
+app.use('/api', meRoute);         // ← /api/me でアクセスできる
 
 // 💡 必要であれば pool も他ファイルで使えるようにexport可能
 module.exports = { app, pool, SECRET_KEY };
@@ -96,7 +95,6 @@ app.post('/api/register', async (req, res) => {
   try {
     const conn = await pool.getConnection();
 
-    // 既存ユーザー確認
     const exists = await conn.query(
       'SELECT id FROM USERS WHERE id = ? OR mail_address = ?',
       [id, email]
@@ -106,20 +104,16 @@ app.post('/api/register', async (req, res) => {
       return res.status(409).json({ error: '既に使用されているIDまたはメールアドレスです。' });
     }
 
-    // パスワードハッシュ化
+    const uuid = crypto.randomUUID(); // ← 必須！
     const hash = await bcrypt.hash(password, 10);
 
-    // 登録
     await conn.query(
-      'INSERT INTO USERS (id, mail_address, password_hash) VALUES (?, ?, ?)',
-      [id, email, hash]
+      'INSERT INTO USERS (uuid, id, mail_address, password_hash) VALUES (?, ?, ?, ?)',
+      [uuid, id, email, hash]
     );
+
     conn.release();
-
-    console.log(`[✅ 登録完了] ID: ${id} / Email: ${email}`);
-
-    // 仮のメール送信成功を返す
-    res.json({ message: '登録が完了しました（仮）' });
+    res.json({ message: '登録が完了しました' });
 
   } catch (err) {
     console.error('[❌ 登録エラー]', err);
@@ -127,49 +121,46 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-const authenticate = (req, res, next) => {
-  const token = req.cookies?.token;
-  if (!token) return res.status(401).json({ error: 'Unauthorized' });
 
-  try {
-    const decoded = jwt.verify(token, SECRET_KEY);
-    req.user = decoded; // JWTに { user_id } が含まれていることが前提
-    next();
-  } catch (err) {
-    return res.status(401).json({ error: 'Invalid token' });
-  }
-};
+
+
+
+
 // me.js や /api/me の中
 app.get('/api/me', authenticate, async (req, res) => {
-  const userId = req.user.id;
+  const userUuid = req.user?.uuid;
+
+  if (!userUuid) {
+    console.warn('[me] トークンペイロードに uuid が含まれていません');
+    return res.status(401).json({ error: 'Invalid token payload' });
+  }
 
   try {
-    const [rows] = await pool.query(
-      'SELECT username, avatar_url, location_lat, location_lng FROM USERS WHERE id = ?',
-      [userId]
+    const rows = await pool.query(
+      'SELECT uuid, id, mail_address, avatar_url, location_lat, location_lng FROM USERS WHERE uuid = ?',
+      [userUuid]
     );
 
     if (!rows.length) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const user = rows[0]; // ← ここ重要
+    const user = rows[0];
 
     res.json({
-      id: userId,
-      username: user.username,
+      uuid: user.uuid,                    // ← 内部用ID
+      id: user.id,                        // ← 表示名
+      email: user.mail_address,
       avatar_url: user.avatar_url,
       location_lat: user.location_lat,
       location_lng: user.location_lng
     });
+
   } catch (err) {
-    console.error('ユーザー情報取得エラー:', err);
-    res.status(500).json({ error: 'DB error' });
+    console.error('[me取得失敗]', err);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-
-
-
 
 app.post('/api/login', async (req, res) => {
   const { identifier, password } = req.body;
@@ -182,29 +173,36 @@ app.post('/api/login', async (req, res) => {
   try {
     conn = await pool.getConnection();
 
+    // ✅ クエリ実行
     const rows = await conn.query(
       'SELECT * FROM USERS WHERE id = ? OR mail_address = ? LIMIT 1',
       [identifier, identifier]
     );
 
+    // ✅ 結果が空かチェック
+    if (!rows || rows.length === 0) {
+      console.warn('[WARN] ユーザーが見つかりません:', identifier);
+      return res.status(401).json({ error: 'ログイン情報が正しくありません。' });
+    }
+
     const user = rows[0];
 
-    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+    // ✅ パスワード比較
+    if (!user.password_hash || !(await bcrypt.compare(password, user.password_hash))) {
       return res.status(401).json({ error: 'ログイン情報が正しくありません。' });
     }
 
     // ✅ JWT トークン生成
-    const token = jwt.sign({ id: user.id }, SECRET_KEY, { expiresIn: '7d' });
+    const token = jwt.sign({ uuid: user.uuid }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
-    // ✅ Cookie に保存
+    // ✅ Cookie にセット
     res.cookie('token', token, {
       httpOnly: true,
-      secure: false, // ← ✅ HTTP環境ではfalseにする
+      secure: false, // HTTPSならtrueに
       sameSite: 'Lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    // ✅ 応答
     res.json({
       message: 'ログイン成功',
       user: {
@@ -223,6 +221,8 @@ app.post('/api/login', async (req, res) => {
 
 
 
+
+
 app.post('/api/logout', (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,
@@ -231,6 +231,70 @@ app.post('/api/logout', (req, res) => {
   });
   res.json({ message: 'ログアウト完了' });
 });
+app.post('/api/update_account', authenticate, async (req, res) => {
+  const { username: newId, email, currentPassword, newPassword } = req.body;
+  const currentId = req.user.uuid;
+
+  let conn;
+  try {
+    conn = await pool.getConnection();
+
+    const rows = await conn.query('SELECT * FROM USERS WHERE id = ?', [currentId]);
+    const user = rows[0];
+
+    if (!user || !await bcrypt.compare(currentPassword, user.password_hash)) {
+      return res.status(403).send('現在のパスワードが正しくありません');
+    }
+
+    const updates = [];
+    const values = [];
+
+    if (newId && newId !== currentId) {
+      updates.push('id = ?');
+      values.push(newId);
+    }
+
+    if (email && email !== user.mail_address) {
+      updates.push('mail_address = ?');
+      values.push(email);
+    }
+
+    if (newPassword) {
+      const hashed = await bcrypt.hash(newPassword, 10);
+      updates.push('password_hash = ?');
+      values.push(hashed);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).send('変更項目がありません');
+    }
+
+    values.push(currentId); // WHERE 条件に使用
+    await conn.query(`UPDATE USERS SET ${updates.join(', ')} WHERE id = ?`, values);
+
+    // idが変更された場合は新しいJWTを返す（ログイン維持のため）
+    if (newId && newId !== currentId) {
+      const newToken = jwt.sign({ id: newId }, SECRET_KEY, { expiresIn: '7d' });
+      res.cookie('token', newToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'Lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+    }
+
+    res.send('アカウント情報を更新しました');
+
+  } catch (err) {
+    console.error('アカウント更新エラー:', err);
+    res.status(500).send('更新に失敗しました');
+  } finally {
+    if (conn) conn.release();
+  }
+});
+
+
+
 
 
 
@@ -242,7 +306,6 @@ app.post('/api/reset-password', (req, res) => {
 });
 
 // ✅ 新しい観光地を保存するAPI
-// ✅ 新しい観光地を保存するAPI（S3対応）
 app.post('/api/save-spot', upload.single('image'), async (req, res) => {
   let conn;
 
@@ -300,28 +363,27 @@ app.post('/api/save-spot', upload.single('image'), async (req, res) => {
 app.get('/api/has_location', authenticate, async (req, res) => {
   console.log("📍 /api/has_location called");
 
-  const userId = req.user?.id;
-  console.log("🔑 userId:", userId);
+  const userUuid = req.user?.uuid;
+  console.log("🔑 userUuid:", userUuid);
 
-  if (!userId) {
-    console.warn("⚠️ userId が undefined です。JWTの構造を確認してください。");
-    return res.status(400).json({ error: 'User ID missing from token' });
+  if (!userUuid) {
+    console.warn("⚠️ userUuid が undefined です。JWTの構造を確認してください。");
+    return res.status(400).json({ error: 'User UUID missing from token' });
   }
 
   try {
     const rows = await pool.query(
-      'SELECT location_lat, location_lng FROM USERS WHERE id = ?',
-      [userId]
+      'SELECT location_lat, location_lng FROM USERS WHERE uuid = ?',
+      [userUuid]
     );
 
     console.log("📦 DB Query Raw Result:", rows);
 
-    // ✅ MariaDBのドライバが1件のみ返す形式なら、rows自体がその1件になる
     const user = Array.isArray(rows) ? rows[0] : rows;
     console.log("🧍‍♂️ user:", user);
 
-    if (!user || user.location_lat === undefined) {
-      console.warn("⚠️ 該当ユーザーが見つかりません");
+    if (!user || user.location_lat === undefined || user.location_lng === undefined) {
+      console.warn("⚠️ 該当ユーザーが見つかりません、または住所未設定");
       return res.json({ hasLocation: false });
     }
 
@@ -342,22 +404,46 @@ app.get('/api/has_location', authenticate, async (req, res) => {
 
 
 
-app.post('/api/answer', async (req, res) => {
-  const { user_id, spot_id, answer_lat, answer_lng, distance_km, score } = req.body;
+
+app.post('/api/answer', authenticate, async (req, res) => {
+  const { spot_id, answer_lat, answer_lng, distance_km, score } = req.body;
   let conn;
 
-  // バリデーション
-  if (!user_id || !spot_id || answer_lat == null || answer_lng == null || distance_km == null || score == null) {
+  // 🔍 バリデーション
+  if (
+    spot_id == null ||
+    answer_lat == null ||
+    answer_lng == null ||
+    distance_km == null ||
+    score == null
+  ) {
     return res.status(400).json({ success: false, error: 'すべての項目が必須です' });
+  }
+
+  // 数値としてパースして不正入力を防止（任意）
+  const parsedLat = parseFloat(answer_lat);
+  const parsedLng = parseFloat(answer_lng);
+  const parsedDist = parseFloat(distance_km);
+  const parsedScore = parseInt(score);
+
+  if (
+    isNaN(parsedLat) ||
+    isNaN(parsedLng) ||
+    isNaN(parsedDist) ||
+    isNaN(parsedScore)
+  ) {
+    return res.status(400).json({ success: false, error: '数値項目の形式が不正です' });
   }
 
   try {
     conn = await pool.getConnection();
+    const userUuid = req.user.uuid;
 
     await conn.query(`
-      INSERT INTO user_answers (user_id, spot_id, answer_lat, answer_lng, distance_km, score)
+      INSERT INTO user_answers 
+        (user_uuid, spot_id, answer_lat, answer_lng, distance_km, score)
       VALUES (?, ?, ?, ?, ?, ?)`,
-      [user_id, spot_id, answer_lat, answer_lng, distance_km, score]
+      [userUuid, spot_id, parsedLat, parsedLng, parsedDist, parsedScore]
     );
 
     res.json({ success: true });
@@ -366,12 +452,14 @@ app.post('/api/answer', async (req, res) => {
     console.error('[保存エラー]', err);
     res.status(500).json({ success: false, error: 'DB保存に失敗しました' });
   } finally {
-    if (conn) conn.release();
+    if (conn) conn?.release();
   }
 });
 
+
+
 app.get('/api/history/:user_id', async (req, res) => {
-  const userId = req.params.user_id;
+  const userUuid = req.params.user_id;
   let conn;
 
   try {
@@ -384,18 +472,17 @@ app.get('/api/history/:user_id', async (req, res) => {
           s.lat, s.lng, s.image_path
        FROM user_answers ua
        JOIN spots s ON ua.spot_id = s.spot_id
-       WHERE ua.user_id = ?
+       WHERE ua.user_uuid = ?
        ORDER BY ua.answered_at DESC`,
-      [userId]
+      [userUuid]
     );
 
-    // ✅ ローカル用のベースURL（例: http://localhost:3000/image/...）
     const BASE_URL = `${req.protocol}://${req.get('host')}/`;
 
     const processedRows = rows.map(row => ({
       ...row,
       image_path: row.image_path
-        ? BASE_URL + row.image_path.replace(/^\/?/, '') // 先頭のスラッシュを除去して結合
+        ? BASE_URL + row.image_path.replace(/^\/?/, '')
         : null
     }));
 
@@ -408,6 +495,59 @@ app.get('/api/history/:user_id', async (req, res) => {
     if (conn) conn.release();
   }
 });
+app.get('/api/history/:uuid', async (req, res) => {
+  const userUuid = req.params.uuid;
+  let conn;
+
+  // UUIDの形式チェック
+  if (!userUuid || typeof userUuid !== 'string' || userUuid.length !== 36) {
+    return res.status(400).json({ success: false, error: 'UUIDが無効です' });
+  }
+
+  try {
+    conn = await pool.getConnection();
+
+    // 回答履歴とスポット情報を結合して取得
+    const rows = await conn.query(
+      `SELECT 
+          ua.spot_id,         -- ✅ 必要（home.jsで使う）
+          ua.score, 
+          ua.answered_at, 
+          s.title, 
+          s.genre, 
+          s.description, 
+          s.lat, 
+          s.lng, 
+          s.image_path
+       FROM user_answers ua
+       JOIN spots s ON ua.spot_id = s.spot_id
+       WHERE ua.user_uuid = ?
+       ORDER BY ua.answered_at DESC`,
+      [userUuid]
+    );
+
+    const BASE_URL = `${req.protocol}://${req.get('host')}/`;
+
+    // image_path をURLに整形
+    const history = rows.map(row => ({
+      ...row,
+      image_path: row.image_path
+        ? BASE_URL + row.image_path.replace(/^\/?/, '') // `/images/foo.jpg` → `http://host/images/foo.jpg`
+        : null
+    }));
+
+    res.json({ success: true, history });
+
+  } catch (err) {
+    console.error('履歴取得エラー:', err);
+    res.status(500).json({ success: false, error: '履歴取得に失敗しました' });
+  } finally {
+    if (conn) conn.release();
+  }
+});
+
+
+
 
 
 
@@ -533,7 +673,7 @@ app.get('/api/geocode', async (req, res) => {
 
 
 app.get('/api/user_answers', authenticate, async (req, res) => {
-  const userId = req.user.id;
+  const userId = req.user.uuid;
 
   try {
     const rows = await db.query(
@@ -561,18 +701,22 @@ app.get('/api/user_location', authenticate, async (req, res) => {
 app.post('/api/user_location', authenticate, async (req, res) => {
   const { lat, lng } = req.body;
   try {
-    await db.query('UPDATE USERS SET location_lat = ?, location_lng = ? WHERE id = ?', [lat, lng, req.user.id]);
+    await db.query(
+      'UPDATE USERS SET location_lat = ?, location_lng = ? WHERE uuid = ?',
+      [lat, lng, req.user.uuid]
+    );
     res.json({ success: true });
   } catch (err) {
     console.error('住所保存エラー:', err);
     res.status(500).json({ error: '住所保存に失敗しました' });
   }
 });
+
 app.delete('/api/user_location', authenticate, async (req, res) => {
   try {
     await db.query(
-      'UPDATE users SET location_lat = NULL, location_lng = NULL WHERE id = ?',
-      [req.user.id]
+      'UPDATE USERS SET location_lat = NULL, location_lng = NULL WHERE uuid = ?',
+      [req.user.uuid]
     );
     res.json({ success: true });
   } catch (err) {
@@ -580,6 +724,7 @@ app.delete('/api/user_location', authenticate, async (req, res) => {
     res.status(500).json({ error: '住所削除に失敗しました' });
   }
 });
+
 
 app.get('/api/score', (req, res) => {
 

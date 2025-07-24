@@ -9,9 +9,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   const ul = document.getElementById("history-ul");
   if (!ul) return;
 
-  const userId = localStorage.getItem('user_id');
-  if (!userId) {
-    ul.innerHTML = "<li>ユーザーIDが見つかりません。</li>";
+  let userUuid = null;
+  try {
+    const res = await fetch('/api/me', { credentials: 'include' });
+    if (!res.ok) throw new Error('ユーザー情報取得失敗');
+    const user = await res.json();
+    userUuid = user.uuid;
+  } catch (err) {
+    ul.innerHTML = "<li>ログイン情報が取得できませんでした。</li>";
+    console.error("ユーザーUUID取得失敗:", err);
     return;
   }
 
@@ -33,7 +39,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   try {
-    const res = await fetch(`/api/history/${userId}`);
+    const res = await fetch(`/api/history/${userUuid}`);
     const data = await res.json();
 
     if (!data.success || !data.history || data.history.length === 0) {
@@ -81,27 +87,16 @@ function formatDate(str) {
 }
 
 function getRegionFromLatLng(lat, lng) {
-  if (lat >= 43) {
-    return '北海道';
-  } else if (lat >= 38 && lat < 43 && lng >= 139 && lng <= 142) {
-    return '東北';
-  } else if (lat >= 35 && lat < 38 && lng >= 138 && lng <= 141) {
-    return '関東';
-  } else if (lat >= 35 && lat < 38 && lng >= 136 && lng < 138) {
-    return '中部';
-  } else if (lat >= 33.5 && lat < 35 && lng >= 134.5 && lng < 136.5) {
-    return '近畿';
-  } else if (lat >= 33.5 && lat < 35 && lng >= 131 && lng < 134.5) {
-    return '中国';
-  } else if (lat >= 32 && lat < 34 && lng >= 132 && lng < 134.5) {
-    return '四国';
-  } else if (lat >= 30 && lat < 33.5 && lng >= 128 && lng < 132) {
-    return '九州';
-  } else if (lat < 30) {
-    return '沖縄';
-  } else {
-    return 'etc';
-  }
+  if (lat >= 43) return '北海道';
+  if (lat >= 38 && lat < 43 && lng >= 139 && lng <= 142) return '東北';
+  if (lat >= 35 && lat < 38 && lng >= 138 && lng <= 141) return '関東';
+  if (lat >= 35 && lat < 38 && lng >= 136 && lng < 138) return '中部';
+  if (lat >= 33.5 && lat < 35 && lng >= 134.5 && lng < 136.5) return '近畿';
+  if (lat >= 33.5 && lat < 35 && lng >= 131 && lng < 134.5) return '中国';
+  if (lat >= 32 && lat < 34 && lng >= 132 && lng < 134.5) return '四国';
+  if (lat >= 30 && lat < 33.5 && lng >= 128 && lng < 132) return '九州';
+  if (lat < 30) return '沖縄';
+  return 'etc';
 }
 
 function getDistanceKm(lat1, lon1, lat2, lon2) {

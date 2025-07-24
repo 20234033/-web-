@@ -1,41 +1,37 @@
-const jwt = require('jsonwebtoken');
 const express = require('express');
 const router = express.Router();
+const { authenticate } = require('../middleware/authenticate');
+const pool = require('./db'); // ← あなたのDB接続モジュールに応じて変更
 
-const SECRET_KEY = process.env.SECRET_KEY;
-const pool = require('./db'); // ← DB接続プールをエクスポートしているファイル
+router.get('/api/me', authenticate, async (req, res) => {
+  const userUuid = req.user?.uuid;
 
-router.get('/api/me', async (req, res) => {
-  const token = req.cookies.token;
-  if (!token) {
-    return res.status(401).json({ error: 'トークンがありません。' });
+  if (!userUuid) {
+    return res.status(401).json({ error: 'Invalid token payload' });
   }
 
   try {
-    const decoded = jwt.verify(token, SECRET_KEY);
-
-    const conn = await pool.getConnection();
-
-    // ✅ name を username として取得する
-    const rows = await conn.query(
-      'SELECT id, id AS username, avatar_url FROM USERS WHERE id = ? LIMIT 1',
-      [decoded.id]
+    const [rows] = await pool.query(
+      'SELECT id, mail_address, avatar_url, location_lat, location_lng FROM USERS WHERE uuid = ?',
+      [userUuid]
     );
 
-
-
-    conn.release();
-
-    if (rows.length === 0) {
-      return res.status(404).json({ error: 'ユーザーが見つかりません。' });
+    if (!rows.length) {
+      return res.status(404).json({ error: 'User not found' });
     }
 
-    // ✅ id, username, avatar_url をクライアントに返す
-    res.json(rows[0]);
-
+    const user = rows[0];
+    res.json({
+      uuid: userUuid,
+      id: user.id,
+      email: user.mail_address,
+      avatar_url: user.avatar_url,
+      location_lat: user.location_lat,
+      location_lng: user.location_lng,
+    });
   } catch (err) {
-    console.error('[認証エラー]', err);
-    res.status(401).json({ error: '無効なトークンです。' });
+    console.error('[me取得失敗]', err);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 

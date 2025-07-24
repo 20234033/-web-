@@ -9,39 +9,40 @@
   <script defer src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script defer src="js/navbar.js"></script>
   <script defer src="js/settings.js"></script>
-
-  <style>
-
-
-
-  </style>
 </head>
 <body>
   <div id="navbar-placeholder"></div>
 
-<div class="settings-container">
-  <h1>⚙ 設定</h1>
+  <div class="settings-container">
+    <h1>⚙ 設定</h1>
 
-  <div class="setting-section">
-    <label>📍 住所の設定（地図でピンを動かす） ：</label>
-    <div id="map"></div>
-    <p id="locationDisplay">選択された位置：--</p>
-    <button id="confirmLocation">✅ 住所を確定</button>
-  </div>
-<div style="margin: 10px 0;">
-  <input type="text" id="addressInput" placeholder="住所を入力してください" style="width: 300px;">
-  <button id="geocodeBtn">🔍 ピンを住所に移動</button>
-</div>
-  <div class="setting-section">
-    <label>📍 現在設定されている住所：</label>
-    <div class="location-display-row">
-      <p id="savedLocationDisplay" class="location-text">--</p>
-      <button id="deleteLocation" class="delete-btn">🗑️ 削除</button>
+    <!-- 地図で住所を設定 -->
+    <div class="setting-section">
+      <label>📍 住所の設定（地図でピンを動かす） ：</label>
+      <div id="map" style="height: 400px;"></div>
+      <p id="locationDisplay">選択された位置：--</p>
+      <button id="confirmLocation">✅ この位置を保存</button>
     </div>
 
-  </div>
-</div>
+    <!-- ジオコーディング（住所からピンを動かす） -->
+    <div style="margin: 10px 0;">
+    <input
+      type="text"
+      id="addressInput"
+      placeholder="住所を入力してください"
+      style="width: 400px; height: 40px; font-size: 1rem; padding: 6px;"
+    >
+      <button id="geocodeBtn">🔍 ピンを住所に移動</button>
+    </div>
 
+    <!-- 現在保存されている住所表示と削除 -->
+    <div class="setting-section">
+      <label>📍 現在設定されている住所：</label>
+      <div class="location-display-row">
+        <p id="savedLocationDisplay" class="location-text">--</p>
+        <button id="deleteLocation" class="delete-btn">🗑️ 削除</button>
+      </div>
+    </div>
   </div>
 </body>
 </html>

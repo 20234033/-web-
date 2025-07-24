@@ -29,7 +29,7 @@ const SECRET_KEY = process.env.SECRET_KEY || 'your-default-secret';
 const pool = mariadb.createPool({
   host: 'localhost',
   user: 'geoapp',
-  password: 'Password',
+  password: 'password',
   database: 'website',
   connectionLimit: 5
 });
@@ -110,8 +110,8 @@ app.post('/api/register', async (req, res) => {
 
     // 登録
     await conn.query(
-      'INSERT INTO USERS (id, password_hash) VALUES (?, ?)',
-      [id, hash]
+      'INSERT INTO USERS (id, mail_address, password_hash, continuous_login_days) VALUES (?, ?, ?)',
+      [id, email, hash, 0]
     );
     conn.release();
 

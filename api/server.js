@@ -1,5 +1,14 @@
 require('dotenv').config(); // .envを最上部で読み込む
 
+
+const { JWT_SECRET } = require('./config/auth'); 
+
+if (!JWT_SECRET) {
+  console.error('[FATAL] JWT_SECRET is empty');
+  process.exit(1);
+}
+
+console.log('[BOOT] JWT_SECRET length =', String(JWT_SECRET).length);
 const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
@@ -14,7 +23,7 @@ const cors = require('cors');
 
 const db = require('./db.js'); // もしくは './database' など、正しいパスで
 const AWS = require('aws-sdk');
-const { authenticate } = require('../middleware/authenticate'); // ← これがあること
+const { authenticate } = require('./middleware/authenticate.js'); // ← これがあること
 
 const s3 = new AWS.S3({
   region: process.env.AWS_REGION
@@ -66,9 +75,8 @@ module.exports = { app, pool, SECRET_KEY };
 // ✅ ローカル保存用の multer.diskStorage 設定
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const dir = path.join(__dirname, 'public', 'image');
-    fs.mkdirSync(dir, { recursive: true }); // 必要ならディレクトリ作成
-    cb(null, dir);
+  fs.mkdirSync(imageDir, { recursive: true });
+  cb(null, imageDir); // ← ここを imageDir に統一
   },
   filename: (req, file, cb) => {
     const uniqueName = `${Date.now()}_${file.originalname}`;
@@ -193,13 +201,13 @@ app.post('/api/login', async (req, res) => {
     }
 
     // ✅ JWT トークン生成
-    const token = jwt.sign({ uuid: user.uuid }, process.env.JWT_SECRET, { expiresIn: '7d' });
-
+    const { JWT_SECRET } = require('./config/auth.js');
+    const token = jwt.sign({ uuid: user.uuid }, JWT_SECRET, { expiresIn: '7d' });
     // ✅ Cookie にセット
     res.cookie('token', token, {
       httpOnly: true,
-      secure: false, // HTTPSならtrueに
-      sameSite: 'Lax',
+       secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -231,35 +239,91 @@ app.post('/api/logout', (req, res) => {
   });
   res.json({ message: 'ログアウト完了' });
 });
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 app.post('/api/update_account', authenticate, async (req, res) => {
-  const { username: newId, email, currentPassword, newPassword } = req.body;
-  const currentId = req.user.uuid;
+  const userUuid = req.user?.uuid;
+  if (!userUuid) {
+    return res.status(401).send('認証情報が無効です（uuidなし）');
+  }
+
+  // 受け取り（任意の組み合わせOK）
+  let { username, email, currentPassword, newPassword } = req.body || {};
+
+  // フロントの undefined/null 対策
+  if (typeof username !== 'string') username = '';
+  if (typeof email !== 'string') email = '';
+  if (typeof currentPassword !== 'string') currentPassword = '';
+  if (typeof newPassword !== 'string') newPassword = '';
+
+  // どれかを変えるときは currentPassword 必須（安全のため）
+  const wantsChangeUsername = username.trim().length > 0;
+  const wantsChangeEmail = email.trim().length > 0;
+  const wantsChangePassword = newPassword.trim().length > 0;
+
+  if (!wantsChangeUsername && !wantsChangeEmail && !wantsChangePassword) {
+    return res.status(400).send('変更項目がありません');
+  }
+  if (!currentPassword) {
+    return res.status(400).send('現在のパスワードを入力してください');
+  }
+
+  // 前処理
+  const normalizedEmail = wantsChangeEmail ? email.trim().toLowerCase() : null;
+  const newId = wantsChangeUsername ? username.trim() : null;
+
+  // 軽いバリデーション（必要なら強化）
+  if (wantsChangeEmail && !EMAIL_REGEX.test(normalizedEmail)) {
+    return res.status(400).send('メールアドレスの形式が不正です');
+  }
+  if (wantsChangeUsername && newId.length < 3) {
+    return res.status(400).send('IDは3文字以上にしてください');
+  }
+  if (wantsChangePassword && newPassword.length < 8) {
+    return res.status(400).send('パスワードは8文字以上にしてください');
+  }
 
   let conn;
   try {
     conn = await pool.getConnection();
 
-    const rows = await conn.query('SELECT * FROM USERS WHERE id = ?', [currentId]);
+    // 現在ユーザーの取得（uuidで）
+    const rows = await conn.query('SELECT * FROM USERS WHERE uuid = ? LIMIT 1', [userUuid]);
+    if (!rows || rows.length === 0) {
+      return res.status(404).send('ユーザーが見つかりません');
+    }
     const user = rows[0];
 
-    if (!user || !await bcrypt.compare(currentPassword, user.password_hash)) {
+    // 現在パスワードの検証
+    const ok = user.password_hash && await bcrypt.compare(currentPassword, user.password_hash);
+    if (!ok) {
       return res.status(403).send('現在のパスワードが正しくありません');
     }
 
+    // 重複チェック（必要なときのみ）
+    if (wantsChangeUsername) {
+      const dupeId = await conn.query('SELECT uuid FROM USERS WHERE id = ? AND uuid <> ? LIMIT 1', [newId, userUuid]);
+      if (dupeId.length > 0) return res.status(409).send('そのIDは既に使用されています');
+    }
+    if (wantsChangeEmail) {
+      const dupeMail = await conn.query('SELECT uuid FROM USERS WHERE mail_address = ? AND uuid <> ? LIMIT 1', [normalizedEmail, userUuid]);
+      if (dupeMail.length > 0) return res.status(409).send('そのメールアドレスは既に使用されています');
+    }
+
+    // 更新フィールドを組み立て
     const updates = [];
     const values = [];
 
-    if (newId && newId !== currentId) {
+    if (wantsChangeUsername) {
       updates.push('id = ?');
       values.push(newId);
     }
-
-    if (email && email !== user.mail_address) {
+    if (wantsChangeEmail) {
       updates.push('mail_address = ?');
-      values.push(email);
+      values.push(normalizedEmail);
     }
-
-    if (newPassword) {
+    if (wantsChangePassword) {
       const hashed = await bcrypt.hash(newPassword, 10);
       updates.push('password_hash = ?');
       values.push(hashed);
@@ -269,25 +333,52 @@ app.post('/api/update_account', authenticate, async (req, res) => {
       return res.status(400).send('変更項目がありません');
     }
 
-    values.push(currentId); // WHERE 条件に使用
-    await conn.query(`UPDATE USERS SET ${updates.join(', ')} WHERE id = ?`, values);
+    values.push(userUuid);
 
-    // idが変更された場合は新しいJWTを返す（ログイン維持のため）
-    if (newId && newId !== currentId) {
-      const newToken = jwt.sign({ id: newId }, SECRET_KEY, { expiresIn: '7d' });
-      res.cookie('token', newToken, {
-        httpOnly: true,
-        secure: false,
-        sameSite: 'Lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      });
-    }
+    // アップデート実行
+    await conn.query(`UPDATE USERS SET ${updates.join(', ')} WHERE uuid = ?`, values);
 
-    res.send('アカウント情報を更新しました');
+    // 更新後のレコードを取得
+    const after = await conn.query(
+      'SELECT uuid, id, mail_address, avatar_url, location_lat, location_lng, created_at FROM USERS WHERE uuid = ? LIMIT 1',
+      [userUuid]
+    );
+    const updated = after[0];
+
+    // JWTを再発行（常に uuid をペイロードに保持）
+    const cookieSecure = process.env.NODE_ENV === 'production';
+      const { JWT_SECRET } = require('./config/auth.js');
+      const token = jwt.sign({ uuid: userUuid }, JWT_SECRET, { expiresIn: '7d' });    res.cookie('token', token, {
+      httpOnly: true,
+      secure: cookieSecure,
+      sameSite: cookieSecure ? 'None' : 'Lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    // 正常レスポンス
+    return res.json({
+      success: true,
+      message: 'アカウント情報を更新しました',
+      user: {
+        uuid: updated.uuid,
+        id: updated.id,
+        email: updated.mail_address,
+        avatar_url: updated.avatar_url,
+        location_lat: updated.location_lat,
+        location_lng: updated.location_lng,
+        created_at: updated.created_at
+      }
+    });
 
   } catch (err) {
-    console.error('アカウント更新エラー:', err);
-    res.status(500).send('更新に失敗しました');
+    console.error('[update_account error]', err);
+
+    // MariaDB: 重複キー（ユニーク制約）に引っかかった場合の保険
+    if (err && (err.code === 'ER_DUP_ENTRY' || err.errno === 1062)) {
+      return res.status(409).send('IDまたはメールアドレスが既に使用されています');
+    }
+
+    return res.status(500).send('更新に失敗しました');
   } finally {
     if (conn) conn.release();
   }
@@ -303,6 +394,15 @@ app.post('/api/reset-password', (req, res) => {
   const { identifier } = req.body;
   console.log(`[RESET] Identifier: ${identifier}`);
   res.json({ message: 'パスワードリセットリンクを送信しました（仮）' });
+});
+
+app.post('/api/force-logout', (req, res) => {
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+  });
+  res.json({ ok: true });
 });
 
 // ✅ 新しい観光地を保存するAPI
@@ -465,17 +565,24 @@ app.get('/api/history/:user_id', async (req, res) => {
   try {
     conn = await pool.getConnection();
 
-    const rows = await conn.query(
-      `SELECT 
-          ua.score, ua.answered_at, 
-          s.title, s.genre, s.description, 
-          s.lat, s.lng, s.image_path
-       FROM user_answers ua
-       JOIN spots s ON ua.spot_id = s.spot_id
-       WHERE ua.user_uuid = ?
-       ORDER BY ua.answered_at DESC`,
-      [userUuid]
-    );
+const rows = await conn.query(
+  `SELECT 
+      ua.spot_id AS spot_id,  -- 明示的に spot_id を返す
+      ua.score, 
+      ua.answered_at, 
+      s.title, 
+      s.genre, 
+      s.description, 
+      s.lat, 
+      s.lng, 
+      s.image_path
+   FROM user_answers ua
+   JOIN spots s ON ua.spot_id = s.spot_id
+   WHERE ua.user_uuid = ?
+   ORDER BY ua.answered_at DESC`,
+  [userUuid]
+);
+
 
     const BASE_URL = `${req.protocol}://${req.get('host')}/`;
 

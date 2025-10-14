@@ -43,6 +43,58 @@
         <button id="deleteLocation" class="delete-btn">🗑️ 削除</button>
       </div>
     </div>
+    <!-- アカウント情報（表示＆編集） -->
+<div class="setting-section">
+  <h2>👤 アカウント情報</h2>
+
+  <div class="field-row">
+    <label>現在のID：</label>
+    <span id="currentId">--</span>
+  </div>
+  <div class="field-row">
+    <label>現在のメール：</label>
+    <span id="currentEmail">--</span>
+  </div>
+</div>
+
+<!-- ID / メール変更フォーム -->
+<div class="setting-section">
+  <h3>✏️ ID / メールアドレスの変更</h3>
+  <div class="field-row">
+    <label for="newUsername">新しいID</label>
+    <input id="newUsername" type="text" placeholder="（変更しない場合は空でOK）">
+  </div>
+  <div class="field-row">
+    <label for="newEmail">新しいメール</label>
+    <input id="newEmail" type="email" placeholder="（変更しない場合は空でOK）">
+  </div>
+  <div class="field-row">
+    <label for="currentPasswordForProfile">現在のパスワード</label>
+    <input id="currentPasswordForProfile" type="password" placeholder="確認のため必須">
+  </div>
+  <button id="saveProfileBtn">💾 保存</button>
+  <p id="profileMsg" class="msg"></p>
+</div>
+
+<!-- パスワード変更フォーム -->
+<div class="setting-section">
+  <h3>🔒 パスワードの変更</h3>
+  <div class="field-row">
+    <label for="currentPassword">現在のパスワード</label>
+    <input id="currentPassword" type="password" placeholder="現在のパスワード">
+  </div>
+  <div class="field-row">
+    <label for="newPassword">新しいパスワード</label>
+    <input id="newPassword" type="password" placeholder="新しいパスワード">
+  </div>
+  <div class="field-row">
+    <label for="newPassword2">新しいパスワード（確認）</label>
+    <input id="newPassword2" type="password" placeholder="もう一度入力">
+  </div>
+  <button id="changePasswordBtn">🔁 パスワードを変更</button>
+  <p id="passwordMsg" class="msg"></p>
+</div>
+
   </div>
 </body>
 </html>

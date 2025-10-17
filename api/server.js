@@ -57,7 +57,7 @@ if (!fs.existsSync(jsonFilePath)) fs.writeFileSync(jsonFilePath, '[]', 'utf-8');
 app.use(cookieParser()); // JWT読み取り用
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(publicPath)); // 静的ファイル
+app.use(express.static(publicPath, { extensions: ['html'] }));
 app.use('/image', express.static(path.join(__dirname, '..', 'public', 'image')));
 
 app.use(cors({

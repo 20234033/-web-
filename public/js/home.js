@@ -71,7 +71,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   // ============= 履歴読み込み（/api/history/:uuid のみ使用） =============
   try {
-    const hisRes = await fetch(`/api/history/${user.uuid}`, { credentials: 'include' });
+    const hisRes = await fetch(`/api/history/${user.user_uuid}`, { credentials: 'include' });
     if (!hisRes.ok) throw new Error('履歴取得HTTP失敗');
     const { success, history = [] } = await hisRes.json();
     if (!success) throw new Error('履歴取得失敗');

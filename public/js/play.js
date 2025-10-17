@@ -9,7 +9,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     const res = await fetch('/api/me', { credentials: 'include' });
     if (!res.ok) throw new Error('認証失敗');
     const user = await res.json();
-    userUuid = user.uuid;
+    userUuid = user.user_uuid;
   } catch (err) {
     alert('ログインが必要です');
     location.href = 'auth/login.html';

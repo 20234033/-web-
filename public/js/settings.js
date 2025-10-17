@@ -241,7 +241,7 @@ function initMapFeatures() {
           return;
         }
 
-        const newLatLng = [Number(data.lat), Number(data.lng)];
+        const newLatLng = [Number(data.address_lat), Number(data.address_lng)];
         if (marker) marker.setLatLng(newLatLng);
         map.setView(newLatLng, 15);
         updateDisplay(newLatLng);

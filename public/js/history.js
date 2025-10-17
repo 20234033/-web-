@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const res = await fetch('/api/me', { credentials: 'include' });
     if (!res.ok) throw new Error('ユーザー情報取得失敗');
     const user = await res.json();
-    userUuid = user.uuid;
+    userUuid = user.user_uuid;
   } catch (err) {
     ul.innerHTML = "<li>ログイン情報が取得できませんでした。</li>";
     console.error("ユーザーUUID取得失敗:", err);
@@ -30,8 +30,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (locRes.ok) {
       const locData = await locRes.json();
       if (locData.hasLocation) {
-        userLat = locData.lat;
-        userLng = locData.lng;
+        userLat = locData.address_lat;
+        userLng = locData.address_lng;
       }
     }
   } catch (err) {

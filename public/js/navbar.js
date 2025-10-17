@@ -292,9 +292,8 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("ログアウトAPIエラー:", err);
       }
 
-      localStorage.removeItem("user_id");
-      localStorage.removeItem("username");
-      localStorage.removeItem("avatar_url");
+      localStorage.removeItem("user_uuid");
+      localStorage.removeItem("user_name");
 
       alert("ログアウトしました。");
       window.location.href = "auth/login.html";

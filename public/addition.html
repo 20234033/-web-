@@ -1,59 +1,75 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>観光地を追加 | 旅行先提案Webシステム</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Leaflet / CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="css/style.css" />
+  <!-- フォント（Orbitronを使っているので読み込み） -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
+
   <style>
-   /* ---危険 触れないほうがいい--- */
+    /* ---危険 触れないほうがいい--- */
     html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      min-height: 100vh;
-      font-family: 'Orbitron', 'Arial', sans-serif;
-      box-sizing: border-box;
-      overflow-x: hidden;
-      transition: background-color 0.3s ease, color 0.3s ease;
+      margin: 0; padding: 0; height: 100%; min-height: 100vh;
+      font-family: 'Orbitron','Arial',sans-serif;
+      box-sizing: border-box; overflow-x: hidden;
+      transition: background-color .3s ease, color .3s ease;
     }
     #map {
-    height: 100%;
-    width: 100%;
-    position: absolute;
-    top: 0px;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 0;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    margin: 0px 0;
-  }
-  #streetview-container {
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
-      width: 320px;
-      height: 240px;
-      border-radius: 8px;
-      overflow: hidden;
-      z-index: 1000;
-      box-shadow: 0 0 8px rgba(0,0,0,0.4);
-      background: white;
-      transition: transform 0.3s ease;
+      height: 100%; width: 100%; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 0; border-radius: 8px; border: 1px solid #ccc; margin: 0;
     }
-    #streetview-container:hover {
-      transform: scale(1.1);
+    #streetview-container {
+      position: absolute; bottom: 20px; right: 20px;
+      width: 320px; height: 240px; border-radius: 8px; overflow: hidden;
+      z-index: 1000; box-shadow: 0 0 8px rgba(0,0,0,.4); background: #fff;
+      transition: transform .3s ease;
     }
-    #streetview {
-      width: 100%;
-      height: 100%;
-      border: none;
+    #streetview-container:hover { transform: scale(1.1); }
+    #streetview { width: 100%; height: 100%; border: none; }
+
+    /* コントロールパネル（既存CSSがあればそちら優先） */
+    #control-panel {
+      position: absolute; top: 20px; left: 20px; z-index: 1001;
+      width: 360px; max-width: calc(100vw - 40px);
+      background: rgba(255,255,255,0.95);
+      border-radius: 12px; padding: 14px; box-shadow: 0 6px 18px rgba(0,0,0,.15);
+      backdrop-filter: blur(4px);
+    }
+    #control-panel label { display: block; margin-top: 10px; font-weight: 600; }
+    #control-panel input[type="text"],
+    #control-panel textarea,
+    #control-panel select {
+      width: 100%; margin-top: 6px; padding: 8px 10px;
+      border: 1px solid #ccc; border-radius: 8px; font-size: 14px;
+      background: #fff;
+    }
+    #control-panel textarea { min-height: 96px; resize: vertical; }
+    #preview {
+      display: none; width: 100%; max-height: 220px; object-fit: cover;
+      margin-top: 10px; border-radius: 10px; border: 1px solid #ddd;
+    }
+    #deleteImage { display: none; margin-top: 8px; }
+    .custom-file-upload {
+      display: inline-block; padding: 8px 12px; margin-top: 8px;
+      border: 1px solid #888; border-radius: 8px; cursor: pointer; user-select: none;
+      background: #f6f6f6;
+    }
+    .custom-file-upload input { display: none; }
+    #aiStatus { margin-left: 6px; color: #666; font-size: 12px; }
+    #fileNameDisplay { margin-left: 8px; color: #444; font-size: 12px; }
+    #confirmBtn {
+      width: 100%; margin-top: 14px; padding: 12px;
+      border: none; border-radius: 10px; font-weight: 700; cursor: pointer;
+      background: #4f46e5; color: #fff;
     }
   </style>
 </head>
+
 <body class="addition-page">
   <div id="navbar-placeholder"></div>
   <div id="map"></div>
@@ -63,13 +79,18 @@
   </div>
 
   <div id="control-panel">
-    <div style="margin: 10px 0;">
-      <input type="text" id="addressInput" placeholder="住所を入力してください" style="width: 300px;">
-      <button id="geocodeBtn">🔍 ピンを住所に移動</button>
+    <div style="margin: 8px 0;">
+      <input type="text" id="addressInput" placeholder="住所を入力してください" style="width: calc(100% - 140px);" />
+      <button id="geocodeBtn" style="width: 130px;">🔍 ピンを住所に移動</button>
     </div>
 
     <label>📍 観光地のタイトル：</label>
     <input type="text" id="title" placeholder="例：白川郷" />
+
+    <div style="margin-top: 10px;">
+      <button id="aiSuggestBtn" type="button">✨ AIで自動生成</button>
+      <span id="aiStatus"></span>
+    </div>
 
     <label>🎨 ジャンル：</label>
     <select id="genre">
@@ -89,12 +110,13 @@
     </label>
     <span id="fileNameDisplay">未選択</span>
 
-    <img id="preview" src="" />
-    <button id="deleteImage">削除</button>
+    <img id="preview" src="" alt="プレビュー画像" />
+    <button id="deleteImage" type="button">削除</button>
 
-    <button id="confirmBtn">✅ この観光地を追加</button>
+    <button id="confirmBtn" type="button">✅ この観光地を追加</button>
   </div>
 
+  <!-- JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="js/navbar.js"></script>
   <script type="module" src="js/addition.js"></script>

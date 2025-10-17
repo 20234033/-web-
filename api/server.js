@@ -20,6 +20,7 @@ const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 const mariadb = require('mariadb');
 const cors = require('cors');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const db = require('./db.js'); // もしくは './database' など、正しいパスで
 const AWS = require('aws-sdk');
@@ -32,6 +33,19 @@ const s3 = new AWS.S3({
 const app = express();
 const PORT = process.env.PORT || 3000;
 const SECRET_KEY = process.env.SECRET_KEY || 'your-default-secret';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+let genAI = null;
+if (GEMINI_API_KEY) {
+  genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+}
+const MODEL_CANDIDATES = [
+  'gemini-2.0-flash',
+  'gemini-2.0-flash-lite',
+  'gemini-1.5-flash',
+  'gemini-1.5-flash-8b'
+];
+
+
 
 // ✅ DB接続プール（poolは後で使えるようにmodule.exportsしてもOK）
 const pool = mariadb.createPool({
@@ -86,6 +100,74 @@ const storage = multer.diskStorage({
 
 // 🖼 multer 設定（画像保存）
 const upload = multer({ storage });
+
+
+async function listGeminiModels() {
+  const fetch = (await import('node-fetch')).default;
+  const r = await fetch(`https://generativelanguage.googleapis.com/v1/models?key=${process.env.GEMINI_API_KEY}`);
+  return r.json();
+}
+async function callGeminiGenerate(model, prompt) {
+  const fetch = (await import('node-fetch')).default;
+  const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`;
+  const body = {
+    generationConfig: {
+      temperature: 1.0,     // 多様性アップ（0.7〜1.2くらいで調整）
+      topP: 0.95,
+      topK: 40,
+      // maxOutputTokens: 256, // 必要なら制限
+      // candidateCount: 1
+    },
+    contents: [
+      { role: 'user', parts: [{ text: prompt }] }
+    ]
+  };
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  if (!res.ok) {
+    const errText = await res.text().catch(()=> '');
+    const e = new Error(`Gemini ${model} ${res.status} ${res.statusText}: ${errText}`);
+    e.status = res.status;
+    throw e;
+  }
+
+  const data = await res.json();
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  return text.trim();
+}
+
+async function generateWithGeminiFallback(prompt) {
+  let lastError;
+  for (const m of MODEL_CANDIDATES) {
+    try {
+      return await callGeminiGenerate(m, prompt);
+    } catch (e) {
+      // 404/400 はモデル非対応のことが多い→次の候補へ
+      if (e.status !== 404 && e.status !== 400) lastError = e;
+      continue;
+    }
+  }
+  throw lastError || new Error('No Gemini model worked');
+}
+// 住所ヒントが未実装ならこれも追加（既に同名関数があれば不要）
+async function reverseGeocode(lat, lng) {
+  const apiKey = process.env.GOOGLE_API_KEY;
+  if (!apiKey) return null;
+  const fetch = (await import('node-fetch')).default;
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&language=ja&key=${apiKey}`;
+  const r = await fetch(url);
+  const json = await r.json();
+  if (json.status !== 'OK' || !json.results?.length) return null;
+  return {
+    formatted: json.results[0].formatted_address,
+    components: json.results[0].address_components || []
+  };
+}
 
 // 🔐 初期リダイレクト（例：ログインページ）
 app.get('/', (req, res) => {
@@ -749,6 +831,127 @@ app.get('/api/directions', async (req, res) => {
     res.status(500).json({ success: false, error: 'サーバー側でエラーが発生しました。' });
   }
 });
+
+
+// ※ 404/500 ハンドラより前に配置
+
+app.post('/api/ai/spot-suggestion', async (req, res) => {
+  try {
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(503).json({ success: false, error: 'GEMINI_API_KEY が未設定です' });
+    }
+
+    const { title, lat, lng } = req.body || {};
+    const t = typeof title === 'string' ? title.trim() : '';
+    if (!t) {
+      return res.status(400).json({ success: false, error: 'title を指定してください' });
+    }
+
+    // lat/lng は任意（あれば補助的にヒントに使う）
+    let latN = Number.isFinite(parseFloat(lat)) ? parseFloat(lat) : null;
+    let lngN = Number.isFinite(parseFloat(lng)) ? parseFloat(lng) : null;
+
+    // 住所ヒント（任意）
+    let addressHint = 'なし', componentsHint = '';
+    if (latN != null && lngN != null) {
+      try {
+        const geo = await reverseGeocode(latN, lngN);
+        if (geo?.formatted) addressHint = geo.formatted;
+        if (geo?.components?.length) {
+          componentsHint = geo.components.map(c => `${c.long_name}(${c.types.join('/')})`).join(', ');
+        }
+      } catch {}
+    }
+
+    const prompt = `
+あなたは日本の旅行ガイド編集者です。与えられた「観光地タイトル」から、
+1) ジャンル（厳密に: "historic" | "nature" | "city" | "culture" のどれか）
+2) その場所の説明（日本語 80〜140文字）
+をJSONだけで返してください。
+
+# 入力
+- title: ${t}
+- lat: ${latN ?? '不明'}
+- lng: ${lngN ?? '不明'}
+- address_hint: ${addressHint}
+- components_hint: ${componentsHint}
+- request_nonce: ${Date.now()}-${Math.random().toString(36).slice(2,8)}
+
+# ルール
+- 出力は **JSONのみ**（前後の文章・マークダウン・コードブロックは禁止）
+- title は入力をベースに適宜整形してOK（誤記訂正や一般的表記への統一）
+- genre は ["historic","nature","city","culture"] のいずれかに必ず合わせる
+- description は日本語で、具体的な魅力・歴史・立地などを簡潔に
+
+# 出力フォーマット
+{"title":"...","genre":"...","description":"..."}
+    `.trim();
+
+    const raw = await generateWithGeminiFallback(prompt);
+
+    const match = raw.match(/\{[\s\S]*\}/);
+    if (!match) {
+      return res.status(502).json({ success: false, error: 'AI応答の解析に失敗しました', raw });
+    }
+
+    let data;
+    try { data = JSON.parse(match[0]); }
+    catch { return res.status(502).json({ success: false, error: 'JSONパース失敗', raw }); }
+
+    // ジャンル正規化（万一ズレた場合の保険）
+    const allowed = ['historic','nature','city','culture'];
+    if (!allowed.includes(data.genre)) {
+      const blob = `${t}${data.title || ''}${data.description || ''}`;
+      if (/城|寺|神社|史|遺産|城郭|古都|寺院/.test(blob)) data.genre = 'historic';
+      else if (/公園|山|川|湖|海|自然|滝|渓谷|高原|岬|砂丘|温泉/.test(blob)) data.genre = 'nature';
+      else if (/都|市|駅|繁華|タワー|スカイ|街|展望|商店街|みなと|ウォーターフロント/.test(blob)) data.genre = 'city';
+      else data.genre = 'culture';
+    }
+
+    // 説明の長さを軽く調整（80〜140目安）
+    const desc = (data.description || '').trim();
+    const trimmed = desc.length > 160 ? desc.slice(0, 160) + '…' : desc;
+
+    return res.json({
+      success: true,
+      suggestion: {
+        title: data.title || t,
+        genre: data.genre,
+        description: trimmed || '説明準備中'
+      }
+    });
+
+  } catch (err) {
+    console.error('[AI suggestion error REST]', err);
+
+    // フォールバック（AI失敗時：ローカル推定）
+    try {
+      const { title } = req.body || {};
+      const t = (title || '').trim();
+      if (!t) throw 0;
+
+      let g = 'culture';
+      if (/城|寺|神社|史|遺産|城郭|古都|寺院/.test(t)) g = 'historic';
+      else if (/公園|山|川|湖|海|自然|滝|渓谷|高原|岬|砂丘|温泉/.test(t)) g = 'nature';
+      else if (/都|市|駅|繁華|タワー|スカイ|街|展望|商店街|みなと|ウォーターフロント/.test(t)) g = 'city';
+
+      return res.status(200).json({
+        success: true,
+        suggestion: {
+          title: t,
+          genre: g,
+          description: '見どころや周辺の雰囲気・歴史・文化が楽しめるスポットです。詳細は追って編集してください。'
+        },
+        fallback: true
+      });
+    } catch {
+      return res.status(500).json({ success: false, error: 'AI生成に失敗しました' });
+    }
+  }
+});
+
+
+
 
 // ✅ /api/geocode?address=〇〇
 app.get('/api/geocode', async (req, res) => {

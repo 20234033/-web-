@@ -12,7 +12,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     localStorage.setItem('username', user.user_name);
 
     const welcomeEl = document.getElementById('welcome');
-    if (welcomeEl) welcomeEl.textContent = `${user.id} さん、ようこそ！`;
+    if (welcomeEl) welcomeEl.textContent = `${user.user_name} さん、ようこそ！`;
   } catch (err) {
     localStorage.clear();
     alert('ログインが必要です。ログインページへ移動します。');

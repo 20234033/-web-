@@ -114,6 +114,8 @@ geocodeBtn.addEventListener('click', async () => {
     formData.append('lng', latlng.lng);
     formData.append('image', selectedImageFile);
     formData.append('streetViewUrl', window.currentStreetViewUrl || '');
+    const userUuid = localStorage.getItem('user_uuid') || ''; 
+    formData.append('user_uuid', userUuid);
 
 
     try {

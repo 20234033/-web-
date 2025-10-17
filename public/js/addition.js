@@ -127,7 +127,7 @@ geocodeBtn.addEventListener('click', async () => {
         const spot = result.data;
         spot.streetViewUrl = window.currentStreetViewUrl || '';
         localStorage.setItem('newSpot', JSON.stringify(spot));
-        location.href = 'add_result.html';
+        location.href = 'add_result';
     } else {
         alert('保存に失敗しました: ' + (result.error || ''));
       }

@@ -53,7 +53,7 @@
         localStorage.setItem('username', user.id);
         localStorage.setItem('avatar_url', user.avatar_url || '');
         alert('ログイン成功');
-        window.location.href = '../home.html';
+        window.location.href = '../home';
       } else {
         alert(result.error || 'ログインに失敗しました。');
       }

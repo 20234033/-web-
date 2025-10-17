@@ -262,7 +262,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     await res.json(); // ここでは取得のみ
   } catch (err) {
     alert('ログインが必要です。ログインページへ移動します。');
-    window.location.href = 'auth/login.html';
+    window.location.href = 'auth/login';
     return;
   }
 

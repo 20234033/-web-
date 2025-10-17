@@ -170,8 +170,8 @@ scoreText.innerHTML = `
 function retry() {
   const fromAddition = localStorage.getItem('fromAddition');
   localStorage.removeItem('fromAddition');
-  location.href = fromAddition ? 'addition.html' : 'play.html';
+  location.href = fromAddition ? 'addition' : 'play';
 }
 function goHome() {
-  location.href = 'home.html';
+  location.href = 'home';
 }

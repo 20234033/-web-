@@ -17,7 +17,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   } catch (err) {
     localStorage.clear();
     alert('ログインが必要です。ログインページへ移動します。');
-    location.href = 'auth/login.html';
+    location.href = 'auth/login';
     return;
   }
 
@@ -31,16 +31,16 @@ window.addEventListener('DOMContentLoaded', async () => {
     const mode   = document.getElementById('mode')?.value   || 'search';
     const query  = `region=${region}&genre=${genre}&mode=${mode}`;
 
-    if (mode === 'play') location.href = `play.html?${query}`;
-    else if (mode === 'addition') location.href = `addition.html?${query}`;
+    if (mode === 'play') location.href = `play?${query}`;
+    else if (mode === 'addition') location.href = `addition?${query}`;
     else alert('モードが正しく選択されていません。');
   });
 
   document.getElementById('historyButton')?.addEventListener('click', () => {
-    location.href = 'history.html';
+    location.href = 'history';
   });
   document.getElementById('viewResults')?.addEventListener('click', () => {
-    location.href = 'result.html';
+    location.href = 'result';
   });
 
   // ============= 右ペイン要素参照 =============

@@ -981,7 +981,6 @@ app.get('/api/geocode', async (req, res) => {
   }
 });
 
-
 app.get('/api/user_answers', authenticate, async (req, res) => {
   const userId = req.user.uuid;
 

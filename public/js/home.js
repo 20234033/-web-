@@ -8,9 +8,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (!res.ok) throw new Error('Unauthorized');
     user = await res.json();
 
-    localStorage.setItem('user_uuid', user.uuid);
-    localStorage.setItem('username', user.id);
-    localStorage.setItem('avatar_url', user.avatar_url || '');
+    localStorage.setItem('user_uuid', user.user_uuid);
+    localStorage.setItem('username', user.user_name);
 
     const welcomeEl = document.getElementById('welcome');
     if (welcomeEl) welcomeEl.textContent = `${user.id} さん、ようこそ！`;

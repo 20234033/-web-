@@ -133,10 +133,10 @@ function initMapFeatures() {
     try {
       const res = await fetch('/api/user_location', { credentials: 'include' });
       const data = await res.json();
-      if (data?.lat != null && data?.lng != null) {
-        currentLatLng = [Number(data.lat), Number(data.lng)];
+      if (data?.address_lat != null && data?.address_lng != null) {
+        currentLatLng = [Number(data.address_lat), Number(data.address_lng)];
         if (savedLocationEl) savedLocationEl.textContent =
-          `${Number(data.lat).toFixed(5)}, ${Number(data.lng).toFixed(5)}`;
+          `${Number(data.address_lat).toFixed(5)}, ${Number(data.address_lng).toFixed(5)}`;
       } else {
         if (savedLocationEl) savedLocationEl.textContent = '未設定';
       }

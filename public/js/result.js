@@ -120,9 +120,9 @@ scoreText.innerHTML = `
     if (!locRes.ok) throw new Error("住所情報取得に失敗");
 
     const locData = await locRes.json();
-    if (locData.hasLocation && locData.lat != null && locData.lng != null) {
-      const userLat = locData.lat;
-      const userLng = locData.lng;
+    if (locData.hasLocation && locData.address_lat != null && locData.address_lng != null) {
+      const userLat = locData.address_lat;
+      const userLng = locData.address_lng;
 
       // 🏠 自宅マーカーを地図に追加
       const houseIcon = L.icon({

@@ -12,7 +12,7 @@ router.get('/api/me', authenticate, async (req, res) => {
 
   try {
     const [rows] = await pool.query(
-      'SELECT id, mail_address, avatar_url, location_lat, location_lng FROM USERS WHERE uuid = ?',
+      'SELECT user_name, mail_address, address_lat, address_lng FROM users WHERE user_uuid = ?',
       [userUuid]
     );
 
@@ -22,12 +22,11 @@ router.get('/api/me', authenticate, async (req, res) => {
 
     const user = rows[0];
     res.json({
-      uuid: userUuid,
-      id: user.id,
-      email: user.mail_address,
-      avatar_url: user.avatar_url,
-      location_lat: user.location_lat,
-      location_lng: user.location_lng,
+      user_uuid: userUuid,
+      user_name: user.user_name,
+      mail_address: user.mail_address,
+      address_lat: user.address_lat,
+      address_lng: user.address_lng,
     });
   } catch (err) {
     console.error('[me取得失敗]', err);

@@ -69,6 +69,7 @@ if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 if (!fs.existsSync(jsonFilePath)) fs.writeFileSync(jsonFilePath, '[]', 'utf-8');
 
 // ✅ ミドルウェア設定
+app.set('trust proxy', 1);
 app.use(cookieParser()); // JWT読み取り用
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -286,6 +287,7 @@ app.post('/api/login', async (req, res) => {
       httpOnly: true,
       secure: false,          // ← HTTPのみなので常に false
       sameSite: 'Lax',        // ← クロスサイトにしない運用（同一オリジン前提） 'None' : 'Lax',
+      path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 

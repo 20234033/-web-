@@ -19,7 +19,7 @@ router.get('/me', authenticate, async (req, res) => {
 
   try {
     // mysql2/promise: query() は [rows, fields] を返す
-    const [rows] = await pool.query(
+    const rows = await pool.query(
       `SELECT uuid, id, mail_address, avatar_url, location_lat, location_lng
          FROM USERS
         WHERE uuid = ?

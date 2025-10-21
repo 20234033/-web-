@@ -1,83 +1,213 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>ホーム | 旅行先提案Webシステム</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="css/style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
-  <style>
-    /* 画像をきれいに見せるための軽いスタイル（必要に応じて削除OK） */
-    .last-image {
-      width: 100%;
-      max-width: 360px;
-      aspect-ratio: 16/10;
-      object-fit: cover;
-      border-radius: 8px;
-      display: block;
-      margin: 8px auto 12px;
+// public/js/home.js
+
+// ================== 画像プレースホルダ（外部通信なしのデータURL） ==================
+const NO_IMAGE_DATA_URL =
+  'data:image/svg+xml;utf8,' +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200">
+       <rect width="100%" height="100%" fill="#e0e0e0"/>
+       <text x="50%" y="50%" font-family="sans-serif" font-size="20" fill="#666" text-anchor="middle" dominant-baseline="middle">
+         No Image
+       </text>
+     </svg>`
+  );
+
+// ================== すべての <img> に対するグローバルフォールバック（1回だけ） ==================
+(function installGlobalImgFallback(){
+  window.addEventListener('error', (e) => {
+    const el = e.target;
+    if (el && el.tagName === 'IMG' && !el.dataset.fallbackApplied) {
+      el.dataset.fallbackApplied = '1';   // 無限ループ防止
+      el.removeAttribute('srcset');       // srcset があると再取得が走るので除去
+      el.src = NO_IMAGE_DATA_URL;         // データURLに差し替え
     }
-  </style>
-</head>
-<body class="light">
-  <div id="navbar-placeholder"></div>
+  }, true); // キャプチャ段階で捕捉するのがコツ
+})();
 
-  <div class="home-layout">
-    <!-- 左側：設定 -->
-    <div class="home-left">
-      <h2 id="welcome" class="heading">ようこそ</h2>
+// ================== 既に埋め込まれている placeholder を起動時に除去 ==================
+(function replaceExistingPlaceholders(){
+  const fix = (img) => {
+    const s = img.getAttribute('src') || '';
+    const ss = img.getAttribute('srcset') || '';
+    if (s.includes('via.placeholder.com')) img.setAttribute('src', NO_IMAGE_DATA_URL);
+    if (ss.includes('via.placeholder.com')) img.removeAttribute('srcset');
+  };
+  document.querySelectorAll('img').forEach(fix);
 
-      <label for="region">地域を選択：</label>
-      <select id="region">
-        <option value="null">指定しない</option>
-        <option value="hokkaidou">北海道</option>
-        <option value="touhoku">東北</option>
-        <option value="kantou">関東</option>
-        <option value="chubu">中部</option>
-        <option value="kinki">近畿</option>
-        <option value="chugoku">中国</option>
-        <option value="shikoku">四国</option>
-        <option value="kyusyu">九州</option>
-      </select>
+  // 動的に追加される <img> にも適用（任意・軽量）
+  const mo = new MutationObserver((muts) => {
+    for (const m of muts) {
+      m.addedNodes.forEach((n) => {
+        if (n.nodeType === 1) {
+          if (n.tagName === 'IMG') fix(n);
+          n.querySelectorAll?.('img').forEach(fix);
+        }
+      });
+    }
+  });
+  mo.observe(document.documentElement, { childList: true, subtree: true });
+})();
 
-      <label for="genre">ジャンルを選択：</label>
-      <select id="genre">
-        <option value="null">指定しない</option>
-        <option value="historic">歴史的建造物</option>
-        <option value="nature">自然</option>
-        <option value="city">都市景観</option>
-        <option value="culture">文化的名所</option>
-      </select>
+// =====================================================================
+// 本来の home 画面処理
+// =====================================================================
+window.addEventListener('DOMContentLoaded', async () => {
+  // ============= 認証 & /api/me =============
+  let user;
+  try {
+    const res = await fetch('/api/me', { credentials: 'include' });
+    if (!res.ok) throw new Error('Unauthorized');
+    user = await res.json();
 
-      <label for="mode">モードを選択：</label>
-      <select id="mode">
-        <option value="play">観光地を探す</option>
-        <option value="addition">観光地を追加する</option>
-      </select>
+    localStorage.setItem('user_uuid', user.uuid);
+    localStorage.setItem('username', user.id);
+    localStorage.setItem('avatar_url', user.avatar_url || '');
 
-      <button id="startButton" class="primary-btn">📌 開始する</button>
-    </div>
+    const welcomeEl = document.getElementById('welcome');
+    if (welcomeEl) welcomeEl.textContent = `${user.id} さん、ようこそ！`;
+  } catch (err) {
+    localStorage.clear();
+    alert('ログインが必要です。ログインページへ移動します。');
+    location.href = 'auth/login';
+    return;
+  }
 
-    <!-- 右側：前回の結果 -->
-    <div class="home-right">
-      <!-- 観光地の画像（新設） -->
-      <img id="lastImage" class="last-image"
-           src="https://via.placeholder.com/320x200?text=No+Image"
-           alt="前回の観光地画像">
+  // ============= テーマ =============
+  document.body.className = localStorage.getItem('theme') || 'light';
 
-      <p id="lastScore" class="info-text">--</p>
-      <p id="lastGenre" class="info-text">--</p>
-      <p id="lastRegion" class="info-text">--</p>
-      <p id="lastPlace" class="info-text">--</p>
-      <p id="lastInfo" class="info-text">--</p>
-      <p id="lastPlayed" class="info-text">--</p>
-      <p id="streak" class="info-text">--</p>
+  // ============= ボタン/遷移 =============
+  document.getElementById('startButton')?.addEventListener('click', () => {
+    const region = document.getElementById('region')?.value || 'unspecified';
+    const genre  = document.getElementById('genre')?.value  || 'unspecified';
+    const mode   = document.getElementById('mode')?.value   || 'search';
+    const query  = `region=${region}&genre=${genre}&mode=${mode}`;
 
-      <button id="historyButton" class="secondary-btn">📖 出題履歴を表示する</button>
-    </div>
-  </div>
+    if (mode === 'play') location.href = `play?${query}`;
+    else if (mode === 'addition') location.href = `addition?${query}`;
+    else alert('モードが正しく選択されていません。');
+  });
 
-  <script src="js/navbar.js"></script>
-  <script src="js/home.js"></script>
-</body>
-</html>
+  document.getElementById('historyButton')?.addEventListener('click', () => {
+    location.href = 'history';
+  });
+  document.getElementById('viewResults')?.addEventListener('click', () => {
+    location.href = 'result';
+  });
+
+  // ============= 右ペイン要素参照 =============
+  const lastImageEl = document.getElementById('lastImage');
+  const lastScoreEl  = document.getElementById('lastScore');
+  const lastGenreEl  = document.getElementById('lastGenre');
+  const lastRegionEl = document.getElementById('lastRegion');
+  const lastPlaceEl  = document.getElementById('lastPlace');
+  const lastInfoEl   = document.getElementById('lastInfo');
+  const lastPlayedEl = document.getElementById('lastPlayed');
+
+  // 画像の個別フェールセーフ（無限ループ防止版）
+  if (lastImageEl) {
+    let triedFallback = false;
+    lastImageEl.onerror = () => {
+      if (triedFallback) return;     // 一度だけ
+      triedFallback = true;
+      lastImageEl.removeAttribute('srcset');
+      lastImageEl.src = NO_IMAGE_DATA_URL;
+    };
+  }
+
+  // 初期プレースホルダ
+  setRightPanel({
+    score: '--',
+    genreLabel: '--',
+    regionLabel: '--',
+    title: '--',
+    description: '--',
+    playedAt: '--',
+    image: NO_IMAGE_DATA_URL
+  });
+
+  // ============= 履歴読み込み（/api/history/:uuid のみ使用） =============
+  try {
+    const hisRes = await fetch(`/api/history/${user.uuid}`, { credentials: 'include' });
+    if (!hisRes.ok) throw new Error('履歴取得HTTP失敗');
+    const { success, history = [] } = await hisRes.json();
+    if (!success) throw new Error('履歴取得失敗');
+    if (!history.length) throw new Error('履歴がありません');
+
+    // 念のため最新順に
+    history.sort((a, b) => new Date(b.answered_at) - new Date(a.answered_at));
+    const latest = history[0];
+
+    const genreMap = {
+      historic: '歴史的建造物',
+      nature:   '自然',
+      city:     '都市景観',
+      culture:  '文化的名所',
+    };
+    const regionLabel = getRegionFromLatLng(Number(latest.lat), Number(latest.lng));
+    const genreLabel  = genreMap[latest.genre] || '不明';
+
+    setRightPanel({
+      score: `${latest.score} / 100`,
+      genreLabel,
+      regionLabel,
+      title: latest.title || '--',
+      description: latest.description || '--',
+      playedAt: new Date(latest.answered_at).toLocaleDateString('ja-JP'),
+      image: latest.image_path || NO_IMAGE_DATA_URL
+    });
+  } catch (e) {
+    console.error('履歴読み込み失敗:', e);
+    // 失敗時は初期値のまま
+  }
+
+  // ============= 地方判定関数 =============
+  function getRegionFromLatLng(lat, lng) {
+    if (Number.isNaN(lat) || Number.isNaN(lng)) return 'その他';
+    if (lat >= 43) return '北海道';
+    if (lat >= 38) return '東北';
+    if (lat >= 35 && lng >= 138 && lng < 141) return '関東';
+    if (lat >= 34 && lng >= 135 && lng < 138) return '中部';
+    if (lat >= 34 && lng >= 133 && lng < 135) return '関西';
+    if (lat >= 33 && lng >= 130) return '九州';
+    if (lat < 30) return '沖縄';
+    return 'その他';
+  }
+
+  // ============= 右ペイン描画ヘルパ =============
+  function setRightPanel({
+    score, genreLabel, regionLabel, title, description, playedAt, image
+  }) {
+    if (lastImageEl && image) lastImageEl.src = image;
+    if (lastScoreEl)  lastScoreEl.textContent  = `前回のスコア：${score}`;
+    if (lastGenreEl)  lastGenreEl.textContent  = `ジャンル：${genreLabel}`;
+    if (lastRegionEl) lastRegionEl.textContent = `地域：${regionLabel}`;
+    if (lastPlaceEl)  lastPlaceEl.textContent  = `観光地：${title}`;
+    if (lastInfoEl)   lastInfoEl.textContent   = `説明：${description}`;
+    if (lastPlayedEl) lastPlayedEl.textContent = `最終プレイ日：${playedAt}`;
+  }
+
+  // ============= モードに応じてセレクト無効化 =============
+  const modeSelect   = document.getElementById('mode');
+  const regionSelect = document.getElementById('region');
+  const genreSelect  = document.getElementById('genre');
+  function updateSelectStates() {
+    const isAddition = modeSelect?.value === 'addition';
+    if (regionSelect) regionSelect.disabled = !!isAddition;
+    if (genreSelect)  genreSelect.disabled  = !!isAddition;
+  }
+  updateSelectStates();
+  modeSelect?.addEventListener('change', updateSelectStates);
+
+  // ============= 連続ログイン日数 =============
+  const streakEl = document.getElementById('streak');
+  const today = new Date().toISOString().slice(0, 10);
+  const lastLogin = localStorage.getItem('lastLoginDate');
+  let streak = parseInt(localStorage.getItem('streakDays') || '0', 10);
+  if (lastLogin !== today) {
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    streak = lastLogin === yesterday ? streak + 1 : 1;
+    localStorage.setItem('lastLoginDate', today);
+    localStorage.setItem('streakDays', String(streak));
+  }
+  if (streakEl) streakEl.textContent = `連続ログイン日数：${streak}日`;
+});

@@ -205,16 +205,7 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-
-
-
-
-
 // me.js や /api/me の中
-
-
-
-
 app.post('/api/login', async (req, res) => {
   const { identifier, password } = req.body;
 
@@ -272,10 +263,6 @@ app.post('/api/login', async (req, res) => {
     if (conn) conn.release();
   }
 });
-
-
-
-
 
 app.post('/api/logout', (req, res) => {
   res.clearCookie('token', {
@@ -430,12 +417,6 @@ app.post('/api/update_account', authenticate, async (req, res) => {
   }
 });
 
-
-
-
-
-
-
 app.post('/api/reset-password', (req, res) => {
   const { identifier } = req.body;
   console.log(`[RESET] Identifier: ${identifier}`);
@@ -547,10 +528,6 @@ app.get('/api/has_location', authenticate, async (req, res) => {
   }
 });
 
-
-
-
-
 app.post('/api/answer', authenticate, async (req, res) => {
   const { spot_id, answer_lat, answer_lng, distance_km, score } = req.body;
   let conn;
@@ -653,17 +630,6 @@ app.get('/api/history/:uuid', async (req, res) => {
   }
 });
 
-
-
-
-
-
-
-
-
-
-
-
 app.get('/api/streetview-url', (req, res) => {
   const { lat, lng } = req.query;
   const apiKey = process.env.GOOGLE_API_KEY;
@@ -749,7 +715,6 @@ app.get('/api/directions', async (req, res) => {
     res.status(500).json({ success: false, error: 'サーバー側でエラーが発生しました。' });
   }
 });
-
 
 // ※ 404/500 ハンドラより前に配置
 
@@ -868,9 +833,6 @@ app.post('/api/ai/spot-suggestion', async (req, res) => {
   }
 });
 
-
-
-
 // ✅ /api/geocode?address=〇〇
 app.get('/api/geocode', async (req, res) => {
   const { address } = req.query;
@@ -952,7 +914,6 @@ app.delete('/api/user_location', authenticate, async (req, res) => {
     res.status(500).json({ error: '住所削除に失敗しました' });
   }
 });
-
 
 app.get('/api/score', (req, res) => {
 

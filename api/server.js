@@ -12,7 +12,6 @@ if (!JWT_SECRET) {
 
 console.log('[BOOT] JWT_SECRET length =', String(JWT_SECRET).length);
 const express = require('express');
-const path = require('path');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const fs = require('fs');

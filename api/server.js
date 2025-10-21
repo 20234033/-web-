@@ -1,4 +1,6 @@
-require('dotenv').config(); // .envを最上部で読み込む
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') }); // ルート固定
+
 
 
 const { JWT_SECRET } = require('./config/auth'); 
@@ -638,52 +640,6 @@ app.post('/api/answer', authenticate, async (req, res) => {
   }
 });
 
-
-
-app.get('/api/history/:user_id', async (req, res) => {
-  const userUuid = req.params.user_id;
-  let conn;
-
-  try {
-    conn = await pool.getConnection();
-
-const rows = await conn.query(
-  `SELECT 
-      ua.spot_id AS spot_id,  -- 明示的に spot_id を返す
-      ua.score, 
-      ua.answered_at, 
-      s.title, 
-      s.genre, 
-      s.description, 
-      s.lat, 
-      s.lng, 
-      s.image_path
-   FROM user_answers ua
-   JOIN spots s ON ua.spot_id = s.spot_id
-   WHERE ua.user_uuid = ?
-   ORDER BY ua.answered_at DESC`,
-  [userUuid]
-);
-
-
-    const BASE_URL = `${req.protocol}://${req.get('host')}/`;
-
-    const processedRows = rows.map(row => ({
-      ...row,
-      image_path: row.image_path
-        ? BASE_URL + row.image_path.replace(/^\/?/, '')
-        : null
-    }));
-
-    res.json({ success: true, history: processedRows });
-
-  } catch (err) {
-    console.error('履歴取得エラー:', err);
-    res.status(500).json({ success: false, error: '履歴取得に失敗しました' });
-  } finally {
-    if (conn) conn.release();
-  }
-});
 app.get('/api/history/:uuid', async (req, res) => {
   const userUuid = req.params.uuid;
   let conn;

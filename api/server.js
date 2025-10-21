@@ -222,32 +222,7 @@ app.post('/api/register', async (req, res) => {
 // me.js や /api/me の中
 
 
- app.get('/api/me', authenticate, async (req, res) => {
-   const userUuid = req.user?.uuid;
-   if (!userUuid) return res.status(401).json({ error: 'Invalid token payload' });
 
-   try {
-     const [rows] = await pool.query(
-       'SELECT uuid, id, mail_address, avatar_url, location_lat, location_lng FROM USERS WHERE uuid = ? LIMIT 1',
-       [userUuid]
-     );
-     if (!rows || rows.length === 0) {
-       return res.status(404).json({ error: 'User not found' });
-     }
-     const user = rows[0];
-     res.json({
-       uuid: user.uuid,
-       id: user.id,
-       email: user.mail_address,
-       avatar_url: user.avatar_url,
-       location_lat: user.location_lat,
-       location_lng: user.location_lng,
-     });
-   } catch (err) {
-     console.error('[me取得失敗]', err);
-     res.status(500).json({ error: 'Internal Server Error' });
-   }
- });
 
 app.post('/api/login', async (req, res) => {
   const { identifier, password } = req.body;
@@ -559,7 +534,7 @@ app.get('/api/has_location', authenticate, async (req, res) => {
 
     console.log("📦 DB Query Raw Result:", rows);
 
-    const user = Array.isArray(rows) ? rows[0] : rows;
+    const user = rows && rows.length ? rows[0] : null;
     console.log("🧍‍♂️ user:", user);
 
     if (!user || user.location_lat === undefined || user.location_lng === undefined) {
@@ -934,13 +909,13 @@ app.get('/api/geocode', async (req, res) => {
 });
 
 app.get('/api/user_answers', authenticate, async (req, res) => {
-  const userId = req.user.uuid;
+  const userUuid = req.user.uuid;
 
   try {
-    const rows = await db.query(
-      'SELECT * FROM user_answers WHERE user_id = ? ORDER BY answered_at DESC',
-      [userId]
-    );
+   const rows = await pool.query(
+     'SELECT * FROM user_answers WHERE user_uuid = ? ORDER BY answered_at DESC',
+     [userUuid]
+   );
     res.json({ success: true, history: rows });  // ← 修正ポイント
   } catch (err) {
     console.error('DBエラー:', err);
@@ -950,8 +925,9 @@ app.get('/api/user_answers', authenticate, async (req, res) => {
 // ユーザーの住所を取得
 app.get('/api/user_location', authenticate, async (req, res) => {
   try {
-    const [row] = await db.query('SELECT location_lat, location_lng FROM USERS WHERE id = ?', [req.user.id]);
-    res.json({ lat: row?.location_lat, lng: row?.location_lng });
+    const rows = await pool.query('SELECT location_lat, location_lng FROM USERS WHERE uuid = ?', [req.user.uuid]);
+    const row = rows && rows.length ? rows[0] : null;
+    res.json({ lat: row?.location_lat ?? null, lng: row?.location_lng ?? null });
   } catch (err) {
     console.error('住所取得エラー:', err);
     res.status(500).json({ error: '住所取得に失敗しました' });

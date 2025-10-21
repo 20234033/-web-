@@ -906,7 +906,7 @@ app.get('/api/spots', async (req, res) => {
     conn = await pool.getConnection();
 
     const rows = await conn.query(
-      'SELECT spot_id as id, title, genre, description, latitude, longitude, image_path FROM spots'
+      'SELECT spot_id as id, title, genre, description, latitude AS lat, longitude AS lng, image_path FROM spots'
     );
 
     // ✅ ローカルの image_path をフルURLに変換（例: http://localhost:3000/image/xxx.jpg）

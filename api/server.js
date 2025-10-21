@@ -560,9 +560,9 @@ app.post('/api/answer', authenticate, async (req, res) => {
 
 
 
-app.get('/api/history/:user_id', async (req, res) => {
+app.get('/api/history/:user_id', authenticate, async (req, res) => {
   console.log("📍 /api/history/:user_id called");
-  const userUuid = req.params.user_uuid;
+  const userUuid = req.user?.user_uuid;
   let conn;
 
   try {
@@ -570,7 +570,7 @@ app.get('/api/history/:user_id', async (req, res) => {
 
 const rows = await conn.query(
   `SELECT 
-      ua.spot_id AS spot_id,  -- 明示的に spot_id を返す
+      ua.spot_id AS spot_id,
       ua.score, 
       ua.answered_at, 
       s.title, 
@@ -585,7 +585,8 @@ const rows = await conn.query(
    ORDER BY ua.answered_at DESC`,
   [userUuid]
 );
-
+    console.log(`[DEBUG] ユーザーUUID: ${userUuid}`);
+    console.log("[DEBUG] user_answers呼び出し結果 (rows):", rows);
 
     const BASE_URL = `${req.protocol}://${req.get('host')}/`;
 
@@ -605,9 +606,11 @@ const rows = await conn.query(
     if (conn) conn.release();
   }
 });
-app.get('/api/history/:uuid', async (req, res) => {
+
+
+app.get('/api/history/:uuid', authenticate, async (req, res) => {
   console.log("📍 /api/history/:uuid called");
-  const userUuid = req.params.user_uuid;
+  const userUuid = req.user?.user_uuid;
   if (!userUuid) {
     return res.status(401).json({ error: '認証情報が無効です。(undefined)' });
   }

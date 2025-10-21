@@ -9,7 +9,7 @@ module.exports = {
       autorestart: true,         // クラッシュ時に自動再起動
       watch: false,              // ファイル変更を監視しない
       env: {
-        NODE_ENV: 'production',
+        NODE_ENV: 'development', 
         PORT: 3000
       }
     }

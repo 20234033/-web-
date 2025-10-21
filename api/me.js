@@ -10,7 +10,7 @@ const pool = require('./db'); // mysql2/promise のプールを想定
  * - USERS(uuid, id, mail_address, avatar_url, location_lat, location_lng)
  * - レスポンス: { uuid, id, email, avatar_url, location_lat, location_lng }
  */
-router.get('/api/me', authenticate, async (req, res) => {
+router.get('/me', authenticate, async (req, res) => {
   const userUuid = req.user?.uuid;
   if (!userUuid) {
     // 認証ミドルウェアを通っているのに uuid が無いのはトークン不正

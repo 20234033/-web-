@@ -94,6 +94,7 @@ app.get('/', (req, res) => {
 
 // 🔐 認証API（仮）
 app.post('/api/register', async (req, res) => {
+  console.log("📍 /api/register called");
   const { id, email, password } = req.body;
 
   if (!id || !email || !password) {
@@ -124,7 +125,7 @@ app.post('/api/register', async (req, res) => {
     res.json({ message: '登録が完了しました' });
 
   } catch (err) {
-    console.error('[❌ 登録エラー]', err);
+    console.error('[❌ register api 登録エラー]', err);
     res.status(500).json({ error: '登録中にエラーが発生しました。' });
   }
 });
@@ -136,10 +137,11 @@ app.post('/api/register', async (req, res) => {
 
 // me.js や /api/me の中
 app.get('/api/me', authenticate, async (req, res) => {
+  console.log("📍 /api/me called");
   const userUuid = req.user?.user_uuid;
 
   if (!userUuid) {
-    console.warn('[me] トークンペイロードに uuid が含まれていません');
+    console.warn('[me] トークンペイロードに user_uuid が含まれていません');
     return res.status(401).json({ error: 'Invalid token payload' });
   }
 
@@ -384,7 +386,7 @@ app.post('/api/update_account', authenticate, async (req, res) => {
 
 app.post('/api/reset-password', (req, res) => {
   const { identifier } = req.body;
-  console.log(`[RESET] Identifier: ${identifier}`);
+  console.log(`[RESET] reset-password Identifier: ${identifier}`);
   res.json({ message: 'パスワードリセットリンクを送信しました（仮）' });
 });
 
@@ -464,7 +466,7 @@ app.get('/api/has_location', authenticate, async (req, res) => {
   console.log("📍 /api/has_location called");
 
   const userUuid = req.user?.user_uuid;
-  console.log("🔑 userUuid:", userUuid);
+  console.log("🔑 user_uuid:", userUuid);
 
   if (!userUuid) {
     console.warn("⚠️ userUuid が undefined です。JWTの構造を確認してください。");
@@ -559,6 +561,7 @@ app.post('/api/answer', authenticate, async (req, res) => {
 
 
 app.get('/api/history/:user_id', async (req, res) => {
+  console.log("📍 /api/history/:user_id called");
   const userUuid = req.params.user_uuid;
   let conn;
 
@@ -603,6 +606,7 @@ const rows = await conn.query(
   }
 });
 app.get('/api/history/:uuid', async (req, res) => {
+  console.log("📍 /api/history/:uuid called");
   const userUuid = req.params.user_uuid;
   if (!userUuid) {
     return res.status(401).json({ error: '認証情報が無効です。(undefined)' });
@@ -668,6 +672,7 @@ app.get('/api/history/:uuid', async (req, res) => {
 
 
 app.get('/api/streetview-url', (req, res) => {
+  console.log("📍 /api/streetview-url called");
   const { lat, lng } = req.query;
   const apiKey = process.env.GOOGLE_API_KEY;
 
@@ -681,6 +686,7 @@ app.get('/api/streetview-url', (req, res) => {
 
 // ✅ Google Street View画像取得API
 app.get('/api/streetview', async (req, res) => {
+  console.log("📍 /api/streetview called");
   const { lat, lng } = req.query;
 
   if (!lat || !lng) {
@@ -708,6 +714,7 @@ app.get('/api/streetview', async (req, res) => {
 });
 // ✅ /api/directions?fromLat=...&fromLng=...&toLat=...&toLng=...
 app.get('/api/directions', async (req, res) => {
+  console.log("📍 /api/directions called");
   const { fromLat, fromLng, toLat, toLng } = req.query;
   const apiKey = process.env.GOOGLE_API_KEY;
 
@@ -755,6 +762,7 @@ app.get('/api/directions', async (req, res) => {
 
 // ✅ /api/geocode?address=〇〇
 app.get('/api/geocode', async (req, res) => {
+  console.log("📍 /api/geocode called");
   const { address } = req.query;
   const apiKey = process.env.GOOGLE_API_KEY;
 
@@ -783,6 +791,7 @@ app.get('/api/geocode', async (req, res) => {
 
 
 app.get('/api/user_answers', authenticate, async (req, res) => {
+  console.log("📍 /api/user_answers called");
   const userUuid = req.user.user_uuid;
 
   try {
@@ -798,6 +807,7 @@ app.get('/api/user_answers', authenticate, async (req, res) => {
 });
 // ユーザーの住所を取得
 app.get('/api/user_location', authenticate, async (req, res) => {
+  console.log("📍 /api/user_location called");
   const userUuid = req.user.user_uuid;
   try {
     const [row] = await db.query('SELECT address_lat, address_lng FROM users WHERE user_uuid = ?', [userUuid]);
@@ -851,7 +861,7 @@ app.delete('/api/user_location', authenticate, async (req, res) => {
 
 
 app.get('/api/score', (req, res) => {
-
+    console.log("📍 /api/score called");
     //文字列からfloat型へ変換
     const SelLat = parseFloat(req.query.SelLat);
     const SelLng = parseFloat(req.query.SelLng);
@@ -890,6 +900,7 @@ app.get('/api/score', (req, res) => {
 
 // /api/spots: MariaDBのspotsテーブルから観光地を取得
 app.get('/api/spots', async (req, res) => {
+  console.log("📍 /api/spots called");
   let conn;
   try {
     conn = await pool.getConnection();

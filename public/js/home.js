@@ -1,10 +1,21 @@
 // public/js/home.js
 
+
 window.addEventListener('DOMContentLoaded', async () => {
   // ============= 認証 & /api/me =============
   let user;
   try {
     const res = await fetch('/api/me', { credentials: 'include' });
+    const NO_IMAGE_DATA_URL =
+  'data:image/svg+xml;utf8,' +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200">
+       <rect width="100%" height="100%" fill="#e0e0e0"/>
+       <text x="50%" y="50%" font-family="sans-serif" font-size="20" fill="#666" text-anchor="middle" dominant-baseline="middle">
+         No Image
+       </text>
+     </svg>`
+  );
     if (!res.ok) throw new Error('Unauthorized');
     user = await res.json();
 
@@ -54,8 +65,11 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   // 画像のフェールセーフ
   if (lastImageEl) {
-    lastImageEl.onerror = () => {
-      lastImageEl.src = 'https://via.placeholder.com/320x200?text=No+Image';
+     let triedFallback = false;
+     lastImageEl.onerror = () => {
+       if (triedFallback) return;  // 無限ループ防止
+       triedFallback = true;
+       lastImageEl.src = NO_IMAGE_DATA_URL;
     };
   }
 
@@ -67,7 +81,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     title: '--',
     description: '--',
     playedAt: '--',
-    image: 'https://via.placeholder.com/320x200?text=No+Image'
+    image: NO_IMAGE_DATA_URL
   });
 
   // ============= 履歴読み込み（/api/history/:uuid のみ使用） =============
@@ -98,7 +112,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       title: latest.title || '--',
       description: latest.description || '--',
       playedAt: new Date(latest.answered_at).toLocaleDateString('ja-JP'),
-      image: latest.image_path || 'https://via.placeholder.com/320x200?text=No+Image'
+      image: latest.image_path || NO_IMAGE_DATA_URL
     });
   } catch (e) {
     console.error('履歴読み込み失敗:', e);

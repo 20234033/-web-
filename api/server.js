@@ -219,40 +219,34 @@ app.post('/api/register', async (req, res) => {
 
 
 // me.js や /api/me の中
-app.get('/api/me', authenticate, async (req, res) => {
-  const userUuid = req.user?.uuid;
 
-  if (!userUuid) {
-    console.warn('[me] トークンペイロードに uuid が含まれていません');
-    return res.status(401).json({ error: 'Invalid token payload' });
-  }
 
-  try {
-    const rows = await pool.query(
-      'SELECT uuid, id, mail_address, avatar_url, location_lat, location_lng FROM USERS WHERE uuid = ?',
-      [userUuid]
-    );
+ app.get('/api/me', authenticate, async (req, res) => {
+   const userUuid = req.user?.uuid;
+   if (!userUuid) return res.status(401).json({ error: 'Invalid token payload' });
 
-    if (!rows.length) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    const user = rows[0];
-
-    res.json({
-      uuid: user.uuid,                    // ← 内部用ID
-      id: user.id,                        // ← 表示名
-      email: user.mail_address,
-      avatar_url: user.avatar_url,
-      location_lat: user.location_lat,
-      location_lng: user.location_lng
-    });
-
-  } catch (err) {
-    console.error('[me取得失敗]', err);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
+   try {
+     const [rows] = await pool.query(
+       'SELECT uuid, id, mail_address, avatar_url, location_lat, location_lng FROM USERS WHERE uuid = ? LIMIT 1',
+       [userUuid]
+     );
+     if (!rows || rows.length === 0) {
+       return res.status(404).json({ error: 'User not found' });
+     }
+     const user = rows[0];
+     res.json({
+       uuid: user.uuid,
+       id: user.id,
+       email: user.mail_address,
+       avatar_url: user.avatar_url,
+       location_lat: user.location_lat,
+       location_lng: user.location_lng,
+     });
+   } catch (err) {
+     console.error('[me取得失敗]', err);
+     res.status(500).json({ error: 'Internal Server Error' });
+   }
+ });
 
 app.post('/api/login', async (req, res) => {
   const { identifier, password } = req.body;
@@ -290,8 +284,8 @@ app.post('/api/login', async (req, res) => {
     // ✅ Cookie にセット
     res.cookie('token', token, {
       httpOnly: true,
-       secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+      secure: false,          // ← HTTPのみなので常に false
+      sameSite: 'Lax',        // ← クロスサイトにしない運用（同一オリジン前提） 'None' : 'Lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 

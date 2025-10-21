@@ -76,9 +76,10 @@ app.use(express.static(publicPath, { extensions: ['html'] }));
 app.use('/image', express.static(path.join(__dirname, '..', 'public', 'image')));
 
 app.use(cors({
-  origin: 'http://localhost:3000', // ← フロントのURLにする
-  credentials: true                // ← これがないとCookieが送られない
+  origin: ['http://localhost:3000', 'http://ec2-54-150-237-229.ap-northeast-1.compute.amazonaws.com'],
+  credentials: true,
 }));
+
 
 // ✅ APIルート読み込み（cookieParserの後に）
 const meRoute = require('./me');

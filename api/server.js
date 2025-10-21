@@ -477,8 +477,8 @@ app.post('/api/reset-password', (req, res) => {
 app.post('/api/force-logout', (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+    secure: false,         // ← HTTPのみなので必ず false
+    sameSite: 'Lax',       // ← 同一オリジン運用（クロスサイト不可）
   });
   res.json({ ok: true });
 });

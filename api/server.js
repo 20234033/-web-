@@ -806,7 +806,7 @@ app.get('/api/user_answers', authenticate, async (req, res) => {
 app.get('/api/user_location', authenticate, async (req, res) => {
   const userUuid = req.user.uuid;
   try {
-    const [row] = await db.query('SELECT address_lat, address_lng FROM users WHERE user_uuid = ?', userUuid);
+    const [row] = await db.query('SELECT address_lat, address_lng FROM users WHERE user_uuid = ?', [userUuid]);
     res.json({ lat: row?.address_lat, lng: row?.address_lng });
   } catch (err) {
     console.error('住所取得エラー:', err);

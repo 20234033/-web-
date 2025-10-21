@@ -4,7 +4,7 @@ const { authenticate } = require('./middleware/authenticate');
 const pool = require('./db'); // ← あなたのDB接続モジュールに応じて変更
 
 router.get('/api/me', authenticate, async (req, res) => {
-  const userUuid = req.user?.uuid;
+  const userUuid = req.user?.user_uuid;
 
   if (!userUuid) {
     return res.status(401).json({ error: 'Invalid token payload' });

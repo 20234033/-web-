@@ -136,7 +136,7 @@ app.post('/api/register', async (req, res) => {
 
 // me.js や /api/me の中
 app.get('/api/me', authenticate, async (req, res) => {
-  const userUuid = req.user?.uuid;
+  const userUuid = req.user?.user_uuid;
 
   if (!userUuid) {
     console.warn('[me] トークンペイロードに uuid が含まれていません');
@@ -156,10 +156,9 @@ app.get('/api/me', authenticate, async (req, res) => {
     const user = rows[0];
 
     res.json({
-      uuid: user.uuid,                    // ← 内部用ID
-      id: user.id,                        // ← 表示名
-      email: user.mail_address,
-      avatar_url: user.avatar_url,
+      user_uuid: user.user_uuid,                    // ← 内部用ID
+      user_name: user.user_name,                        // ← 表示名
+      mail_address: user.mail_address,
       location_lat: user.location_lat,
       location_lng: user.location_lng
     });
@@ -199,6 +198,7 @@ app.post('/api/login', async (req, res) => {
     if (!user.password_hash || !(await bcrypt.compare(password, user.password_hash))) {
       return res.status(401).json({ error: 'ログイン情報が正しくありません。' });
     }
+
 
     //JWTトークン生成
     const { JWT_SECRET } = require('./config/auth.js');
@@ -382,12 +382,6 @@ app.post('/api/update_account', authenticate, async (req, res) => {
   }
 });
 
-
-
-
-
-
-
 app.post('/api/reset-password', (req, res) => {
   const { identifier } = req.body;
   console.log(`[RESET] Identifier: ${identifier}`);
@@ -404,9 +398,9 @@ app.post('/api/force-logout', (req, res) => {
 });
 
 // ✅ 新しい観光地を保存するAPI
-app.post('/api/save-spot', upload.single('image'), async (req, res) => {
+app.post('/api/save-spot', authenticate, upload.single('image'), async (req, res) => {
   let conn;
-  const userUuid = req.user?.uuid;
+  const userUuid = req.user?.user_uuid;
 
   if (!userUuid) {
   console.warn("⚠️ userUuid が undefined です。JWTの構造を確認してください。");
@@ -469,7 +463,7 @@ app.post('/api/save-spot', upload.single('image'), async (req, res) => {
 app.get('/api/has_location', authenticate, async (req, res) => {
   console.log("📍 /api/has_location called");
 
-  const userUuid = req.user?.uuid;
+  const userUuid = req.user?.user_uuid;
   console.log("🔑 userUuid:", userUuid);
 
   if (!userUuid) {
@@ -543,7 +537,7 @@ app.post('/api/answer', authenticate, async (req, res) => {
 
   try {
     conn = await pool.getConnection();
-    const userUuid = req.user.uuid;
+    const userUuid = req.user.user_uuid;
 
     await conn.query(`
       INSERT INTO user_answers 
@@ -565,7 +559,7 @@ app.post('/api/answer', authenticate, async (req, res) => {
 
 
 app.get('/api/history/:user_id', async (req, res) => {
-  const userUuid = req.params.user_id;
+  const userUuid = req.params.user_uuid;
   let conn;
 
   try {
@@ -579,8 +573,8 @@ const rows = await conn.query(
       s.title, 
       s.genre, 
       s.description, 
-      s.lat, 
-      s.lng, 
+      s.latitude AS lat, 
+      s.longitude AS lng, 
       s.image_path
    FROM user_answers ua
    JOIN spots s ON ua.spot_id = s.spot_id
@@ -609,7 +603,7 @@ const rows = await conn.query(
   }
 });
 app.get('/api/history/:uuid', async (req, res) => {
-  const userUuid = req.params.uuid;
+  const userUuid = req.params.user_uuid;
   if (!userUuid) {
     return res.status(401).json({ error: '認証情報が無効です。(undefined)' });
   }
@@ -632,8 +626,8 @@ app.get('/api/history/:uuid', async (req, res) => {
           s.title, 
           s.genre, 
           s.description, 
-          s.lat, 
-          s.lng, 
+          s.latitude AS lat, 
+          s.longitude AS lng, 
           s.image_path
        FROM user_answers ua
        JOIN spots s ON ua.spot_id = s.spot_id
@@ -789,7 +783,7 @@ app.get('/api/geocode', async (req, res) => {
 
 
 app.get('/api/user_answers', authenticate, async (req, res) => {
-  const userUuid = req.user.uuid;
+  const userUuid = req.user.user_uuid;
 
   try {
     const rows = await db.query(
@@ -804,7 +798,7 @@ app.get('/api/user_answers', authenticate, async (req, res) => {
 });
 // ユーザーの住所を取得
 app.get('/api/user_location', authenticate, async (req, res) => {
-  const userUuid = req.user.uuid;
+  const userUuid = req.user.user_uuid;
   try {
     const [row] = await db.query('SELECT address_lat, address_lng FROM users WHERE user_uuid = ?', [userUuid]);
     res.json({ lat: row?.address_lat, lng: row?.address_lng });
@@ -816,7 +810,7 @@ app.get('/api/user_location', authenticate, async (req, res) => {
 
 // ユーザーの住所を保存
 app.post('/api/user_location', authenticate, async (req, res) => {
-  const userUuid = req.user.uuid;
+  const userUuid = req.user.user_uuid;
 
   if (!userUuid) {
   return res.status(401).json({ error: '認証情報が無効です。(undefined)' });
@@ -837,7 +831,7 @@ app.post('/api/user_location', authenticate, async (req, res) => {
 
 //ユーザーの住所を削除
 app.delete('/api/user_location', authenticate, async (req, res) => {
-  const userUuid = req.user.uuid;
+  const userUuid = req.user.user_uuid;
 
   if (!userUuid) {
   return res.status(401).json({ error: '認証情報が無効です。(undefined)' });

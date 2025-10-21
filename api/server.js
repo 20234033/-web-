@@ -23,7 +23,6 @@ const mariadb = require('mariadb');
 const cors = require('cors');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-const db = require('./db.js'); // もしくは './database' など、正しいパスで
 const AWS = require('aws-sdk');
 const { authenticate } = require('./middleware/authenticate.js'); // ← これがあること
 
@@ -46,16 +45,8 @@ const MODEL_CANDIDATES = [
   'gemini-1.5-flash-8b'
 ];
 
-
-
-// ✅ DB接続プール（poolは後で使えるようにmodule.exportsしてもOK）
-const pool = mariadb.createPool({
-  host: 'localhost',
-  user: 'geoapp',
-  password: 'Password',
-  database: 'website',
-  connectionLimit: 5
-});
+const pool = require('./db'); 
+const db = pool;
 
 // 📁 パス定義
 const publicPath = path.join(__dirname, '..', 'public');
@@ -938,7 +929,7 @@ app.get('/api/user_location', authenticate, async (req, res) => {
 app.post('/api/user_location', authenticate, async (req, res) => {
   const { lat, lng } = req.body;
   try {
-    await db.query(
+    await pool.query(
       'UPDATE USERS SET location_lat = ?, location_lng = ? WHERE uuid = ?',
       [lat, lng, req.user.uuid]
     );
@@ -951,7 +942,7 @@ app.post('/api/user_location', authenticate, async (req, res) => {
 
 app.delete('/api/user_location', authenticate, async (req, res) => {
   try {
-    await db.query(
+    await pool.query(
       'UPDATE USERS SET location_lat = NULL, location_lng = NULL WHERE uuid = ?',
       [req.user.uuid]
     );

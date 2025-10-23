@@ -18,7 +18,7 @@ html, body {
 
 /* === テーマ: ダーク === */
 body.dark {
-  background-color: #0e1a2b;
+  background-color: #1e1e1e;
   color: #e0e0e0;
 }
 
@@ -26,13 +26,19 @@ body.dark .home-left,
 body.dark .home-right,
 body.dark .result-info,
 body.dark .result-container {
-  background: linear-gradient(145deg, #1e2a38, #121a26);
+  background: linear-gradient(145deg, #1e2a38, #1e1e1e);
   color: #f5f5f5;
 }
 
 body.dark .home-left select {
   background-color: #1c2c3a;
   color: #fff;
+}
+
+body.dark .setting-section {
+  background: #1e1e1e;           
+  border: 1px solid #1e1e1e;        
+  color: #f1f1f1;                
 }
 
 /* === テーマ: ライト === */
@@ -71,7 +77,7 @@ body.light .home-left select {
 }
 
 body.dark .navbar {
-  background: linear-gradient(90deg, #0f2027, #203a43, #2c5364);
+  background: linear-gradient(90deg, #1e1e1e, #1f1f1f, #2c2c2c);
   color: #f5f5f5;
 }
 
@@ -444,7 +450,7 @@ body.dark .settings-container {
 }
 
 body.dark .setting-section select {
-  background-color: #2c2c2c;
+  background-color: #1e1e1e;
   color: #f1f1f1;
   border: 1px solid #444;
 }
@@ -455,11 +461,11 @@ body.dark .setting-section select:focus {
 }
 
 body.dark #map {
-  filter: grayscale(1) brightness(0.8);
+  /*filter: grayscale(1) brightness(0.8);*/
 }
 
 body.dark #locationDisplay {
-  color: #ccc;
+  color: #2c2c2c;
 }
 
 body.dark #confirmLocation {
@@ -747,9 +753,9 @@ button,
 .setting-section {
   margin: 30px 0;
   padding: 15px;
-  border: 1px solid #ccc;
+  border: 1px solid #ffffff;
   border-radius: 8px;
-  background: #f9f9f9;
+  background: #ffffff;
 }
 
 .setting-section label {

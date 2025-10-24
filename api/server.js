@@ -96,6 +96,8 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 
+
+
 async function listGeminiModels() {
   const fetch = (await import('node-fetch')).default;
   const r = await fetch(`https://generativelanguage.googleapis.com/v1/models?key=${process.env.GEMINI_API_KEY}`);
@@ -944,6 +946,179 @@ app.get('/api/score', (req, res) => {
       });
   });
 
+  // --- 楽天トラベル 近隣ホテル検索（配列の配列フォーマット対応・整形つき） ---
+
+// 目に見えないゼロ幅文字や前後空白を除去
+function sanitizeAppId(raw) {
+  return (raw || "").trim().replace(/[\u200B-\u200D\uFEFF]/g, "");
+}
+
+// 楽天レスポンス1件分から basic/rating を安全に取り出す
+function pickBasicAndRating(node) {
+  if (!node) return { basic: null, rating: null };
+
+  // 期待ケース: [ {hotelBasicInfo:{...}}, {hotelRatingInfo:{...}} ]
+  if (Array.isArray(node)) {
+    const out = { basic: null, rating: null };
+    for (const part of node) {
+      if (part?.hotelBasicInfo) out.basic = part.hotelBasicInfo;
+      if (part?.hotelRatingInfo) out.rating = part.hotelRatingInfo;
+    }
+    return out;
+  }
+
+  // フラット: { hotelBasicInfo:{...}, hotelRatingInfo:{...} }
+  if (node.hotelBasicInfo || node.hotelRatingInfo) {
+    return { basic: node.hotelBasicInfo || null, rating: node.hotelRatingInfo || null };
+  }
+
+  // v1互換: { hotel: [ {hotelBasicInfo:{...}}, ... ] } / { hotel:{hotelBasicInfo:{...}} }
+  if (node.hotel) {
+    if (Array.isArray(node.hotel)) {
+      const out = { basic: null, rating: null };
+      for (const part of node.hotel) {
+        if (part?.hotelBasicInfo) out.basic = part.hotelBasicInfo;
+        if (part?.hotelRatingInfo) out.rating = part.hotelRatingInfo;
+      }
+      return out;
+    } else if (typeof node.hotel === "object") {
+      const maybe = node.hotel;
+      if (maybe.hotelBasicInfo || maybe.hotelRatingInfo) {
+        return { basic: maybe.hotelBasicInfo || null, rating: maybe.hotelRatingInfo || null };
+      }
+      for (const k of Object.keys(maybe)) {
+        const v = maybe[k];
+        if (v?.hotelBasicInfo || v?.hotelRatingInfo) {
+          return { basic: v.hotelBasicInfo || null, rating: v.hotelRatingInfo || null };
+        }
+      }
+    }
+  }
+  return { basic: null, rating: null };
+}
+
+// Rakuten → 共通フォーマットへ整形
+function normalizeHotel(basic, rating) {
+  const lat = typeof basic.latitude === "number" ? basic.latitude : parseFloat(basic.latitude);
+  const lng = typeof basic.longitude === "number" ? basic.longitude : parseFloat(basic.longitude);
+
+  return {
+    id: basic.hotelNo ?? null,
+    name: basic.hotelName ?? null,
+    address: [basic.address1, basic.address2].filter(Boolean).join(" ") || null,
+    lat: Number.isFinite(lat) ? lat : null,
+    lng: Number.isFinite(lng) ? lng : null,
+    minCharge: basic.hotelMinCharge ?? null,
+    reviewAverage: basic.reviewAverage ?? null,  // 総合
+    reviewCount: basic.reviewCount ?? null,
+    ratingDetail: {
+      service: rating?.serviceAverage ?? null,
+      location: rating?.locationAverage ?? null,
+      room: rating?.roomAverage ?? null,
+      equipment: rating?.equipmentAverage ?? null,
+      bath: rating?.bathAverage ?? null,
+      meal: rating?.mealAverage ?? null,
+    },
+    // 画像は候補を優先順で
+    thumbnail: basic.hotelThumbnailUrl || basic.hotelImageUrl || basic.roomThumbnailUrl || null,
+    infoUrl: basic.hotelInformationUrl || null,
+    planUrl: basic.planListUrl || basic.dpPlanListUrl || basic.hotelInformationUrl || null,
+  };
+}
+
+app.get("/api/hotels_nearby_rakuten", async (req, res) => {
+  try {
+    // .env からアプリID取得（サニタイズ）
+    let applicationId = sanitizeAppId(process.env.RAKUTEN_APP_ID);
+    if (!applicationId) {
+      return res.status(500).json({ success: false, message: "RAKUTEN_APP_ID is not set on server" });
+    }
+
+    const { lat, lng, radiusKm, hits } = req.query;
+    if (lat == null || lng == null) {
+      return res.status(400).json({ success: false, message: "missing lat/lng" });
+    }
+
+    // 楽天の searchRadius は 0.1〜3.0 km（小数1桁）
+    const fallbackRadii = radiusKm
+      ? [Math.max(0.1, Math.min(3.0, Number(radiusKm)))]
+      : [0.5, 1.0, 2.0, 3.0];
+
+    const maxHits = Math.min(Math.max(parseInt(hits || "20", 10), 1), 30);
+
+    for (const r of fallbackRadii) {
+      const url = new URL("https://app.rakuten.co.jp/services/api/Travel/SimpleHotelSearch/20170426");
+      url.searchParams.set("applicationId", applicationId);
+      url.searchParams.set("format", "json");
+      url.searchParams.set("formatVersion", "2");   // 配列の配列で返る
+      url.searchParams.set("latitude", String(lat));    // WGS84 (度)
+      url.searchParams.set("longitude", String(lng));   // WGS84 (度)
+      url.searchParams.set("datumType", "1");           // 1=世界測地系 (度)
+      url.searchParams.set("searchRadius", String(r));  // 0.1〜3.0
+      url.searchParams.set("hits", String(maxHits));    // 1〜30
+      url.searchParams.set("carrier", "0");             // PC/スマホ
+      url.searchParams.set("responseType", "middle");   // 情報量をほどほどに
+
+      // applicationId を含む完全URLはログに出さない（漏洩防止）
+      console.log("[Rakuten] GET", url.origin + url.pathname + "?(masked)");
+
+      // Node18未満対策（必要なときだけ node-fetch を動的 import）
+      if (typeof fetch !== "function") {
+        const nf = (await import("node-fetch")).default;
+        global.fetch = nf;
+      }
+
+      const rResp = await fetch(url);
+      console.log("[Rakuten] RESP", rResp.status, rResp.statusText);
+
+      const j = await rResp.json().catch(() => ({}));
+
+      // 楽天は 200 でも body に error を入れてくる場合あり
+      if (j?.error) {
+        console.warn("[Rakuten] BODY error:", j);
+        // デバッグしやすいように 200 で理由を返す
+        return res.json({
+          success: false,
+          apiError: j.error,
+          apiErrorDescription: j.error_description || null,
+        });
+      }
+
+      const rawList = Array.isArray(j?.hotels) ? j.hotels : [];
+      if (rawList.length === 0) {
+        // 次の半径へフォールバック
+        continue;
+      }
+
+      const hotels = [];
+      for (const node of rawList) {
+        const { basic, rating } = pickBasicAndRating(node);
+        if (!basic) continue;
+        hotels.push(normalizeHotel(basic, rating));
+      }
+
+      return res.json({
+        success: true,
+        radiusKm: r,
+        count: hotels.length,
+        hotels,
+        paging: j?.pagingInfo || null,
+      });
+    }
+
+    // すべての半径でヒットなし
+    return res.json({
+      success: true,
+      radiusKm: fallbackRadii.at(-1),
+      count: 0,
+      hotels: [],
+      paging: null,
+    });
+  } catch (e) {
+    console.error("[Rakuten] handler failed:", e);
+    res.status(500).json({ success: false, message: "hotels_nearby_rakuten failed" });
+  }
+});
 
 
 

@@ -670,49 +670,43 @@ app.get('/api/streetview', async (req, res) => {
   }
 });
 // ✅ /api/directions?fromLat=...&fromLng=...&toLat=...&toLng=...
-app.get('/api/directions', async (req, res) => {
-  const { fromLat, fromLng, toLat, toLng } = req.query;
-  const apiKey = process.env.GOOGLE_API_KEY;
-
-  // 座標チェック
-  if (![fromLat, fromLng, toLat, toLng].every(val => val !== undefined && !isNaN(val))) {
-    return res.status(400).json({ success: false, error: '緯度・経度が不正です。' });
-  }
-
-  const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${fromLat},${fromLng}&destination=${toLat},${toLng}&mode=driving&key=${apiKey}`;
-
+app.get("/api/directions", async (req, res) => {
   try {
-    const fetch = (await import('node-fetch')).default;
-    const response = await fetch(url);
-    const data = await response.json();
-
-    // APIレスポンスログ（開発用）
-    console.log('[📦 Directions API status]:', data.status);
-    if (data.status !== 'OK') {
-      return res.status(502).json({
-        success: false,
-        error: 'Google Directions API からの応答が OK ではありません。',
-        details: data.status,
-        message: data.error_message || null,
-      });
+    const { fromLat, fromLng, toLat, toLng, mode = "driving" } = req.query;
+    if ([fromLat, fromLng, toLat, toLng].some(v => v === undefined)) {
+      return res.status(400).json({ success: false, message: "missing params" });
     }
 
-    // デバッグ用にルート情報の概要を出力
-    if (!data.routes || data.routes.length === 0) {
-      return res.status(404).json({ success: false, error: 'ルートが見つかりません。' });
+    // OSRM (無料) — polyline(=5桁精度) を取得
+    const url = `https://router.project-osrm.org/route/v1/${mode}/${fromLng},${fromLat};${toLng},${toLat}?overview=full&geometries=polyline&alternatives=false&steps=true`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(`OSRM ${r.status}`);
+    const json = await r.json();
+
+    if (!json.routes?.length) {
+      return res.json({ success: false, message: "no route" });
     }
 
-    res.json({
+    const route = json.routes[0];
+    const leg = route.legs?.[0];
+
+    return res.json({
       success: true,
       route: {
-        summary: data.routes[0].summary,
-        overview_polyline: data.routes[0].overview_polyline,
-        legs: data.routes[0].legs,
+        overview_polyline: { points: route.geometry }, // ←フロントのdecodePolylineで展開可
+        distance: route.distance,        // meters
+        duration: route.duration,        // seconds
+        steps: (leg?.steps || []).map(s => ({
+          name: s.name,
+          distance: s.distance,
+          duration: s.duration,
+          maneuver: s.maneuver?.instruction || s.maneuver?.type || ""
+        }))
       }
     });
-  } catch (err) {
-    console.error('[❌ Directions API ERROR]', err);
-    res.status(500).json({ success: false, error: 'サーバー側でエラーが発生しました。' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ success: false, message: "directions failed" });
   }
 });
 

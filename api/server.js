@@ -1,6 +1,4 @@
-const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '..', '.env') }); // ルート固定
-
+require('dotenv').config(); // .envを最上部で読み込む
 
 
 const { JWT_SECRET } = require('./config/auth'); 
@@ -12,6 +10,7 @@ if (!JWT_SECRET) {
 
 console.log('[BOOT] JWT_SECRET length =', String(JWT_SECRET).length);
 const express = require('express');
+const path = require('path');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const fs = require('fs');
@@ -21,8 +20,8 @@ const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 const mariadb = require('mariadb');
 const cors = require('cors');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 
+const db = require('./db.js'); // もしくは './database' など、正しいパスで
 const AWS = require('aws-sdk');
 const { authenticate } = require('./middleware/authenticate.js'); // ← これがあること
 
@@ -55,18 +54,16 @@ if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 if (!fs.existsSync(jsonFilePath)) fs.writeFileSync(jsonFilePath, '[]', 'utf-8');
 
 // ✅ ミドルウェア設定
-app.set('trust proxy', 1);
 app.use(cookieParser()); // JWT読み取り用
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(publicPath, { extensions: ['html'] }));
+app.use(express.static(publicPath)); // 静的ファイル
 app.use('/image', express.static(path.join(__dirname, '..', 'public', 'image')));
 
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://ec2-54-150-237-229.ap-northeast-1.compute.amazonaws.com'],
-  credentials: true,
+  origin: 'http://localhost:3000', // ← フロントのURLにする
+  credentials: true                // ← これがないとCookieが送られない
 }));
-
 
 // ✅ APIルート読み込み（cookieParserの後に）
 const meRoute = require('./me');
@@ -89,76 +86,6 @@ const storage = multer.diskStorage({
 
 // 🖼 multer 設定（画像保存）
 const upload = multer({ storage });
-
-
-
-
-async function listGeminiModels() {
-  const fetch = (await import('node-fetch')).default;
-  const r = await fetch(`https://generativelanguage.googleapis.com/v1/models?key=${process.env.GEMINI_API_KEY}`);
-  return r.json();
-}
-async function callGeminiGenerate(model, prompt) {
-  const fetch = (await import('node-fetch')).default;
-  const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`;
-  const body = {
-    generationConfig: {
-      temperature: 1.0,     // 多様性アップ（0.7〜1.2くらいで調整）
-      topP: 0.95,
-      topK: 40,
-      // maxOutputTokens: 256, // 必要なら制限
-      // candidateCount: 1
-    },
-    contents: [
-      { role: 'user', parts: [{ text: prompt }] }
-    ]
-  };
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type':'application/json' },
-    body: JSON.stringify(body)
-  });
-
-  if (!res.ok) {
-    const errText = await res.text().catch(()=> '');
-    const e = new Error(`Gemini ${model} ${res.status} ${res.statusText}: ${errText}`);
-    e.status = res.status;
-    throw e;
-  }
-
-  const data = await res.json();
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  return text.trim();
-}
-
-async function generateWithGeminiFallback(prompt) {
-  let lastError;
-  for (const m of MODEL_CANDIDATES) {
-    try {
-      return await callGeminiGenerate(m, prompt);
-    } catch (e) {
-      // 404/400 はモデル非対応のことが多い→次の候補へ
-      if (e.status !== 404 && e.status !== 400) lastError = e;
-      continue;
-    }
-  }
-  throw lastError || new Error('No Gemini model worked');
-}
-// 住所ヒントが未実装ならこれも追加（既に同名関数があれば不要）
-async function reverseGeocode(lat, lng) {
-  const apiKey = process.env.GOOGLE_API_KEY;
-  if (!apiKey) return null;
-  const fetch = (await import('node-fetch')).default;
-  const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&language=ja&key=${apiKey}`;
-  const r = await fetch(url);
-  const json = await r.json();
-  if (json.status !== 'OK' || !json.results?.length) return null;
-  return {
-    formatted: json.results[0].formatted_address,
-    components: json.results[0].address_components || []
-  };
-}
 
 // 🔐 初期リダイレクト（例：ログインページ）
 app.get('/', (req, res) => {
@@ -202,6 +129,11 @@ app.post('/api/register', async (req, res) => {
     res.status(500).json({ error: '登録中にエラーが発生しました。' });
   }
 });
+
+
+
+
+
 
 // me.js や /api/me の中
 app.get('/api/me', authenticate, async (req, res) => {
@@ -276,9 +208,8 @@ app.post('/api/login', async (req, res) => {
     //Cookie にセット
     res.cookie('token', token, {
       httpOnly: true,
-      secure: false,          // ← HTTPのみなので常に false
-      sameSite: 'Lax',        // ← クロスサイトにしない運用（同一オリジン前提） 'None' : 'Lax',
-      path: '/',
+       secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -296,6 +227,10 @@ app.post('/api/login', async (req, res) => {
     if (conn) conn.release();
   }
 });
+
+
+
+
 
 app.post('/api/logout', (req, res) => {
   res.clearCookie('token', {
@@ -458,8 +393,8 @@ app.post('/api/reset-password', (req, res) => {
 app.post('/api/force-logout', (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,
-    secure: false,         // ← HTTPのみなので必ず false
-    sameSite: 'Lax',       // ← 同一オリジン運用（クロスサイト不可）
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
   });
   res.json({ ok: true });
 });
@@ -546,7 +481,7 @@ app.get('/api/has_location', authenticate, async (req, res) => {
 
     console.log("📦 DB Query Raw Result:", rows);
 
-    const user = rows && rows.length ? rows[0] : null;
+    const user = Array.isArray(rows) ? rows[0] : rows;
     console.log("🧍‍♂️ user:", user);
 
     if (!user || user.address_lat === undefined || user.address_lng === undefined) {
@@ -567,6 +502,10 @@ app.get('/api/has_location', authenticate, async (req, res) => {
     return res.status(500).json({ error: 'DB error' });
   }
 });
+
+
+
+
 
 app.post('/api/answer', authenticate, async (req, res) => {
   const { spot_id, answer_lat, answer_lng, distance_km, score } = req.body;
@@ -724,6 +663,17 @@ app.get('/api/history/:uuid', authenticate, async (req, res) => {
   }
 });
 
+
+
+
+
+
+
+
+
+
+
+
 app.get('/api/streetview-url', (req, res) => {
   console.log("📍 /api/streetview-url called");
   const { lat, lng } = req.query;
@@ -776,153 +726,40 @@ app.get('/api/directions', async (req, res) => {
     return res.status(400).json({ success: false, error: '緯度・経度が不正です。' });
   }
 
-    // OSRM (無料) — polyline(=5桁精度) を取得
-    const url = `https://router.project-osrm.org/route/v1/${mode}/${fromLng},${fromLat};${toLng},${toLat}?overview=full&geometries=polyline&alternatives=false&steps=true`;
-    const r = await fetch(url);
-    if (!r.ok) throw new Error(`OSRM ${r.status}`);
-    const json = await r.json();
+  const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${fromLat},${fromLng}&destination=${toLat},${toLng}&mode=driving&key=${apiKey}`;
 
-    if (!json.routes?.length) {
-      return res.json({ success: false, message: "no route" });
+  try {
+    const fetch = (await import('node-fetch')).default;
+    const response = await fetch(url);
+    const data = await response.json();
+
+    // APIレスポンスログ（開発用）
+    console.log('[📦 Directions API status]:', data.status);
+    if (data.status !== 'OK') {
+      return res.status(502).json({
+        success: false,
+        error: 'Google Directions API からの応答が OK ではありません。',
+        details: data.status,
+        message: data.error_message || null,
+      });
     }
 
-    const route = json.routes[0];
-    const leg = route.legs?.[0];
+    // デバッグ用にルート情報の概要を出力
+    if (!data.routes || data.routes.length === 0) {
+      return res.status(404).json({ success: false, error: 'ルートが見つかりません。' });
+    }
 
-    return res.json({
+    res.json({
       success: true,
       route: {
-        overview_polyline: { points: route.geometry }, // ←フロントのdecodePolylineで展開可
-        distance: route.distance,        // meters
-        duration: route.duration,        // seconds
-        steps: (leg?.steps || []).map(s => ({
-          name: s.name,
-          distance: s.distance,
-          duration: s.duration,
-          maneuver: s.maneuver?.instruction || s.maneuver?.type || ""
-        }))
+        summary: data.routes[0].summary,
+        overview_polyline: data.routes[0].overview_polyline,
+        legs: data.routes[0].legs,
       }
     });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ success: false, message: "directions failed" });
-  }
-});
-
-// ※ 404/500 ハンドラより前に配置
-
-app.post('/api/ai/spot-suggestion', async (req, res) => {
-  try {
-    if (!process.env.GEMINI_API_KEY) {
-      return res.status(503).json({ success: false, error: 'GEMINI_API_KEY が未設定です' });
-    }
-
-    const { title, lat, lng } = req.body || {};
-    const t = typeof title === 'string' ? title.trim() : '';
-    if (!t) {
-      return res.status(400).json({ success: false, error: 'title を指定してください' });
-    }
-
-    // lat/lng は任意（あれば補助的にヒントに使う）
-    let latN = Number.isFinite(parseFloat(lat)) ? parseFloat(lat) : null;
-    let lngN = Number.isFinite(parseFloat(lng)) ? parseFloat(lng) : null;
-
-    // 住所ヒント（任意）
-    let addressHint = 'なし', componentsHint = '';
-    if (latN != null && lngN != null) {
-      try {
-        const geo = await reverseGeocode(latN, lngN);
-        if (geo?.formatted) addressHint = geo.formatted;
-        if (geo?.components?.length) {
-          componentsHint = geo.components.map(c => `${c.long_name}(${c.types.join('/')})`).join(', ');
-        }
-      } catch {}
-    }
-
-    const prompt = `
-あなたは日本の旅行ガイド編集者です。与えられた「観光地タイトル」から、
-1) ジャンル（厳密に: "historic" | "nature" | "city" | "culture" のどれか）
-2) その場所の説明（日本語 80〜140文字）
-をJSONだけで返してください。
-
-# 入力
-- title: ${t}
-- lat: ${latN ?? '不明'}
-- lng: ${lngN ?? '不明'}
-- address_hint: ${addressHint}
-- components_hint: ${componentsHint}
-- request_nonce: ${Date.now()}-${Math.random().toString(36).slice(2,8)}
-
-# ルール
-- 出力は **JSONのみ**（前後の文章・マークダウン・コードブロックは禁止）
-- title は入力をベースに適宜整形してOK（誤記訂正や一般的表記への統一）
-- genre は ["historic","nature","city","culture"] のいずれかに必ず合わせる
-- description は日本語で、具体的な魅力・歴史・立地などを簡潔に
-
-# 出力フォーマット
-{"title":"...","genre":"...","description":"..."}
-    `.trim();
-
-    const raw = await generateWithGeminiFallback(prompt);
-
-    const match = raw.match(/\{[\s\S]*\}/);
-    if (!match) {
-      return res.status(502).json({ success: false, error: 'AI応答の解析に失敗しました', raw });
-    }
-
-    let data;
-    try { data = JSON.parse(match[0]); }
-    catch { return res.status(502).json({ success: false, error: 'JSONパース失敗', raw }); }
-
-    // ジャンル正規化（万一ズレた場合の保険）
-    const allowed = ['historic','nature','city','culture'];
-    if (!allowed.includes(data.genre)) {
-      const blob = `${t}${data.title || ''}${data.description || ''}`;
-      if (/城|寺|神社|史|遺産|城郭|古都|寺院/.test(blob)) data.genre = 'historic';
-      else if (/公園|山|川|湖|海|自然|滝|渓谷|高原|岬|砂丘|温泉/.test(blob)) data.genre = 'nature';
-      else if (/都|市|駅|繁華|タワー|スカイ|街|展望|商店街|みなと|ウォーターフロント/.test(blob)) data.genre = 'city';
-      else data.genre = 'culture';
-    }
-
-    // 説明の長さを軽く調整（80〜140目安）
-    const desc = (data.description || '').trim();
-    const trimmed = desc.length > 160 ? desc.slice(0, 160) + '…' : desc;
-
-    return res.json({
-      success: true,
-      suggestion: {
-        title: data.title || t,
-        genre: data.genre,
-        description: trimmed || '説明準備中'
-      }
-    });
-
   } catch (err) {
-    console.error('[AI suggestion error REST]', err);
-
-    // フォールバック（AI失敗時：ローカル推定）
-    try {
-      const { title } = req.body || {};
-      const t = (title || '').trim();
-      if (!t) throw 0;
-
-      let g = 'culture';
-      if (/城|寺|神社|史|遺産|城郭|古都|寺院/.test(t)) g = 'historic';
-      else if (/公園|山|川|湖|海|自然|滝|渓谷|高原|岬|砂丘|温泉/.test(t)) g = 'nature';
-      else if (/都|市|駅|繁華|タワー|スカイ|街|展望|商店街|みなと|ウォーターフロント/.test(t)) g = 'city';
-
-      return res.status(200).json({
-        success: true,
-        suggestion: {
-          title: t,
-          genre: g,
-          description: '見どころや周辺の雰囲気・歴史・文化が楽しめるスポットです。詳細は追って編集してください。'
-        },
-        fallback: true
-      });
-    } catch {
-      return res.status(500).json({ success: false, error: 'AI生成に失敗しました' });
-    }
+    console.error('[❌ Directions API ERROR]', err);
+    res.status(500).json({ success: false, error: 'サーバー側でエラーが発生しました。' });
   }
 });
 
@@ -954,6 +791,7 @@ app.get('/api/geocode', async (req, res) => {
     res.status(500).json({ success: false, error: 'ジオコーディングに失敗しました。' });
   }
 });
+
 
 app.get('/api/user_answers', authenticate, async (req, res) => {
   console.log("📍 /api/user_answers called");
@@ -1024,6 +862,7 @@ app.delete('/api/user_location', authenticate, async (req, res) => {
   }
 });
 
+
 app.get('/api/score', (req, res) => {
     console.log("📍 /api/score called");
     //文字列からfloat型へ変換
@@ -1059,179 +898,6 @@ app.get('/api/score', (req, res) => {
       });
   });
 
-  // --- 楽天トラベル 近隣ホテル検索（配列の配列フォーマット対応・整形つき） ---
-
-// 目に見えないゼロ幅文字や前後空白を除去
-function sanitizeAppId(raw) {
-  return (raw || "").trim().replace(/[\u200B-\u200D\uFEFF]/g, "");
-}
-
-// 楽天レスポンス1件分から basic/rating を安全に取り出す
-function pickBasicAndRating(node) {
-  if (!node) return { basic: null, rating: null };
-
-  // 期待ケース: [ {hotelBasicInfo:{...}}, {hotelRatingInfo:{...}} ]
-  if (Array.isArray(node)) {
-    const out = { basic: null, rating: null };
-    for (const part of node) {
-      if (part?.hotelBasicInfo) out.basic = part.hotelBasicInfo;
-      if (part?.hotelRatingInfo) out.rating = part.hotelRatingInfo;
-    }
-    return out;
-  }
-
-  // フラット: { hotelBasicInfo:{...}, hotelRatingInfo:{...} }
-  if (node.hotelBasicInfo || node.hotelRatingInfo) {
-    return { basic: node.hotelBasicInfo || null, rating: node.hotelRatingInfo || null };
-  }
-
-  // v1互換: { hotel: [ {hotelBasicInfo:{...}}, ... ] } / { hotel:{hotelBasicInfo:{...}} }
-  if (node.hotel) {
-    if (Array.isArray(node.hotel)) {
-      const out = { basic: null, rating: null };
-      for (const part of node.hotel) {
-        if (part?.hotelBasicInfo) out.basic = part.hotelBasicInfo;
-        if (part?.hotelRatingInfo) out.rating = part.hotelRatingInfo;
-      }
-      return out;
-    } else if (typeof node.hotel === "object") {
-      const maybe = node.hotel;
-      if (maybe.hotelBasicInfo || maybe.hotelRatingInfo) {
-        return { basic: maybe.hotelBasicInfo || null, rating: maybe.hotelRatingInfo || null };
-      }
-      for (const k of Object.keys(maybe)) {
-        const v = maybe[k];
-        if (v?.hotelBasicInfo || v?.hotelRatingInfo) {
-          return { basic: v.hotelBasicInfo || null, rating: v.hotelRatingInfo || null };
-        }
-      }
-    }
-  }
-  return { basic: null, rating: null };
-}
-
-// Rakuten → 共通フォーマットへ整形
-function normalizeHotel(basic, rating) {
-  const lat = typeof basic.latitude === "number" ? basic.latitude : parseFloat(basic.latitude);
-  const lng = typeof basic.longitude === "number" ? basic.longitude : parseFloat(basic.longitude);
-
-  return {
-    id: basic.hotelNo ?? null,
-    name: basic.hotelName ?? null,
-    address: [basic.address1, basic.address2].filter(Boolean).join(" ") || null,
-    lat: Number.isFinite(lat) ? lat : null,
-    lng: Number.isFinite(lng) ? lng : null,
-    minCharge: basic.hotelMinCharge ?? null,
-    reviewAverage: basic.reviewAverage ?? null,  // 総合
-    reviewCount: basic.reviewCount ?? null,
-    ratingDetail: {
-      service: rating?.serviceAverage ?? null,
-      location: rating?.locationAverage ?? null,
-      room: rating?.roomAverage ?? null,
-      equipment: rating?.equipmentAverage ?? null,
-      bath: rating?.bathAverage ?? null,
-      meal: rating?.mealAverage ?? null,
-    },
-    // 画像は候補を優先順で
-    thumbnail: basic.hotelThumbnailUrl || basic.hotelImageUrl || basic.roomThumbnailUrl || null,
-    infoUrl: basic.hotelInformationUrl || null,
-    planUrl: basic.planListUrl || basic.dpPlanListUrl || basic.hotelInformationUrl || null,
-  };
-}
-
-app.get("/api/hotels_nearby_rakuten", async (req, res) => {
-  try {
-    // .env からアプリID取得（サニタイズ）
-    let applicationId = sanitizeAppId(process.env.RAKUTEN_APP_ID);
-    if (!applicationId) {
-      return res.status(500).json({ success: false, message: "RAKUTEN_APP_ID is not set on server" });
-    }
-
-    const { lat, lng, radiusKm, hits } = req.query;
-    if (lat == null || lng == null) {
-      return res.status(400).json({ success: false, message: "missing lat/lng" });
-    }
-
-    // 楽天の searchRadius は 0.1〜3.0 km（小数1桁）
-    const fallbackRadii = radiusKm
-      ? [Math.max(0.1, Math.min(3.0, Number(radiusKm)))]
-      : [0.5, 1.0, 2.0, 3.0];
-
-    const maxHits = Math.min(Math.max(parseInt(hits || "20", 10), 1), 30);
-
-    for (const r of fallbackRadii) {
-      const url = new URL("https://app.rakuten.co.jp/services/api/Travel/SimpleHotelSearch/20170426");
-      url.searchParams.set("applicationId", applicationId);
-      url.searchParams.set("format", "json");
-      url.searchParams.set("formatVersion", "2");   // 配列の配列で返る
-      url.searchParams.set("latitude", String(lat));    // WGS84 (度)
-      url.searchParams.set("longitude", String(lng));   // WGS84 (度)
-      url.searchParams.set("datumType", "1");           // 1=世界測地系 (度)
-      url.searchParams.set("searchRadius", String(r));  // 0.1〜3.0
-      url.searchParams.set("hits", String(maxHits));    // 1〜30
-      url.searchParams.set("carrier", "0");             // PC/スマホ
-      url.searchParams.set("responseType", "middle");   // 情報量をほどほどに
-
-      // applicationId を含む完全URLはログに出さない（漏洩防止）
-      console.log("[Rakuten] GET", url.origin + url.pathname + "?(masked)");
-
-      // Node18未満対策（必要なときだけ node-fetch を動的 import）
-      if (typeof fetch !== "function") {
-        const nf = (await import("node-fetch")).default;
-        global.fetch = nf;
-      }
-
-      const rResp = await fetch(url);
-      console.log("[Rakuten] RESP", rResp.status, rResp.statusText);
-
-      const j = await rResp.json().catch(() => ({}));
-
-      // 楽天は 200 でも body に error を入れてくる場合あり
-      if (j?.error) {
-        console.warn("[Rakuten] BODY error:", j);
-        // デバッグしやすいように 200 で理由を返す
-        return res.json({
-          success: false,
-          apiError: j.error,
-          apiErrorDescription: j.error_description || null,
-        });
-      }
-
-      const rawList = Array.isArray(j?.hotels) ? j.hotels : [];
-      if (rawList.length === 0) {
-        // 次の半径へフォールバック
-        continue;
-      }
-
-      const hotels = [];
-      for (const node of rawList) {
-        const { basic, rating } = pickBasicAndRating(node);
-        if (!basic) continue;
-        hotels.push(normalizeHotel(basic, rating));
-      }
-
-      return res.json({
-        success: true,
-        radiusKm: r,
-        count: hotels.length,
-        hotels,
-        paging: j?.pagingInfo || null,
-      });
-    }
-
-    // すべての半径でヒットなし
-    return res.json({
-      success: true,
-      radiusKm: fallbackRadii.at(-1),
-      count: 0,
-      hotels: [],
-      paging: null,
-    });
-  } catch (e) {
-    console.error("[Rakuten] handler failed:", e);
-    res.status(500).json({ success: false, message: "hotels_nearby_rakuten failed" });
-  }
-});
 
 
 

@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (userLat !== null && userLng !== null) {
         const dist = getDistanceKm(userLat, userLng, entry.lat, entry.lng);
         const hours = (dist / 60).toFixed(1);
-        console.log("[DEBUG] userLat:" + userLat + "　userLng:" + userLng + "　entry.lat:" + entry.lat + "　entry.lng:" + entry.lng)
+        console.log("[DEBUG] userLat:" + userLat + "　userLng:" + userLng + "　entry.lat:" + entry.lat + "　entry.lng:" + entry.lng) 
         travelText = `
           <div style="margin-top: 6px;">
             🚗 自宅から <strong>${dist.toFixed(1)}km</strong>、約 <strong>${hours}時間</strong>

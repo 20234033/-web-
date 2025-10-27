@@ -1,3 +1,4 @@
+// routes/me.js
 const express = require('express');
 const router = express.Router();
 const { authenticate } = require('./middleware/authenticate');
@@ -7,16 +8,18 @@ router.get('/api/me', authenticate, async (req, res) => {
   const userUuid = req.user?.user_uuid;
 
   if (!userUuid) {
+    // 認証ミドルウェアを通っているのに uuid が無いのはトークン不正
     return res.status(401).json({ error: 'Invalid token payload' });
   }
 
   try {
     const [rows] = await pool.query(
-      'SELECT user_name, mail_address, address_lat, address_lng FROM users WHERE user_uuid = ?',
+      'SELECT user_name, mail_address, address_lat, address_lng FROM users WHERE user_uuid = ? LIMIT 1',
       [userUuid]
     );
 
-    if (!rows.length) {
+    // rows は必ず配列
+    if (!rows || rows.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
 
@@ -30,7 +33,7 @@ router.get('/api/me', authenticate, async (req, res) => {
     });
   } catch (err) {
     console.error('[me取得失敗]', err);
-    res.status(500).json({ error: 'Internal Server Error' });
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 

@@ -776,3 +776,83 @@ button,
   margin-top: 15px;
   padding: 8px 16px;
 }
+/* ====== ダークテーマ（ライトはそのまま） ====== */
+:root {
+  --bg: #0f1115;
+  --panel: #171a21;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  --border: #262b36;
+  --btn: #1f2430;
+  --btn-hover: #2a3140;
+  --accent: #60a5fa;
+}
+
+/* 1) 手動トグル: body.dark が付いたとき */
+body.dark { background: var(--bg); color: var(--text); }
+body.dark .setting-section {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+body.dark .setting-section input[type="text"],
+body.dark .setting-section input[type="email"],
+body.dark .setting-section input[type="password"]{
+  background: var(--btn);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+body.dark .setting-section button{
+  background: var(--btn);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+body.dark .leaflet-container{ background: var(--panel); }
+body.dark .leaflet-control a{
+  background: var(--btn);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+body.dark .leaflet-control a:hover{ background: var(--btn-hover); }
+body.dark .leaflet-control-attribution{
+  background: var(--btn);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+#map{ border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+
+/* 2) OSがダークのとき（ただし body に .light が付いていたら除外） */
+@media (prefers-color-scheme: dark) {
+  body:not(.light) { background: var(--bg); color: var(--text); }
+  body:not(.light) .setting-section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  body:not(.light) .setting-section input[type="text"],
+  body:not(.light) .setting-section input[type="email"],
+  body:not(.light) .setting-section input[type="password"]{
+    background: var(--btn);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  body:not(.light) .setting-section button{
+    background: var(--btn);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  body:not(.light) .leaflet-container{ background: var(--panel); }
+  body:not(.light) .leaflet-control a{
+    background: var(--btn);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  body:not(.light) .leaflet-control a:hover{ background: var(--btn-hover); }
+  body:not(.light) .leaflet-control-attribution{
+    background: var(--btn);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+}
+
+

@@ -209,8 +209,8 @@ document.addEventListener("DOMContentLoaded", () => {
       isAuthPage
         ? `<button id="themeToggle">🌓 モード切替</button>`
         : `
-      <a href="../home.html">🏠 ホーム</a>
-      <a href="../settings.html">⚙️ 設定</a>
+      <a href="../home">🏠 ホーム</a>
+      <a href="../settings">⚙️ 設定</a>
       <button id="themeToggle">🌓 モード切替</button>
       <button id="logoutButton">🔓 ログアウト</button>`
     }
@@ -296,7 +296,7 @@ document.addEventListener("DOMContentLoaded", () => {
       localStorage.removeItem("user_name");
 
       alert("ログアウトしました。");
-      window.location.href = "auth/login.html";
+      window.location.href = "auth/login";
     });
   }
 });

@@ -7,120 +7,64 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      width: 100%;
-      overflow: hidden;
-      background-color: #0e1a2b;
+      margin: 0; padding: 0; height: 100%; width: 100%;
       font-family: 'Orbitron', sans-serif;
-      color: white;
+      /* overflow は result.js 側で制御（hidden） */
     }
+    #navbar-placeholder { z-index: 2000; }
+    /* ナビの実測値を使って高さを決定（デフォルトは 56px。JSで上書き） */
+    :root { --nav-h: 56px; }
 
-    #navbar-placeholder {
-      z-index: 2000;
+  #result-layout{
+    display: flex; gap: 12px; align-items: stretch;
+    /* ▼ “vhのズレ”をさらに抑えるため dvb を採用（dvhでもOK） */
+    height: calc(100dvb - var(--nav-h));
+    padding: 8px; box-sizing: border-box; overflow: hidden;
+    /* ▼ 下の余白原因になりがちなサブピクセル対策 */
+    margin: 0; 
+  }
+
+  #result-sidebar{
+    width: clamp(260px, 28vw, 340px);
+    height: 100%;
+    min-height: 0;            /* ▼ flex子のはみ出し抑止 */
+    overflow-y: auto; overflow-x: hidden;
+    -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+    padding-right: 6px;
+    /* ▼ ナビを意識して“少し下から開始”する余白（JSで実測に合わせて上書き） */
+    padding-top: var(--sidebar-pad, 14px);
+    border-radius: 12px; border: 1px solid transparent; background: transparent;
+  }
+    #scoreText{ padding: 12px; }
+    #place-info{ margin-top: 16px; }
+
+  #map-wrap{ flex: 1 1 auto; min-width: 0; height: 100%; min-height: 0; overflow: hidden; }
+  #result-map{ width: 100%; height: 100%; }
+
+    .streetview-frame{
+      width: 100%; height: 200px; border: 0; border-radius: 12px;
+      transition: transform .2s ease;
     }
-
-    #result-map {
-      height: 100%;
-      width: 100%;
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 0;
-    }
-
-    .result-overlay {
-      position: absolute;
-      top: 80px;
-      left: 20px;
-      background: rgba(0, 0, 0, 0.75);
-      color: white;
-      padding: 16px 24px;
-      border-radius: 12px;
-      font-size: 18px;
-      z-index: 1000;
-      max-width: 400px;
-    }
-
-    .result-buttons {
-      position: absolute;
-      bottom: 20px;
-      left: 20px;
-      z-index: 1000;
-      display: flex;
-      gap: 12px;
-    }
-
-    .result-buttons button {
-      padding: 10px 20px;
-      font-size: 16px;
-      font-weight: bold;
-      border: none;
-      border-radius: 10px;
-      background-color: #1976d2;
-      color: white;
-      cursor: pointer;
-      transition: background 0.3s ease, transform 0.2s ease;
-    }
-
-    .result-buttons button:hover {
-      background-color: #1565c0;
-      transform: scale(1.05);
-    }
-
-    .result-overlay h3 {
-      margin-top: 12px;
-      font-size: 20px;
-      color: #ffeb3b;
-    }
-
-    .result-overlay p {
-      margin: 6px 0;
-      font-size: 16px;
-      line-height: 1.4;
-    }
-#streetview-container {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  z-index: 1100;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
-  transition: transform 0.3s ease;
-  transform-origin: bottom right; /* ← 拡大の基準を右下に */
-}
-
-#streetview-container:hover .streetview-frame {
-  transform: scale(1.3) translate(-20%, -20%);
-  z-index: 1200;
-}
-
-
+    .streetview-frame:hover{ transform: scale(1.02); }
   </style>
 </head>
 <body>
-  <!-- ✅ ナビバーを挿入する場所 -->
   <div id="navbar-placeholder"></div>
 
-  <!-- 地図表示エリア -->
-  <div id="result-map"></div>
+  <main id="result-layout">
+    <aside id="result-sidebar">
+      <div id="scoreText">スコア計算中...</div>
+      <div id="place-info"></div>
+      <!-- 既存ボタンは result.js の injectBottomButtons() がここに追加 -->
+    </aside>
 
-  <!-- スコア表示＋観光情報 -->
-  <div class="result-overlay" id="scoreText">
-    スコア計算中...
-    <div id="place-info" style="margin-top: 16px;"></div>
-  </div>
+    <section id="map-wrap">
+      <div id="result-map"></div>
+    </section>
+  </main>
 
-  <!-- ボタン群 -->
-  <div class="result-buttons">
-    <button onclick="retry()">🔁 もう一度プレイ</button>
-    <button onclick="goHome()">🏠 ホームに戻る</button>
-  </div>
-
-  <!-- Leaflet JS & 自作スクリプト -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="js/navbar.js"></script>
   <script src="js/result.js"></script>
-
 </body>
 </html>

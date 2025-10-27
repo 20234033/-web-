@@ -5,7 +5,7 @@ window.addEventListener('DOMContentLoaded',() => {
 
   if (!spot || !spot.title || !spot.lat || !spot.lng) {
     alert('観光地の情報が見つかりません。');
-    location.href = 'addition.html';
+    location.href = 'addition';
     return;
   }
 

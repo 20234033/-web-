@@ -48,7 +48,7 @@ document.getElementById('registerForm').addEventListener('submit', async functio
 
     if (response.ok) {
       alert("登録が完了しました。ログイン画面へ移動します。");
-      window.location.href = 'login.html';
+      window.location.href = 'login';
     } else {
       alert(result.error || "登録に失敗しました。");
     }

@@ -1,5 +1,56 @@
 // public/js/home.js
 
+// ================== 画像プレースホルダ（外部通信なしのデータURL） ==================
+const NO_IMAGE_DATA_URL =
+  'data:image/svg+xml;utf8,' +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200">
+       <rect width="100%" height="100%" fill="#e0e0e0"/>
+       <text x="50%" y="50%" font-family="sans-serif" font-size="20" fill="#666" text-anchor="middle" dominant-baseline="middle">
+         No Image
+       </text>
+     </svg>`
+  );
+
+// ================== すべての <img> に対するグローバルフォールバック（1回だけ） ==================
+(function installGlobalImgFallback(){
+  window.addEventListener('error', (e) => {
+    const el = e.target;
+    if (el && el.tagName === 'IMG' && !el.dataset.fallbackApplied) {
+      el.dataset.fallbackApplied = '1';   // 無限ループ防止
+      el.removeAttribute('srcset');       // srcset があると再取得が走るので除去
+      el.src = NO_IMAGE_DATA_URL;         // データURLに差し替え
+    }
+  }, true); // キャプチャ段階で捕捉するのがコツ
+})();
+
+// ================== 既に埋め込まれている placeholder を起動時に除去 ==================
+(function replaceExistingPlaceholders(){
+  const fix = (img) => {
+    const s = img.getAttribute('src') || '';
+    const ss = img.getAttribute('srcset') || '';
+    if (s.includes('via.placeholder.com')) img.setAttribute('src', NO_IMAGE_DATA_URL);
+    if (ss.includes('via.placeholder.com')) img.removeAttribute('srcset');
+  };
+  document.querySelectorAll('img').forEach(fix);
+
+  // 動的に追加される <img> にも適用（任意・軽量）
+  const mo = new MutationObserver((muts) => {
+    for (const m of muts) {
+      m.addedNodes.forEach((n) => {
+        if (n.nodeType === 1) {
+          if (n.tagName === 'IMG') fix(n);
+          n.querySelectorAll?.('img').forEach(fix);
+        }
+      });
+    }
+  });
+  mo.observe(document.documentElement, { childList: true, subtree: true });
+})();
+
+// =====================================================================
+// 本来の home 画面処理
+// =====================================================================
 window.addEventListener('DOMContentLoaded', async () => {
   // ============= 認証 & /api/me =============
   let user;
@@ -16,7 +67,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   } catch (err) {
     localStorage.clear();
     alert('ログインが必要です。ログインページへ移動します。');
-    location.href = 'auth/login.html';
+    location.href = 'auth/login';
     return;
   }
 
@@ -30,16 +81,16 @@ window.addEventListener('DOMContentLoaded', async () => {
     const mode   = document.getElementById('mode')?.value   || 'search';
     const query  = `region=${region}&genre=${genre}&mode=${mode}`;
 
-    if (mode === 'play') location.href = `play.html?${query}`;
-    else if (mode === 'addition') location.href = `addition.html?${query}`;
+    if (mode === 'play') location.href = `play?${query}`;
+    else if (mode === 'addition') location.href = `addition?${query}`;
     else alert('モードが正しく選択されていません。');
   });
 
   document.getElementById('historyButton')?.addEventListener('click', () => {
-    location.href = 'history.html';
+    location.href = 'history';
   });
   document.getElementById('viewResults')?.addEventListener('click', () => {
-    location.href = 'result.html';
+    location.href = 'result';
   });
 
   // ============= 右ペイン要素参照 =============
@@ -51,10 +102,14 @@ window.addEventListener('DOMContentLoaded', async () => {
   const lastInfoEl   = document.getElementById('lastInfo');
   const lastPlayedEl = document.getElementById('lastPlayed');
 
-  // 画像のフェールセーフ
+  // 画像の個別フェールセーフ（無限ループ防止版）
   if (lastImageEl) {
+    let triedFallback = false;
     lastImageEl.onerror = () => {
-      lastImageEl.src = 'https://via.placeholder.com/320x200?text=No+Image';
+      if (triedFallback) return;     // 一度だけ
+      triedFallback = true;
+      lastImageEl.removeAttribute('srcset');
+      lastImageEl.src = NO_IMAGE_DATA_URL;
     };
   }
 
@@ -66,7 +121,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     title: '--',
     description: '--',
     playedAt: '--',
-    image: 'https://via.placeholder.com/320x200?text=No+Image'
+    image: NO_IMAGE_DATA_URL
   });
 
   // ============= 履歴読み込み（/api/history/:uuid のみ使用） =============
@@ -97,7 +152,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       title: latest.title || '--',
       description: latest.description || '--',
       playedAt: new Date(latest.answered_at).toLocaleDateString('ja-JP'),
-      image: latest.image_path || 'https://via.placeholder.com/320x200?text=No+Image'
+      image: latest.image_path || NO_IMAGE_DATA_URL
     });
   } catch (e) {
     console.error('履歴読み込み失敗:', e);

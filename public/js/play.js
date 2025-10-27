@@ -12,7 +12,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     userUuid = user.user_uuid;
   } catch (err) {
     alert('ログインが必要です');
-    location.href = 'auth/login.html';
+    location.href = 'auth/login';
     return;
   }
 
@@ -169,7 +169,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     localStorage.setItem('lastScore', score.toString());
 
     setTimeout(() => {
-      location.href = 'result.html';
+      location.href = 'result';
     }, 200);
   });
 });

@@ -42,13 +42,12 @@ const pool = mariadb.createPool({
   connectionLimit: process.env.DB_CONNECTION_LIMIT || 5 
 });
 
-// 📁 パス定義
+//パス定義
 const publicPath = path.join(__dirname, '..', 'public');
 const imageDir = path.join(publicPath, 'image');
 const dataDir = path.join(publicPath, 'data');
 const jsonFilePath = path.join(dataDir, 'sightseeing.json');
-
-// 📁 ディレクトリ作成（初回用）
+//ディレクトリ作成(初回用)
 if (!fs.existsSync(imageDir)) fs.mkdirSync(imageDir, { recursive: true });
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 if (!fs.existsSync(jsonFilePath)) fs.writeFileSync(jsonFilePath, '[]', 'utf-8');
@@ -57,7 +56,7 @@ if (!fs.existsSync(jsonFilePath)) fs.writeFileSync(jsonFilePath, '[]', 'utf-8');
 app.use(cookieParser()); // JWT読み取り用
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(publicPath)); // 静的ファイル
+app.use(express.static(publicPath, { extensions: ['html'] })); //extensionで['html']を指定しないと、404エラーが出て強制リダイレクト
 app.use('/image', express.static(path.join(__dirname, '..', 'public', 'image')));
 
 app.use(cors({
@@ -798,7 +797,7 @@ app.get('/api/user_answers', authenticate, async (req, res) => {
   const userUuid = req.user.user_uuid;
 
   try {
-    const rows = await db.query(
+    const rows = await pool.query(
       'SELECT * FROM user_answers WHERE user_uuid = ? ORDER BY answered_at DESC',
       [userUuid]
     );
@@ -813,7 +812,7 @@ app.get('/api/user_location', authenticate, async (req, res) => {
   console.log("📍 /api/user_location called");
   const userUuid = req.user.user_uuid;
   try {
-    const [row] = await db.query('SELECT address_lat, address_lng FROM users WHERE user_uuid = ?', [userUuid]);
+    const [row] = await pool.query('SELECT address_lat, address_lng FROM users WHERE user_uuid = ?', [userUuid]);
     res.json({ lat: row?.address_lat, lng: row?.address_lng });
   } catch (err) {
     console.error('住所取得エラー:', err);
@@ -831,7 +830,7 @@ app.post('/api/user_location', authenticate, async (req, res) => {
 
   const { lat, lng } = req.body;
   try {
-    await db.query(
+    await pool.query(
       'UPDATE users SET address_lat = ?, address_lng = ? WHERE user_uuid = ?',
       [lat, lng, userUuid]
     );
@@ -851,7 +850,7 @@ app.delete('/api/user_location', authenticate, async (req, res) => {
   }
 
   try {
-    await db.query(
+    await pool.query(
       'UPDATE users SET address_lat = NULL, address_lng = NULL WHERE user_uuid = ?',
       userUuid
     );

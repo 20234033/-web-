@@ -3,14 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <title>ログイン | 旅行先提案Webシステム</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="./css/style.css">
 </head>
 <body class="dark">
-  <!-- ナビゲーションバー -->
-  <div class="navbar">
-    <div class="brand">🌍</div>
-    <button id="themeToggle">🌙</button>
-  </div>
+  <!-- navbar.js が生成するナビゲーションバー用のプレースホルダー -->
+  <div id="navbar-placeholder"></div>
 
   <!-- ログインフォーム -->
   <div class="auth-container">
@@ -26,7 +23,7 @@
       <a href="forgot.html">パスワードをお忘れですか？</a>
     </div>
   </div>
-
+<script src="../js/navbar.js"></script>
 <script>
   document.getElementById('loginForm').addEventListener('submit', async function (e) {
     e.preventDefault();
@@ -63,10 +60,5 @@
     }
   });
 </script>
-
-
-
-  <div id="navbar-placeholder"></div>
-  <script src="../js/navbar.js"></script>
 </body>
 </html>

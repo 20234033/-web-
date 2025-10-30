@@ -765,29 +765,42 @@ app.get('/api/directions', async (req, res) => {
 // ✅ /api/geocode?address=〇〇
 app.get('/api/geocode', async (req, res) => {
   console.log("📍 /api/geocode called");
-  const { address } = req.query;
-  const apiKey = process.env.GOOGLE_API_KEY;
-
-  if (!address) {
-    return res.status(400).json({ success: false, error: '住所を指定してください。' });
-  }
-
-  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
-
   try {
-    const fetch = (await import('node-fetch')).default;
-    const response = await fetch(url);
-    const data = await response.json();
+    const q = (req.query.q || req.query.address || '').trim();
+    if (!q) return res.json({ success: false, error: 'q/address is required' });
 
-    if (data.status !== 'OK' || !data.results || data.results.length === 0) {
-      return res.status(404).json({ success: false, error: '住所が見つかりませんでした。' });
+    // ✅ 日本住所・施設名どっちも狙えるように調整
+    const nomiUrl = new URL('https://nominatim.openstreetmap.org/search');
+    nomiUrl.searchParams.set('format', 'jsonv2');
+    nomiUrl.searchParams.set('q', q);
+    nomiUrl.searchParams.set('countrycodes', 'jp');  // ← これ重要
+    nomiUrl.searchParams.set('limit', '1');
+    nomiUrl.searchParams.set('addressdetails', '1');
+
+    const nomiResp = await fetch(nomiUrl.toString(), {
+      headers: {
+        'User-Agent': 'GeoGuess-App/1.0 (contact@example.com)' // 任意
+      }
+    });
+    const nomi = await nomiResp.json();
+
+    if (Array.isArray(nomi) && nomi.length > 0) {
+      const top = nomi[0];
+      return res.json({
+        success: true,
+        lat: parseFloat(top.lat),
+        lng: parseFloat(top.lon),
+        display_name: top.display_name,
+        provider: 'nominatim'
+      });
     }
 
-    const { lat, lng } = data.results[0].geometry.location;
-    res.json({ success: true, lat, lng });
-  } catch (err) {
-    console.error('[❌ Geocode ERROR]', err);
-    res.status(500).json({ success: false, error: 'ジオコーディングに失敗しました。' });
+    // Googleフォールバック（省略）
+    return res.json({ success: false, error: 'not found' });
+
+  } catch (e) {
+    console.error('[geocode] error', e);
+    res.json({ success: false, error: 'geocode failed' });
   }
 });
 

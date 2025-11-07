@@ -46,9 +46,8 @@
 
       if (response.ok) {
         const user = result.user;
-        localStorage.setItem('user_id', user.id);
-        localStorage.setItem('username', user.id);
-        localStorage.setItem('avatar_url', user.avatar_url || '');
+        localStorage.setItem('user_uuid', user.user_uuid);
+        localStorage.setItem('user_name', user.user_name);
         alert('ログイン成功');
         window.location.href = '../home';
       } else {

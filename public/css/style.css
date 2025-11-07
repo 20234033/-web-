@@ -1,108 +1,152 @@
-/* === 基本レイアウトと全体設定 === */
+/* ========================================
+   1. CSS変数定義
+   ======================================== */
+:root {
+  --bg: #0f1115;
+  --panel: #171a21;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  --border: #262b36;
+  --btn: #1f2430;
+  --btn-hover: #2a3140;
+  --accent: #60a5fa;
+}
+
+/* ========================================
+   2. 基本レイアウトと全体設定
+   ======================================== */
 html, body {
   margin: 0;
   padding: 0;
   height: 100%;
   min-height: 100vh;
-  font-family: 'Orbitron', 'Arial', sans-serif;
+  font-family: 'Arial', sans-serif;
   box-sizing: border-box;
-  padding-top: 60px; /* ナビバー高さ */
+  padding-top: 60px;
   overflow-x: hidden;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* === すべてに border-box を適用 === */
 *, *::before, *::after {
   box-sizing: inherit;
 }
 
-/* === テーマ: ダーク === */
-body.dark {
-  background-color: #2c2c2c;
-  color: #e0e0e0;
+button {
+  font-family: 'Orbitron', sans-serif;
 }
 
-body.dark .home-left,
-body.dark .home-right,
-body.dark .result-info,
-body.dark .result-container {
-  background: linear-gradient(145deg, #1e2a38, #1e1e1e);
-  color: #f5f5f5;
+button:disabled {
+  background-color: #555;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
-body.dark .home-left select {
-  background-color: #1c2c3a;
-  color: #fff;
-}
-
-body.dark .setting-section {
-  background: #1e1e1e;           
-  border: 1px solid #1e1e1e;        
-  color: #f1f1f1;                
-}
-
-/* === テーマ: ライト === */
-body.light {
-  background-color: #f4f4f4;
-  color: #222;
-}
-
-body.light .home-left,
-body.light .home-right,
-body.light .result-info,
-body.light .result-container {
-  background: linear-gradient(145deg, #ffffff, #dddddd);
-  color: #222;
-}
-
-body.light .home-left select {
-  background-color: #ffffff;
-  color: #000;
-}
-
-/* === ナビバー === */
+/* ========================================
+   3. ナビバー
+   ======================================== */
 .navbar {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   height: 60px;
+  background: linear-gradient(90deg, #1e1e1e, #1f1f1f, #2c2c2c);
+  color: white;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
-  z-index: 1000;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-  transition: background 0.3s ease, color 0.3s ease;
+  padding: 0 20px;
+  z-index: 2000;
+  font-family: 'Orbitron', sans-serif;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
 }
 
-body.dark .navbar {
-  background: linear-gradient(90deg, #1e1e1e, #1f1f1f, #2c2c2c);
-  color: #f5f5f5;
+.navbar .brand {
+  font-weight: bold;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-body.light .navbar {
-  background: linear-gradient(90deg, #ffffff, #e0e0e0);
-  color: #111;
+.navbar .brand::before {
+  content: "🌍 旅行先提案Webシステム";
+  font-size: 22px;
 }
 
-.navbar a,
-.navbar button {
-  color: inherit;
+.navbar nav {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  transition: right 0.3s ease;
+}
+
+.navbar nav a,
+.navbar nav button {
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 16px;
   background: none;
   border: none;
-  font-size: 1rem;
-  font-weight: bold;
   cursor: pointer;
   transition: color 0.3s ease;
+  padding: 6px 8px;
+  color: inherit;
 }
 
-.navbar a:hover,
-.navbar button:hover {
+.navbar nav a:hover,
+.navbar nav button:hover {
   color: #1abc9c;
 }
 
-/* === ホームレイアウト === */
+.navbar-toggle {
+  display: none;
+  width: 30px;
+  height: 20px;
+  position: relative;
+  cursor: pointer;
+  z-index: 2001;
+}
+
+.navbar-toggle span {
+  position: absolute;
+  height: 3px;
+  width: 100%;
+  background-color: white;
+  left: 0;
+  transition: all 0.3s ease;
+  border-radius: 2px;
+}
+
+.navbar-toggle span:nth-child(1) {
+  top: 0;
+}
+
+.navbar-toggle span:nth-child(2) {
+  top: 8px;
+}
+
+.navbar-toggle span:nth-child(3) {
+  top: 16px;
+}
+
+.navbar.open .navbar-toggle span:nth-child(1) {
+  transform: rotate(45deg);
+  top: 8px;
+}
+
+.navbar.open .navbar-toggle span:nth-child(2) {
+  opacity: 0;
+}
+
+.navbar.open .navbar-toggle span:nth-child(3) {
+  transform: rotate(-45deg);
+  top: 8px;
+}
+
+/* ========================================
+   4. ホームレイアウト
+   ======================================== */
 .home-layout {
   display: flex;
   flex-wrap: wrap;
@@ -116,7 +160,6 @@ body.light .navbar {
   width: 100%;
 }
 
-/* === カード共通スタイル === */
 .home-left,
 .home-right {
   flex: 1;
@@ -127,7 +170,9 @@ body.light .navbar {
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
 }
 
-/* === ホーム画面ボタン === */
+/* ========================================
+   5. ホーム画面のコントロール要素
+   ======================================== */
 .home-left button {
   width: 100%;
   padding: 1.25rem;
@@ -148,7 +193,6 @@ body.light .navbar {
   transform: scale(1.03);
 }
 
-/* === セレクトボックスとラベル === */
 .home-left label {
   display: block;
   text-align: left;
@@ -173,7 +217,6 @@ body.light .navbar {
   border-color: #1abc9c;
 }
 
-/* === 出題履歴ボタン専用 === */
 #historyButton {
   margin-top: 20px;
   width: 100%;
@@ -194,25 +237,18 @@ body.light .navbar {
   transform: scale(1.03);
 }
 
-/* === ボタン共通 === */
-button {
-  font-family: 'Orbitron', sans-serif;
-}
-
-button:disabled {
-  background-color: #555;
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-/* === スコア === */
+/* ========================================
+   6. スコア表示
+   ======================================== */
 .score-info span {
   color: #00e676;
   font-weight: bold;
   font-size: 1.25rem;
 }
 
-/* === 結果画面カードなど === */
+/* ========================================
+   7. 結果画面
+   ======================================== */
 .result-info,
 .result-container {
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
@@ -223,7 +259,6 @@ button:disabled {
   width: 100%;
 }
 
-/* === 地図エリア === */
 .result-map-box {
   border-radius: 16px;
   overflow: hidden;
@@ -232,7 +267,6 @@ button:disabled {
   width: 100%;
 }
 
-/* === スコア表示 === */
 .result-overlay {
   position: absolute;
   top: 80px;
@@ -245,12 +279,6 @@ button:disabled {
   transition: background 0.3s ease;
 }
 
-body.light .result-overlay {
-  background: rgba(255, 255, 255, 0.85);
-  color: #222;
-}
-
-/* === ボタンエリア === */
 .result-buttons {
   position: absolute;
   bottom: 20px;
@@ -277,69 +305,11 @@ body.light .result-overlay {
   transform: scale(1.05);
 }
 
-/* === レスポンシブ対応 === */
-@media screen and (max-width: 768px) {
-  .home-layout,
-  .result-layout {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .home-left,
-  .home-right,
-  .result-info,
-  .result-map-box {
-    width: 100%;
-    margin-bottom: 20px;
-  }
-
-  .navbar nav {
-    flex-direction: column;
-    gap: 8px;
-  }
-}
-/* === 履歴ページのスタイル === */
+/* ========================================
+   8. 履歴ページ
+   ======================================== */
 #history-list ul {
   list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-#history-list li {
-  background-color: rgba(255, 255, 255, 0.05);
-  padding: 16px;
-  margin-bottom: 16px;
-  border-radius: 10px;
-  line-height: 1.6;
-  transition: background-color 0.3s ease;
-}
-
-#history-list li strong {
-  font-size: 1.1rem;
-  color: #00e676;
-}
-
-#history-list li small {
-  display: inline-block;
-  min-width: 80px;
-  color: #aaa;
-}
-
-/* === ライトモード対応 === */
-body.light #history-list li {
-  background-color: rgba(0, 0, 0, 0.05);
-  color: #222;
-}
-
-body.light #history-list li strong {
-  color: #00796b;
-}
-
-body.light #history-list li small {
-  color: #555;
-}
-#history-list ul {
-  list-style-type: none;
   padding: 0;
   margin: 0;
 }
@@ -352,6 +322,8 @@ body.light #history-list li small {
   color: #f0f0f0;
   box-shadow: 0 4px 10px rgba(0,0,0,0.3);
   font-size: 0.95rem;
+  line-height: 1.6;
+  transition: background-color 0.3s ease;
 }
 
 #history-list li div {
@@ -364,48 +336,48 @@ body.light #history-list li small {
 }
 
 #history-list li small {
+  display: inline-block;
+  min-width: 80px;
   color: #aaa;
 }
-    .settings-container {
-      max-width: 700px;
-      margin: 2em auto;
-      padding: 1.5em;
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.05);
-    }
 
-    .setting-section {
-      margin-bottom: 2em;
-    }
+/* ========================================
+   9. 設定画面
+   ======================================== */
+.settings-container {
+  max-width: 700px;
+  margin: 2em auto;
+  padding: 1.5em;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.05);
+}
 
-    .setting-section label {
-      display: block;
-      margin-bottom: 0.5em;
-      font-weight: bold;
-      font-size: 1.1em;
-    }
+.setting-section {
+  margin: 30px 0;
+  padding: 15px;
+  border: 1px solid #ffffff;
+  border-radius: 8px;
+  background: #ffffff;
+}
 
-    #map {
-      width: 100%;
-      height: 300px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
+.setting-section label {
+  display: block;
+  font-weight: bold;
+  margin-top: 10px;
+  font-size: 1.1em;
+  margin-bottom: 0.5em;
+}
 
-    #locationDisplay {
-      margin-top: 0.5em;
-      color: #555;
-      font-size: 0.95em;
-    }
+.setting-section input {
+  width: 100%;
+  max-width: 400px;
+  padding: 6px;
+  margin-top: 4px;
+  box-sizing: border-box;
+}
 
-    @media (max-width: 600px) {
-      .settings-container {
-        margin: 1em;
-        padding: 1em;
-      }
-    }
-    .setting-section select {
+.setting-section select {
   padding: 10px 14px;
   font-size: 1rem;
   border-radius: 6px;
@@ -423,6 +395,52 @@ body.light #history-list li small {
   outline: none;
   box-shadow: 0 0 5px rgba(52, 152, 219, 0.4);
 }
+
+.setting-section input[type="range"] {
+  width: 100%;
+  max-width: 100%;
+  margin-top: 6px;
+}
+
+.setting-section button {
+  margin-top: 15px;
+  padding: 8px 16px;
+}
+
+#volumeValue {
+  display: inline-block;
+  margin-left: 10px;
+  font-weight: bold;
+  color: inherit;
+}
+
+#map {
+  width: 100%;
+  height: 300px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  margin: 10px 0;
+  overflow: hidden;
+}
+
+#locationDisplay {
+  margin-top: 0.5em;
+  color: #555;
+  font-size: 0.95em;
+}
+
+.location-display-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.location-text {
+  font-size: 1rem;
+  margin: 0;
+}
+
 #confirmLocation {
   background-color: #4CAF50;
   color: white;
@@ -443,10 +461,325 @@ body.light #history-list li small {
 #confirmLocation:active {
   background-color: #3e8e41;
 }
+
+/* ========================================
+   10. コントロールパネル
+   ======================================== */
+#control-panel {
+  position: absolute;
+  top: 125px;
+  left: 20px;
+  z-index: 1001;
+  padding: 12px;
+  border-radius: 10px;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+#control-panel input[type="text"],
+#control-panel textarea,
+#control-panel select {
+  width: 100%;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  padding: 6px;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+#control-panel label {
+  display: block;
+  font-weight: bold;
+  margin: 16px 0 6px;
+  font-size: 1rem;
+}
+
+#control-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+#control-panel::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+#control-panel::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 4px;
+}
+
+#control-panel::-webkit-scrollbar-thumb:hover {
+  background-color: #555;
+}
+
+#control-panel {
+  scrollbar-width: thin;
+  scrollbar-color: #888 rgba(0,0,0,0.05);
+}
+
+#genre {
+  max-width: 400px;
+}
+
+#description {
+  max-width: 600px;
+  height: 120px;
+  padding: 10px 14px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+#geocodeBtn {
+  background-color: #007BFF;
+  color: white;
+  margin-right: 8px;
+  font-size: 0.9rem;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+}
+
+#geocodeBtn:hover {
+  background-color: #0056b3;
+}
+
+#deleteImage {
+  display: none;
+  margin-top: 4px;
+  background-color: #e74c3c;
+  color: white;
+  font-size: 0.9rem;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+#deleteImage:hover {
+  background-color: #c0392b;
+}
+
+#confirmBtn {
+  margin-top: 10px;
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+#confirmBtn:hover {
+  background-color: #45a049;
+}
+
+.custom-file-upload {
+  display: inline-block;
+  background-color: #3498db;
+  color: white;
+  margin-top: 6px;
+  font-size: 0.9rem;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+}
+
+.custom-file-upload:hover {
+  background-color: #2980b9;
+}
+
+.custom-file-upload input[type="file"] {
+  display: none;
+}
+
+#fileNameDisplay {
+  display: inline-block;
+  margin-left: 10px;
+  font-size: 0.9rem;
+  vertical-align: middle;
+}
+
+#preview {
+  max-width: 100%;
+  display: none;
+  margin-top: 8px;
+  border-radius: 6px;
+}
+
+.delete-btn {
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.delete-btn:hover {
+  background-color: #c0392b;
+}
+
+/* ========================================
+   11. その他のUI要素
+   ======================================== */
+.info-box {
+  position: absolute;
+  top: 80px;
+  right: 20px;
+  width: 320px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  z-index: 1001;
+}
+
+/* ========================================
+   12. ライトモード（デフォルト）
+   ======================================== */
+body.light {
+  background-color: #f4f4f4;
+  color: #222;
+}
+
+body.light .navbar {
+  background: linear-gradient(90deg, #f0f0f0, #ffffff);
+  color: black;
+}
+
+body.light .navbar nav a,
+body.light .navbar nav button {
+  color: black;
+}
+
+body.light .navbar nav a:hover,
+body.light .navbar nav button:hover {
+  color: #3498db;
+}
+
+body.light .navbar nav {
+  background-color: transparent;
+}
+
+body.light .navbar-toggle span {
+  background-color: black;
+}
+
+body.light .home-left,
+body.light .home-right,
+body.light .result-info,
+body.light .result-container {
+  background: linear-gradient(145deg, #ffffff, #dddddd);
+  color: #222;
+}
+
+body.light .home-left select {
+  background-color: #ffffff;
+  color: #000;
+}
+
+body.light .result-overlay {
+  background: rgba(255, 255, 255, 0.85);
+  color: #222;
+}
+
+body.light #history-list li {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #222;
+}
+
+body.light #history-list li strong {
+  color: #00796b;
+}
+
+body.light #history-list li small {
+  color: #555;
+}
+
+body.light #control-panel {
+  background: rgba(255, 255, 255, 0.95);
+  color: #000;
+}
+
+body.light #control-panel input,
+body.light #control-panel textarea,
+body.light #control-panel select {
+  background-color: #fff;
+  color: #000;
+  border: 1px solid #ccc;
+}
+
+body.light label,
+body.light .location-text,
+body.light #fileNameDisplay {
+  color: #000;
+}
+
+/* ========================================
+   13. ダークモード
+   ======================================== */
+body.dark {
+  background-color: #2c2c2c;
+  color: #e0e0e0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+body.dark .navbar {
+  background: linear-gradient(90deg, #1e1e1e, #1f1f1f, #2c2c2c);
+  color: #f5f5f5;
+}
+
+body.dark .navbar nav {
+  color: white;
+  background-color: transparent;
+}
+
+body.dark .navbar nav a,
+body.dark .navbar nav button {
+  color: white;
+}
+
+body.dark .navbar nav a:hover,
+body.dark .navbar nav button:hover {
+  color: #1abc9c;
+}
+
+body.dark .home-left,
+body.dark .home-right,
+body.dark .result-info,
+body.dark .result-container {
+  background: linear-gradient(145deg, #1e2a38, #1e1e1e);
+  color: #f5f5f5;
+}
+
+body.dark .home-left select {
+  background-color: #1c2c3a;
+  color: #fff;
+}
+
 body.dark .settings-container {
   background: #1e1e1e;
   color: #f1f1f1;
   box-shadow: 0 0 20px rgba(255,255,255,0.05);
+}
+
+body.dark .setting-section {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
 }
 
 body.dark .setting-section select {
@@ -460,12 +793,22 @@ body.dark .setting-section select:focus {
   box-shadow: 0 0 5px rgba(144, 202, 249, 0.4);
 }
 
-body.dark #map {
-  /*filter: grayscale(1) brightness(0.8);*/
+body.dark .setting-section input[type="text"],
+body.dark .setting-section input[type="email"],
+body.dark .setting-section input[type="password"] {
+  background: var(--btn);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+body.dark .setting-section button {
+  background: var(--btn);
+  color: var(--text);
+  border: 1px solid var(--border);
 }
 
 body.dark #locationDisplay {
-  color: #2c2c2c;
+  color: #ccc;
 }
 
 body.dark #confirmLocation {
@@ -479,135 +822,12 @@ body.dark #confirmLocation:hover {
 body.dark #confirmLocation:active {
   background-color: #1b5e20;
 }
-.setting-section input[type="range"] {
-  width: 100%;
-  max-width: 100%;
-  margin-top: 6px;
-}
-#volumeValue {
-  display: inline-block;
-  margin-left: 10px;
-  font-weight: bold;
-  color: inherit;
-}
-.info-box {
-  position: absolute;
-  top: 80px; /* ← 少し下にずらした */
-  right: 20px;
-  width: 320px;
-  background: rgba(255, 255, 255, 0.95);
-  padding: 16px;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-  z-index: 1001;
-}
-.setting-section {
-  margin-bottom: 20px;
-}
 
-#map {
-  height: 300px;
-  border: 1px solid #ccc;
-  margin: 10px 0;
-  border-radius: 8px;
-}
-
-.location-display-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.location-text {
-  font-size: 1rem;
-  margin: 0;
-}
-
-.delete-btn {
-  padding: 6px 12px;
-  font-size: 0.9rem;
-  background-color: #e74c3c;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.delete-btn:hover {
-  background-color: #c0392b;
-}
-/* === コントロールパネル（共通） === */
-#control-panel {
-  position: absolute;
-  top: 70px;
-  left: 20px;
-  z-index: 1001;
-  padding: 12px;
-  border-radius: 10px;
-  max-width: 300px;
-  max-height: calc(100vh - 100px);
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-  transition: background-color 0.3s ease, color 0.3s ease;
-  background-color: #ffffff; /* ライトモードデフォルト */
-  color: #000000;
-}
-
-/* === ライトモード用 フォーム要素 === */
-#control-panel input[type="text"],
-#control-panel textarea,
-#control-panel select {
-  width: 100%;
-  margin-top: 8px;
-  margin-bottom: 8px;
-  padding: 6px;
-  font-size: 1rem;
-  box-sizing: border-box;
-  background-color: #ffffff;
-  color: #000000;
-  border: 1px solid #ccc;
-}
-
-/* === コントロールパネル共通 === */
-#control-panel {
-  position: absolute;
-  top: 125px;
-  left: 20px;
-  z-index: 1001;
-  padding: 12px;
-  border-radius: 10px;
-  max-width: 400px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-}
-
-/* ライトモード */
-body.light #control-panel {
-  background: rgba(255, 255, 255, 0.95);
-  color: #000;
-}
-body.light #control-panel input,
-body.light #control-panel textarea,
-body.light #control-panel select {
-  background-color: #fff;
-  color: #000;
-  border: 1px solid #ccc;
-}
-body.light label,
-body.light .location-text,
-body.light #fileNameDisplay {
-  color: #000;
-}
-
-/* ダークモード */
 body.dark #control-panel {
   background: rgba(30, 30, 30, 0.95);
   color: #f0f0f0;
 }
+
 body.dark #control-panel input,
 body.dark #control-panel textarea,
 body.dark #control-panel select {
@@ -615,244 +835,163 @@ body.dark #control-panel select {
   color: #fff;
   border: 1px solid #555;
 }
+
 body.dark label,
 body.dark .location-text,
 body.dark #fileNameDisplay {
   color: #ccc;
 }
 
-/* === ラベルとテキスト === */
-label {
-  display: block;
-  font-weight: bold;
-  margin: 16px 0 6px;
-  font-size: 1rem;
-}
-.location-display-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.location-text {
-  font-size: 1rem;
-  margin: 0;
-}
-
-/* === ボタン共通 === */
-button,
-#geocodeBtn,
-.custom-file-upload {
-  font-size: 0.9rem;
-  padding: 6px 12px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: background-color 0.2s ease;
-}
-#geocodeBtn {
-  background-color: #007BFF;
-  color: white;
-  margin-right: 8px;
-}
-#geocodeBtn:hover {
-  background-color: #0056b3;
-}
-#deleteImage {
-  display: none;
-  margin-top: 4px;
-  background-color: #e74c3c;
-  color: white;
-}
-#deleteImage:hover {
-  background-color: #c0392b;
-}
-#confirmBtn {
-  margin-top: 10px;
-  padding: 10px 20px;
-  background-color: #4CAF50;
-  color: white;
-}
-#confirmBtn:hover {
-  background-color: #45a049;
-}
-
-/* === セレクト・テキストエリア === */
-#genre {
-  max-width: 400px;
-}
-#description {
-  max-width: 600px;
-  height: 120px;
-  padding: 10px 14px;
-  line-height: 1.5;
-  resize: vertical;
-}
-
-/* === カスタムファイルアップロード === */
-.custom-file-upload {
-  display: inline-block;
-  background-color: #3498db;
-  color: white;
-  margin-top: 6px;
-}
-.custom-file-upload:hover {
-  background-color: #2980b9;
-}
-.custom-file-upload input[type="file"] {
-  display: none;
-}
-#fileNameDisplay {
-  display: inline-block;
-  margin-left: 10px;
-  font-size: 0.9rem;
-  vertical-align: middle;
-}
-#preview {
-  max-width: 100%;
-  display: none;
-  margin-top: 8px;
-  border-radius: 6px;
-}
-
-/* === 汎用削除ボタン === */
-.delete-btn {
-  padding: 6px 12px;
-  font-size: 0.9rem;
-  background-color: #e74c3c;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-.delete-btn:hover {
-  background-color: #c0392b;
-}
-
-/* === スクロールバー装飾（Webkit） === */
-#control-panel::-webkit-scrollbar {
-  width: 8px;
-}
-#control-panel::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-}
-#control-panel::-webkit-scrollbar-thumb {
-  background-color: #888;
-  border-radius: 4px;
-}
-#control-panel::-webkit-scrollbar-thumb:hover {
-  background-color: #555;
-}
-
-/* === スクロールバー装飾（Firefox） === */
-#control-panel {
-  scrollbar-width: thin;
-  scrollbar-color: #888 rgba(0,0,0,0.05);
-}
-.setting-section {
-  margin: 30px 0;
-  padding: 15px;
-  border: 1px solid #ffffff;
-  border-radius: 8px;
-  background: #ffffff;
-}
-
-.setting-section label {
-  display: block;
-  font-weight: bold;
-  margin-top: 10px;
-}
-
-.setting-section input {
-  width: 100%;
-  max-width: 400px;
-  padding: 6px;
-  margin-top: 4px;
-  box-sizing: border-box;
-}
-
-.setting-section button {
-  margin-top: 15px;
-  padding: 8px 16px;
-}
-/* ====== ダークテーマ（ライトはそのまま） ====== */
-:root {
-  --bg: #0f1115;
-  --panel: #171a21;
-  --text: #e5e7eb;
-  --muted: #9ca3af;
-  --border: #262b36;
-  --btn: #1f2430;
-  --btn-hover: #2a3140;
-  --accent: #60a5fa;
-}
-
-/* 1) 手動トグル: body.dark が付いたとき */
-body.dark { background: var(--bg); color: var(--text); }
-body.dark .setting-section {
+body.dark .leaflet-container {
   background: var(--panel);
-  border: 1px solid var(--border);
-  color: var(--text);
 }
-body.dark .setting-section input[type="text"],
-body.dark .setting-section input[type="email"],
-body.dark .setting-section input[type="password"]{
+
+body.dark .leaflet-control a {
   background: var(--btn);
   color: var(--text);
   border: 1px solid var(--border);
 }
-body.dark .setting-section button{
-  background: var(--btn);
-  color: var(--text);
-  border: 1px solid var(--border);
+
+body.dark .leaflet-control a:hover {
+  background: var(--btn-hover);
 }
-body.dark .leaflet-container{ background: var(--panel); }
-body.dark .leaflet-control a{
-  background: var(--btn);
-  color: var(--text);
-  border: 1px solid var(--border);
-}
-body.dark .leaflet-control a:hover{ background: var(--btn-hover); }
-body.dark .leaflet-control-attribution{
+
+body.dark .leaflet-control-attribution {
   background: var(--btn);
   color: var(--muted);
   border: 1px solid var(--border);
 }
-#map{ border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
 
-/* 2) OSがダークのとき（ただし body に .light が付いていたら除外） */
+/* ========================================
+   14. システムダークモード対応
+   ======================================== */
 @media (prefers-color-scheme: dark) {
-  body:not(.light) { background: var(--bg); color: var(--text); }
+  body:not(.light) {
+    background: var(--bg);
+    color: var(--text);
+  }
+  
   body:not(.light) .setting-section {
     background: var(--panel);
     border: 1px solid var(--border);
     color: var(--text);
   }
+  
   body:not(.light) .setting-section input[type="text"],
   body:not(.light) .setting-section input[type="email"],
-  body:not(.light) .setting-section input[type="password"]{
+  body:not(.light) .setting-section input[type="password"] {
     background: var(--btn);
     color: var(--text);
     border: 1px solid var(--border);
   }
-  body:not(.light) .setting-section button{
+  
+  body:not(.light) .setting-section button {
     background: var(--btn);
     color: var(--text);
     border: 1px solid var(--border);
   }
-  body:not(.light) .leaflet-container{ background: var(--panel); }
-  body:not(.light) .leaflet-control a{
+  
+  body:not(.light) .leaflet-container {
+    background: var(--panel);
+  }
+  
+  body:not(.light) .leaflet-control a {
     background: var(--btn);
     color: var(--text);
     border: 1px solid var(--border);
   }
-  body:not(.light) .leaflet-control a:hover{ background: var(--btn-hover); }
-  body:not(.light) .leaflet-control-attribution{
+  
+  body:not(.light) .leaflet-control a:hover {
+    background: var(--btn-hover);
+  }
+  
+  body:not(.light) .leaflet-control-attribution {
     background: var(--btn);
     color: var(--muted);
     border: 1px solid var(--border);
   }
 }
 
+/* ========================================
+   15. レスポンシブ対応
+   ======================================== */
+@media screen and (max-width: 890px) {
+  .navbar nav {
+    position: fixed;
+    top: 60px;
+    right: -300px;
+    width: 250px;
+    height: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px;
+    gap: 16px;
+    z-index: 1998;
+    background-color: transparent;
+  }
 
+  .navbar.open nav {
+    right: 0;
+  }
+
+  .navbar-toggle {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .navbar nav a,
+  .navbar nav button {
+    width: 100%;
+    text-align: left;
+    padding: 10px;
+    font-size: 18px;
+  }
+
+  body.dark .navbar nav a,
+  body.dark .navbar nav button {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    color: white;
+  }
+
+  body.light .navbar nav a,
+  body.light .navbar nav button {
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 6px;
+    color: black;
+  }
+
+  body.dark .navbar nav a:hover,
+  body.dark .navbar nav button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  body.light .navbar nav a:hover,
+  body.light .navbar nav button:hover {
+    background-color: rgba(52, 152, 219, 0.1);
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .home-layout,
+  .result-layout {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .home-left,
+  .home-right,
+  .result-info,
+  .result-map-box {
+    width: 100%;
+    margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 600px) {
+  .settings-container {
+    margin: 1em;
+    padding: 1em;
+  }
+}

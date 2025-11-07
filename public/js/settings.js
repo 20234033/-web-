@@ -16,8 +16,8 @@ async function loadMe() {
 
     const idEl = document.getElementById('currentId');
     const emailEl = document.getElementById('currentEmail');
-    if (idEl) idEl.textContent = me.id ?? '--';
-    if (emailEl) emailEl.textContent = me.email ?? '--';
+    if (idEl) idEl.textContent = me.user_name ?? '--';
+    if (emailEl) emailEl.textContent = me.mail_address ?? '--';
   } catch (e) {
     console.error('[me] load error:', e);
   }

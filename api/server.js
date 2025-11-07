@@ -216,6 +216,7 @@ app.post('/api/login', async (req, res) => {
       message: 'ログイン成功',
       user: {
         user_name: user.user_name,
+        user_uuid: user.user_uuid,
       },
     });
 

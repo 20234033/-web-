@@ -11,12 +11,20 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
 
   <style>
-    /* ===== テーマ（必要に応じて result と共通化） ===== */
-    :root[data-theme="light"]{color-scheme:light;--bg:#f7f7f8;--text:#0f172a;--subtle:#475569;--panel:#ffffff;--border:#e5e7eb;--primary:#4f46e5;}
-    :root[data-theme="dark"] {color-scheme:dark; --bg:#0b0f14;--text:#e5e7eb;--subtle:#9aa4b2;--panel:#111827;--border:#1f2937;--primary:#6366f1;}
-    :root{ --nav-h:56px; } /* ナビ高は必要に応じて調整 */
+    /* ===== テーマ ===== */
+    :root[data-theme="light"]{
+      color-scheme:light;
+      --bg:#f7f7f8; --text:#0f172a; --subtle:#475569;
+      --panel:#ffffff; --border:#e5e7eb; --primary:#4f46e5;
+    }
+    :root[data-theme="dark"] {
+      color-scheme:dark;
+      --bg:#0b0f14; --text:#e5e7eb; --subtle:#9aa4b2;
+      --panel:#111827; --border:#1f2937; --primary:#6366f1;
+    }
+    :root{ --nav-h:56px; }
 
-    /* ===== 全体（ページ側はスクロールしない） ===== */
+    /* ===== 全体 ===== */
     html, body{
       margin:0; padding:0; height:100%;
       font-family:'Orbitron','Arial',sans-serif;
@@ -29,36 +37,34 @@
       display:grid;
       grid-template-columns: 360px 1fr; /* 左固定 / 右可変 */
       gap:12px;
-      height:calc(100vh - var(--nav-h));
+      height:calc(100dvh - var(--nav-h)); /* ← 画面高 - ナビ高さ */
       padding:12px;
       box-sizing:border-box;
     }
 
-    /* ===== 左パネル：上=SV / 仕切り / 下=フォーム（スクロール） ===== */
+    /* ===== 左パネル：上=SV / 仕切り / 下=フォーム ===== */
     #leftPanel{
       display:grid;
-      grid-template-rows: var(--left-sv-h, 260px) 8px 1fr; /* 初期高さ=260px */
+      grid-template-rows: var(--left-sv-h, 260px) 8px 1fr;
       gap:12px;
       background:var(--panel);
       border:1px solid var(--border);
       border-radius:12px;
       padding:12px;
-      overflow:hidden; /* 外側は固定 */
+      overflow:hidden;
     }
-    /* ストリートビュー領域（最上段） */
     #streetview-container{
       width:100%; height:100%;
       border:1px solid var(--border);
       border-radius:12px;
       overflow:hidden;
       background:#0001;
-      position:static; /* 旧 absolute を無効化 */
-      box-shadow:none; /* 旧演出を無効化 */
+      position:static;
+      box-shadow:none;
       transition:none;
     }
     #streetview{ width:100%; height:100%; border:none; }
 
-    /* リサイズ用バー（ドラッグ可能／JS対応） */
     .left-resizer{
       align-self:stretch;
       cursor:row-resize;
@@ -73,7 +79,6 @@
       border-radius:2px; background:var(--border); opacity:.9;
     }
 
-    /* フォーム（ここだけスクロール） */
     .left-form{
       overflow:auto; padding-right:4px;
     }
@@ -105,7 +110,7 @@
       background:var(--primary); color:#fff;
     }
 
-    /* ===== 右パネル（地図のみ） ===== */
+    /* ===== 右パネル（地図） ===== */
     .right-panel{
       display:grid; grid-template-rows:1fr;
       gap:12px; min-height:0;
@@ -115,11 +120,11 @@
       border:1px solid var(--border);
       border-radius:12px;
       background:#0001;
-      position:static; /* 旧 absolute を無効化 */
+      position:static;
       margin:0;
     }
 
-    /* ===== モバイル（縦積み） ===== */
+    /* ===== モバイル ===== */
     @media (max-width: 820px){
       .addition-layout{
         grid-template-columns: 1fr;
@@ -127,23 +132,33 @@
       }
     }
   </style>
+
+  <script>
+    // ナビバーの実高さを測って --nav-h に反映
+    function applyNavHeightForAddition() {
+      const host = document.getElementById('navbar-placeholder');
+      const navEl = (host && host.firstElementChild) ? host.firstElementChild : host;
+      const h = Math.max(0, Math.round((navEl?.getBoundingClientRect().height || 56)));
+      document.documentElement.style.setProperty('--nav-h', h + 'px');
+      if (host) host.style.height = h + 'px';
+    }
+    window.addEventListener('load', applyNavHeightForAddition);
+    window.addEventListener('resize', applyNavHeightForAddition);
+  </script>
 </head>
 
 <body class="addition-page" data-theme="light">
   <div id="navbar-placeholder"></div>
 
   <main class="addition-layout">
-    <!-- 左：上=ストビュー／仕切り／下=フォーム（スクロール） -->
+    <!-- 左：上=ストビュー／仕切り／下=フォーム -->
     <section id="leftPanel" aria-label="操作パネル">
-      <!-- ストリートビュー（最上段） -->
       <div id="streetview-container">
         <iframe id="streetview" src="" allowfullscreen></iframe>
       </div>
 
-      <!-- リサイズ用バー（JSで高さドラッグ可能） -->
       <div class="left-resizer" role="separator" aria-orientation="horizontal" tabindex="0"></div>
 
-      <!-- フォーム一式（スクロール） -->
       <div class="left-form">
         <div style="margin: 8px 0;">
           <input type="text" id="addressInput" placeholder="住所を入力してください" style="width: calc(100% - 140px);" />

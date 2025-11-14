@@ -13,7 +13,7 @@ window.addEventListener('DOMContentLoaded', () => {
       display:grid;
       grid-template-columns: 360px 1fr; /* 左：固定幅, 右：可変 */
       gap:12px;
-      height:calc(100vh - var(--nav-h));
+      height:calc(100dvh - var(--nav-h)); /* ← 画面高 - ナビ高さ */
       padding:12px;
       box-sizing:border-box;
     }
@@ -89,14 +89,14 @@ window.addEventListener('DOMContentLoaded', () => {
   /* ★ 左パネル”全体”をスクロールにして、SV も一緒に動かす */
   #leftPanel{
     min-height: 0;
-    overflow: auto;                   /* ← ここを追加（全体スクロール） */
+    overflow: auto;
     -webkit-overflow-scrolling: touch;
-    --left-sv-h: 200px;               /* 初期はやや低め（好みで調整OK） */
+    --left-sv-h: 200px;
   }
 
   /* ★ フォームはスクロールさせない（親に委ねる） */
   .left-form{
-    overflow: visible;                /* ← ここを変更 */
+    overflow: visible;
   }
 }
 
@@ -114,6 +114,24 @@ window.addEventListener('DOMContentLoaded', () => {
       document.documentElement.setAttribute('data-theme','light');
     }
   })();
+
+  /* ========= ナビ高さを CSS 変数へ反映 ========= */
+  function measureAndApplyNavHeightForAddition() {
+    const host = document.getElementById('navbar-placeholder');
+    const navEl = (host && host.firstElementChild) ? host.firstElementChild : host;
+    const navH = Math.max(0, Math.round((navEl?.getBoundingClientRect().height || 56)));
+    document.documentElement.style.setProperty('--nav-h', `${navH}px`);
+    if (host) host.style.height = `${navH}px`;
+  }
+
+  measureAndApplyNavHeightForAddition();
+  const navHost = document.getElementById('navbar-placeholder');
+  if (navHost) {
+    const obs = new MutationObserver(measureAndApplyNavHeightForAddition);
+    obs.observe(navHost, { childList: true, subtree: true });
+  }
+  window.addEventListener('resize', measureAndApplyNavHeightForAddition);
+  window.addEventListener('load', () => setTimeout(measureAndApplyNavHeightForAddition, 0));
 
   /* ========= レイアウトを自動構築 ========= */
   (function buildLayoutIfNeeded() {
@@ -301,10 +319,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  /* === 旧：住所→座標（addressInput / geocodeBtn）は廃止 ===
-     もしテンプレに残っていても、下で自動的に非表示にします。 */
-
-  // --- タイトル入力 → 座標（Enter確定 or blur で発火） ---
+  // --- タイトル入力 → 座標 ---
   const titleInput = document.getElementById('title');
   let lastGeocodeQuery = '';
   let isComposing = false;
@@ -314,7 +329,7 @@ window.addEventListener('DOMContentLoaded', () => {
   async function geocodeAndMove(query) {
     const q = normalizeQuery(query);
     if (!q) return;
-    if (q === lastGeocodeQuery) return; // 同一クエリは再リクエストしない
+    if (q === lastGeocodeQuery) return;
     try {
       const res = await fetch(`/api/geocode?q=${encodeURIComponent(q)}`);
       const data = await res.json();
@@ -333,11 +348,9 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // IME 変換中は Enter を無視
   titleInput?.addEventListener('compositionstart', () => { isComposing = true; });
   titleInput?.addEventListener('compositionend', () => { isComposing = false; });
 
-  // Enter 確定で発火
   titleInput?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
       e.preventDefault();
@@ -345,7 +358,6 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // フォーカスアウトでも発火（内容が変わっていれば）
   titleInput?.addEventListener('blur', () => {
     const q = normalizeQuery(titleInput.value);
     if (q && q !== lastGeocodeQuery) {
@@ -353,12 +365,11 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 初期値が入っている場合は自動で1回だけ geocode
   if (titleInput && normalizeQuery(titleInput.value)) {
     geocodeAndMove(titleInput.value);
   }
 
-  // 旧UI（住所入力ブロック）が残っていれば隠す
+  // 旧UIを隠す
   (function hideLegacyAddressUI() {
     const addressInput = document.getElementById('addressInput');
     const geocodeBtn = document.getElementById('geocodeBtn');

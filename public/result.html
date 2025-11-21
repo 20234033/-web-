@@ -5,47 +5,93 @@
   <title>結果 | 旅行先提案Webシステム</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
   <style>
-    html, body {
-      margin: 0; padding: 0; height: 100%; width: 100%;
-      font-family: 'Orbitron', sans-serif;
-      /* overflow は result.js 側で制御（hidden） */
+    /* ====== 全体基礎 ====== */
+    :root {
+      /* ナビの実測値を result.js から上書き */
+      --nav-h: 56px;
     }
-    #navbar-placeholder { z-index: 2000; }
-    /* ナビの実測値を使って高さを決定（デフォルトは 56px。JSで上書き） */
-    :root { --nav-h: 56px; }
 
-  #result-layout{
-    display: flex; gap: 12px; align-items: stretch;
-    /* ▼ “vhのズレ”をさらに抑えるため dvb を採用（dvhでもOK） */
-    height: calc(100dvb - var(--nav-h));
-    padding: 8px; box-sizing: border-box; overflow: hidden;
-    /* ▼ 下の余白原因になりがちなサブピクセル対策 */
-    margin: 0; 
-  }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      font-family: 'Orbitron', sans-serif;
+      overflow: hidden; /* ページ全体のスクロールはさせない */
+    }
 
-  #result-sidebar{
-    width: clamp(260px, 28vw, 340px);
-    height: 100%;
-    min-height: 0;            /* ▼ flex子のはみ出し抑止 */
-    overflow-y: auto; overflow-x: hidden;
-    -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
-    padding-right: 6px;
-    /* ▼ ナビを意識して“少し下から開始”する余白（JSで実測に合わせて上書き） */
-    padding-top: var(--sidebar-pad, 14px);
-    border-radius: 12px; border: 1px solid transparent; background: transparent;
-  }
-    #scoreText{ padding: 12px; }
-    #place-info{ margin-top: 16px; }
+    #navbar-placeholder {
+      z-index: 2000;
+      /* navbar.js 側で nav の高さに合わせて調整される想定 */
+    }
 
-  #map-wrap{ flex: 1 1 auto; min-width: 0; height: 100%; min-height: 0; overflow: hidden; }
-  #result-map{ width: 100%; height: 100%; }
+    /* ====== メインレイアウト（ここが「メインの部分」） ====== */
+    #result-layout {
+      position: fixed;
+      /* ナビの下からスタート（高さは CSS 変数で制御） */
+      top: var(--nav-h, 56px);
+      left: 0;
+      right: 0;
+      bottom: 0;
 
-    .streetview-frame{
-      width: 100%; height: 200px; border: 0; border-radius: 12px;
+      display: flex;
+      gap: 12px;
+      align-items: stretch;
+
+      padding: 8px;
+      box-sizing: border-box;
+      overflow: hidden; /* ここではみ出さない → 下に余白が出ない */
+      margin: 0;
+    }
+
+    /* ====== サイドバー ====== */
+    #result-sidebar {
+      width: clamp(260px, 28vw, 340px);
+      height: 100%;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+
+      padding-right: 6px;
+      padding-top: var(--sidebar-pad, 14px);
+
+      border-radius: 12px;
+      border: 1px solid transparent;
+      background: transparent;
+    }
+
+    #scoreText { padding: 12px; }
+    #place-info { margin-top: 16px; }
+
+    /* ====== マップ ====== */
+    #map-wrap {
+      flex: 1 1 auto;
+      min-width: 0;
+      height: 100%;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    #result-map {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ====== Street View iframe ====== */
+    .streetview-frame {
+      width: 100%;
+      height: 200px;
+      border: 0;
+      border-radius: 12px;
       transition: transform .2s ease;
     }
-    .streetview-frame:hover{ transform: scale(1.02); }
+    .streetview-frame:hover {
+      transform: scale(1.02);
+    }
   </style>
 </head>
 <body>

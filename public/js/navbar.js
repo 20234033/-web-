@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
     position: fixed;
     top: 0; left: 0; right: 0;
     height: 60px;
-    background: linear-gradient(90deg, #1e1e1e, #1f1f1f, #2c2c2c);
+    background: linear-gradient(90deg, #0f2027, #203a43, #2c5364);
     color: white;
     display: flex;
     align-items: center;

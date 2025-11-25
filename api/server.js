@@ -3,12 +3,14 @@ require('dotenv').config({ path: path.join(__dirname, '..', '.env') }); // ル�
 
 
 
+
 const { JWT_SECRET } = require('./config/auth'); 
 
 if (!JWT_SECRET) {
   console.error('[FATAL] JWT_SECRET is empty');
   process.exit(1);
 }
+
 
 console.log('[BOOT] JWT_SECRET length =', String(JWT_SECRET).length);
 const express = require('express');
@@ -25,10 +27,20 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const AWS = require('aws-sdk');
 const { authenticate } = require('./middleware/authenticate.js'); // ← これがあること
+const { MailerSend, EmailParams, Sender, Recipient } = require("mailersend");
+
 
 const s3 = new AWS.S3({
   region: process.env.AWS_REGION
 });
+const mailerSend = new MailerSend({
+  apiKey: process.env.MAILERSEND_API_KEY,
+});
+
+const sentFrom = new Sender(
+  process.env.VERIFY_FROM_EMAIL,      // 例: "no-reply@xxxxx"
+  process.env.VERIFY_FROM_NAME || "旅行先提案Webシステム"
+);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -94,6 +106,42 @@ const storage = multer.diskStorage({
 
 // 🖼 multer 設定（画像保存）
 const upload = multer({ storage });
+
+
+
+async function sendLoginNotificationEmail(toEmail, userId) {
+  if (!toEmail) {
+    console.warn('[MAIL] 宛先メールアドレスが空です。スキップします。');
+    return;
+  }
+
+  const recipients = [new Recipient(toEmail, userId || toEmail)];
+
+  const emailParams = new EmailParams()
+    .setFrom(sentFrom)
+    .setTo(recipients)
+    .setReplyTo(sentFrom)
+    .setSubject("ログイン通知 - 旅行先提案Webシステム")
+    .setHtml(`
+      <p>ユーザーID: <b>${userId || '(不明)'}</b> でログインが行われました。</p>
+      <p>このメールはシステムのテスト用に送信されています。</p>
+      <p>もし心当たりがない場合は、パスワードの変更をご検討ください。</p>
+    `)
+    .setText(
+      [
+        `ユーザーID: ${userId || '(不明)'} でログインが行われました。`,
+        '',
+        'このメールはシステムのテスト用に送信されています。',
+        'もし心当たりがない場合は、パスワードの変更をご検討ください。'
+      ].join('\n')
+    );
+
+  console.log('[MAIL] ログイン通知メール送信開始 →', toEmail);
+
+  await mailerSend.email.send(emailParams);
+
+  console.log('[MAIL] ログイン通知メール送信完了 →', toEmail);
+}
 
 
 
@@ -165,12 +213,63 @@ async function reverseGeocode(lat, lng) {
   };
 }
 
+app.get("/verify-email", async (req, res) => {
+  const { token } = req.query;
+
+  if (!token || typeof token !== "string") {
+    return res.status(400).send("不正なリクエストです。");
+  }
+
+  try {
+    const now = new Date();
+
+    const [rows] = await db.query(
+      `SELECT id, email_verify_expires_at
+       FROM users
+       WHERE email_verify_token = ? AND email_verified = 0`,
+      [token]
+    );
+
+    if (rows.length === 0) {
+      return res.status(400).send("トークンが無効か、すでに認証済みです。");
+    }
+
+    const user = rows[0];
+
+    if (user.email_verify_expires_at && user.email_verify_expires_at < now) {
+      return res.status(400).send("トークンの有効期限が切れています。");
+    }
+
+    await db.query(
+      `UPDATE users
+       SET email_verified = 1,
+           email_verify_token = NULL,
+           email_verify_expires_at = NULL
+       WHERE id = ?`,
+      [user.id]
+    );
+
+    // 🔥 認証完了したら certification.html に飛ばす！
+    return res.redirect("/auth/certification.html");
+
+  } catch (err) {
+    console.error("verify-email error:", err);
+    return res.status(500).send("サーバーエラーが発生しました。");
+  }
+});
+
+
+
+
+
+
 // 🔐 初期リダイレクト（例：ログインページ）
 app.get('/', (req, res) => {
   res.redirect('/auth/login.html');
 });
 
 // 🔐 認証API（仮）
+// 🔐 ユーザー登録（メール認証つき）
 app.post('/api/register', async (req, res) => {
   const { id, email, password } = req.body;
 
@@ -178,78 +277,123 @@ app.post('/api/register', async (req, res) => {
     return res.status(400).json({ error: '全ての項目を入力してください。' });
   }
 
+  let conn;
   try {
-    const conn = await pool.getConnection();
+    conn = await pool.getConnection();
 
+    // 重複チェック
     const exists = await conn.query(
-      'SELECT id FROM USERS WHERE id = ? OR mail_address = ?',
+      'SELECT uuid FROM USERS WHERE id = ? OR mail_address = ? LIMIT 1',
       [id, email]
     );
     if (exists.length > 0) {
-      conn.release();
       return res.status(409).json({ error: '既に使用されているIDまたはメールアドレスです。' });
     }
 
-    const uuid = crypto.randomUUID(); // ← 必須！
+    const uuid = crypto.randomUUID();
     const hash = await bcrypt.hash(password, 10);
 
+    // 認証用トークンと有効期限（60分）
+    const verifyToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
     await conn.query(
-      'INSERT INTO USERS (uuid, id, mail_address, password_hash) VALUES (?, ?, ?, ?)',
-      [uuid, id, email, hash]
+      `INSERT INTO USERS (
+          uuid, id, mail_address, password_hash,
+          email_verified, email_verify_token, email_verify_expires_at
+        ) VALUES (?, ?, ?, ?, 0, ?, ?)`,
+      [uuid, id, email, hash, verifyToken, expiresAt]
     );
 
-    conn.release();
-    res.json({ message: '登録が完了しました' });
+    // 確認メール送信（失敗しても登録は残す or ロールバックするかはお好み）
+    try {
+      await sendSignupVerificationEmail(email, id, verifyToken);
+    } catch (mailErr) {
+      console.error('[MAIL] signup verify send error:', mailErr);
+      // 必要ならここで return して「メール送信に失敗しました」と返す
+    }
+
+    res.json({
+      message: '仮登録が完了しました。メールに記載されたリンクからメールアドレスを確認してください。'
+    });
 
   } catch (err) {
-    console.error('[❌ 登録エラー]', err);
+    console.error('[❌ /api/register error]', err);
     res.status(500).json({ error: '登録中にエラーが発生しました。' });
+  } finally {
+    if (conn) conn?.release();
   }
 });
+
 
 // me.js や /api/me の中
 app.post('/api/login', async (req, res) => {
   const { identifier, password } = req.body;
 
   if (!identifier || !password) {
-    return res.status(400).json({ error: 'IDまたはメールアドレスとパスワードを入力してください。' });
+    return res
+      .status(400)
+      .json({ error: 'IDまたはメールアドレスとパスワードを入力してください。' });
   }
 
   let conn;
   try {
     conn = await pool.getConnection();
 
-    // ✅ クエリ実行
+    // ユーザー検索（ID or メールアドレス）
     const rows = await conn.query(
       'SELECT * FROM USERS WHERE id = ? OR mail_address = ? LIMIT 1',
       [identifier, identifier]
     );
 
-    // ✅ 結果が空かチェック
     if (!rows || rows.length === 0) {
       console.warn('[WARN] ユーザーが見つかりません:', identifier);
-      return res.status(401).json({ error: 'ログイン情報が正しくありません。' });
+      return res
+        .status(401)
+        .json({ error: 'ログイン情報が正しくありません。' });
     }
 
     const user = rows[0];
 
-    // ✅ パスワード比較
-    if (!user.password_hash || !(await bcrypt.compare(password, user.password_hash))) {
-      return res.status(401).json({ error: 'ログイン情報が正しくありません。' });
+    // ✅ メール未認証ならログインさせない
+    if (user.email_verified === 0) {
+      return res.status(403).json({
+        error:
+          'メールアドレスの認証が完了していません。メールに記載されたリンクを開いて認証を完了してください。',
+        needsVerification: true,
+      });
     }
 
-    // ✅ JWT トークン生成
+    // ✅ パスワードチェック
+    const ok =
+      user.password_hash && (await bcrypt.compare(password, user.password_hash));
+    if (!ok) {
+      return res
+        .status(401)
+        .json({ error: 'ログイン情報が正しくありません。' });
+    }
+
+    // 🔔 ログイン通知メール（失敗してもログインは成功扱い）
+    try {
+      await sendLoginNotificationEmail(user.mail_address, user.id);
+    } catch (mailErr) {
+      console.error('[MAIL] ログイン通知メール送信エラー:', mailErr);
+    }
+
+    // ✅ JWT発行
     const { JWT_SECRET } = require('./config/auth.js');
     const token = jwt.sign({ uuid: user.uuid }, JWT_SECRET, { expiresIn: '7d' });
-    // ✅ Cookie にセット
+
+    // ✅ Cookie 設定
     res.cookie('token', token, {
       httpOnly: true,
-      secure: false,          // ← HTTPのみなので常に false
-      sameSite: 'Lax',        // ← クロスサイトにしない運用（同一オリジン前提） 'None' : 'Lax',
+      secure: false,        // 本番HTTPSなら true
+      sameSite: 'Lax',      // 同一オリジン前提
       path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
+    // ✅ レスポンス
     res.json({
       message: 'ログイン成功',
       user: {
@@ -257,14 +401,17 @@ app.post('/api/login', async (req, res) => {
         avatar_url: user.avatar_url || null,
       },
     });
-
   } catch (err) {
     console.error('[ログイン失敗]', err);
-    res.status(500).json({ error: 'ログイン処理中にエラーが発生しました。' });
+    res
+      .status(500)
+      .json({ error: 'ログイン処理中にエラーが発生しました。' });
   } finally {
     if (conn) conn.release();
   }
 });
+
+
 
 app.post('/api/logout', (req, res) => {
   res.clearCookie('token', {
@@ -274,6 +421,60 @@ app.post('/api/logout', (req, res) => {
   });
   res.json({ message: 'ログアウト完了' });
 });
+
+// メールアドレス確認
+app.get('/api/email/verify', async (req, res) => {
+  const { token } = req.query;
+
+  if (!token || typeof token !== 'string') {
+    return res.status(400).send('不正なリクエストです。');
+  }
+
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const now = new Date();
+
+    const rows = await conn.query(
+      `SELECT uuid, email_verify_expires_at
+         FROM USERS
+        WHERE email_verify_token = ?
+          AND email_verified = 0
+        LIMIT 1`,
+      [token]
+    );
+
+    if (!rows || rows.length === 0) {
+      return res.status(400).send('トークンが無効か、すでに認証済みです。');
+    }
+
+    const user = rows[0];
+
+    if (user.email_verify_expires_at && user.email_verify_expires_at < now) {
+      return res.status(400).send('トークンの有効期限が切れています。');
+    }
+
+    await conn.query(
+      `UPDATE USERS
+          SET email_verified = 1,
+              email_verify_token = NULL,
+              email_verify_expires_at = NULL
+        WHERE uuid = ?`,
+      [user.uuid]
+    );
+
+    // 成功したらログイン画面へ
+    const baseUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
+    return res.redirect(`${baseUrl}/auth/login.html?verified=1`);
+
+  } catch (err) {
+    console.error('[verify email error]', err);
+    return res.status(500).send('サーバーエラーが発生しました。');
+  } finally {
+    if (conn) conn?.release();
+  }
+});
+
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -419,11 +620,153 @@ app.post('/api/update_account', authenticate, async (req, res) => {
   }
 });
 
-app.post('/api/reset-password', (req, res) => {
-  const { identifier } = req.body;
-  console.log(`[RESET] Identifier: ${identifier}`);
-  res.json({ message: 'パスワードリセットリンクを送信しました（仮）' });
+// ③ パスワードリセット用コード発行
+app.post('/api/password/forgot', async (req, res) => {
+  const { identifier } = req.body || {};
+
+  if (!identifier) {
+    return res.status(400).json({ error: 'ユーザーIDまたはメールアドレスを入力してください。' });
+  }
+
+  let conn;
+  try {
+    conn = await pool.getConnection();
+
+    // メールかIDか簡易判定
+    const isEmail = identifier.includes('@');
+
+    const users = await conn.query(
+      isEmail
+        ? 'SELECT uuid, id, mail_address FROM USERS WHERE mail_address = ? LIMIT 1'
+        : 'SELECT uuid, id, mail_address FROM USERS WHERE id = ? LIMIT 1',
+      [identifier]
+    );
+
+    // 存在しない場合も「送信しました」と返す（存在有無をバラさないため）
+    if (!users || users.length === 0) {
+      conn.release();
+      return res.json({
+        ok: true,
+        message: 'パスワード再設定用のメールを送信しました。（存在しない場合もこのメッセージです）'
+      });
+    }
+
+    const user = users[0];
+
+    // 6桁コード + 内部トークン
+    const code = generate6DigitCode();
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10分
+
+    await conn.query(
+      `INSERT INTO EMAIL_VERIFICATION_CODES
+         (token, email, user_id, code, purpose, expires_at)
+       VALUES (?, ?, ?, ?, 'reset_password', ?)`,
+      [token, user.mail_address, user.id, code, expiresAt]
+    );
+
+    conn.release();
+
+    // メール送信
+    try {
+      await sendVerificationCodeEmail(user.mail_address, code, 'reset_password');
+    } catch (mailErr) {
+      console.error('[MAIL] パスワードリセット確認コード送信エラー:', mailErr);
+    }
+
+    return res.json({
+      ok: true,
+      pending_token: token,
+      message: 'パスワード再設定用の確認コードをメールで送信しました。'
+    });
+
+  } catch (err) {
+    if (conn) conn.release();
+    console.error('[password/forgot error]', err);
+    return res.status(500).json({ error: 'サーバーエラーが発生しました。' });
+  }
 });
+
+// ④ パスワードリセット実行
+app.post('/api/password/reset', async (req, res) => {
+  const { pending_token, code, newPassword } = req.body || {};
+
+  if (!pending_token || !code || !newPassword) {
+    return res.status(400).json({ error: 'トークン・確認コード・新しいパスワードが必要です。' });
+  }
+  if (newPassword.length < 8) {
+    return res.status(400).json({ error: 'パスワードは8文字以上にしてください。' });
+  }
+
+  let conn;
+  try {
+    conn = await pool.getConnection();
+
+    const rows = await conn.query(
+      `SELECT * FROM EMAIL_VERIFICATION_CODES
+       WHERE token = ? AND purpose = 'reset_password' AND used = 0
+       LIMIT 1`,
+      [pending_token]
+    );
+
+    if (!rows || rows.length === 0) {
+      conn.release();
+      return res.status(400).json({ error: '無効なトークンです。最初からやり直してください。' });
+    }
+
+    const ver = rows[0];
+    const now = new Date();
+
+    if (ver.expires_at && ver.expires_at < now) {
+      conn.release();
+      return res.status(400).json({ error: '確認コードの有効期限が切れています。' });
+    }
+
+    if (ver.code !== String(code).trim()) {
+      conn.release();
+      return res.status(400).json({ error: '確認コードが一致しません。' });
+    }
+
+    // ユーザー検索（メールで）
+    const users = await conn.query(
+      'SELECT uuid FROM USERS WHERE mail_address = ? LIMIT 1',
+      [ver.email]
+    );
+    if (!users || users.length === 0) {
+      conn.release();
+      return res.status(400).json({ error: '対象ユーザーが見つかりません。' });
+    }
+
+    const user = users[0];
+    const newHash = await bcrypt.hash(newPassword, 10);
+
+    // パスワード更新
+    await conn.query(
+      'UPDATE USERS SET password_hash = ? WHERE uuid = ?',
+      [newHash, user.uuid]
+    );
+
+    // このコードを使用済みに
+    await conn.query(
+      'UPDATE EMAIL_VERIFICATION_CODES SET used = 1 WHERE token = ?',
+      [pending_token]
+    );
+
+    conn.release();
+
+    return res.json({
+      ok: true,
+      message: 'パスワードを更新しました。新しいパスワードでログインしてください。'
+    });
+
+  } catch (err) {
+    if (conn) conn.release();
+    console.error('[password/reset error]', err);
+    return res.status(500).json({ error: 'サーバーエラーが発生しました。' });
+  }
+});
+
+
 
 app.post('/api/force-logout', (req, res) => {
   res.clearCookie('token', {
@@ -966,6 +1309,138 @@ app.get('/api/score', (req, res) => {
 function sanitizeAppId(raw) {
   return (raw || "").trim().replace(/[\u200B-\u200D\uFEFF]/g, "");
 }
+
+function generate6DigitCode() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+// 🔐 ユーザー登録（メール認証つき）
+app.post('/api/register', async (req, res) => {
+  const { id, email, password } = req.body;
+
+  if (!id || !email || !password) {
+    return res.status(400).json({ error: '全ての項目を入力してください。' });
+  }
+
+  let conn;
+  try {
+    conn = await pool.getConnection();
+
+    // 重複チェック
+    const exists = await conn.query(
+      'SELECT uuid FROM USERS WHERE id = ? OR mail_address = ? LIMIT 1',
+      [id, email]
+    );
+    if (exists.length > 0) {
+      return res.status(409).json({ error: '既に使用されているIDまたはメールアドレスです。' });
+    }
+
+    const uuid = crypto.randomUUID();
+    const hash = await bcrypt.hash(password, 10);
+
+    // 認証用トークンと有効期限（60分）
+    const verifyToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+    await conn.query(
+      `INSERT INTO USERS (
+          uuid, id, mail_address, password_hash,
+          email_verified, email_verify_token, email_verify_expires_at
+        ) VALUES (?, ?, ?, ?, 0, ?, ?)`,
+      [uuid, id, email, hash, verifyToken, expiresAt]
+    );
+
+    // 確認メール送信（失敗しても登録は残す or ロールバックするかはお好み）
+    try {
+      await sendSignupVerificationEmail(email, id, verifyToken);
+    } catch (mailErr) {
+      console.error('[MAIL] signup verify send error:', mailErr);
+      // 必要ならここで return して「メール送信に失敗しました」と返す
+    }
+
+    res.json({
+      message: '仮登録が完了しました。メールに記載されたリンクからメールアドレスを確認してください。'
+    });
+
+  } catch (err) {
+    console.error('[❌ /api/register error]', err);
+    res.status(500).json({ error: '登録中にエラーが発生しました。' });
+  } finally {
+    if (conn) conn?.release();
+  }
+});
+
+// server.js など
+
+async function sendSignupVerificationEmail(toEmail, userId, token) {
+  if (!toEmail || !token) {
+    console.warn('[MAIL] signup verify: toEmail/token が足りません');
+    return;
+  }
+
+  const recipients = [new Recipient(toEmail, userId || toEmail)];
+
+  // .env にフロントのURLを書いておくと楽 (例: http://localhost:3000)
+  const baseUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
+  const verifyUrl = `${baseUrl}/api/email/verify?token=${encodeURIComponent(token)}`;
+
+  const emailParams = new EmailParams()
+    .setFrom(sentFrom)
+    .setTo(recipients)
+    .setReplyTo(sentFrom)
+    .setSubject('メールアドレス確認 - 旅行先提案Webシステム')
+    .setHtml(`
+      <p>旅行先提案Webシステムへのご登録ありがとうございます。</p>
+      <p>以下のリンクをクリックして、メールアドレスの確認を完了してください。</p>
+      <p><a href="${verifyUrl}">${verifyUrl}</a></p>
+      <p>このリンクの有効期限は 60 分です。</p>
+    `)
+    .setText([
+      '旅行先提案Webシステムへのご登録ありがとうございます。',
+      '次のURLにアクセスして、メールアドレスの確認を完了してください。',
+      '',
+      verifyUrl,
+      '',
+      'このリンクの有効期限は 60 分です。'
+    ].join('\n'));
+
+  console.log('[MAIL] 登録確認メール送信開始 →', toEmail);
+  await mailerSend.email.send(emailParams);
+  console.log('[MAIL] 登録確認メール送信完了 →', toEmail);
+}
+
+
+async function sendVerificationCodeEmail(toEmail, code, purpose) {
+  const purposeLabel = purpose === 'reset_password'
+    ? 'パスワード再設定'
+    : '確認';
+
+  const recipients = [new Recipient(toEmail, toEmail)];
+
+  const emailParams = new EmailParams()
+    .setFrom(sentFrom)
+    .setTo(recipients)
+    .setReplyTo(sentFrom)
+    .setSubject(`【${purposeLabel}】確認コードのお知らせ`)
+    .setHtml(`
+      <p>${purposeLabel} の確認コードは <b style="font-size: 20px;">${code}</b> です。</p>
+      <p>このコードの有効期限は10分間です。</p>
+      <p>ご自身で操作していない場合は、このメールは破棄してください。</p>
+    `)
+    .setText(
+      [
+        `${purposeLabel} の確認コードは ${code} です。`,
+        'このコードの有効期限は10分間です。',
+        'ご自身で操作していない場合は、このメールは破棄してください。'
+      ].join('\n')
+    );
+
+  console.log('[MAIL] 確認コード送信開始 →', toEmail, 'purpose=', purpose);
+  await mailerSend.email.send(emailParams);
+  console.log('[MAIL] 確認コード送信完了 →', toEmail);
+}
+
+
 
 // 楽天レスポンス1件分から basic/rating を安全に取り出す
 function pickBasicAndRating(node) {

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>確認コード入力 | 旅行先提案Webシステム</title>
+  <link rel="stylesheet" href="css/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+
+  <div class="auth-container">
+    <h1>📩 確認コードを入力してください</h1>
+    <p class="description">
+      メールでお送りした <strong>6桁の確認コード</strong> と<br>
+      新しいパスワードを入力してください。
+    </p>
+
+    <form class="auth-form" id="verifyForm">
+      <label for="code">6桁の確認コード</label>
+      <input type="text" id="code" name="code" maxlength="6"
+       inputmode="numeric" pattern="[0-9]{6}" required
+       placeholder="例: 123456">
+
+      <label for="newPassword">新しいパスワード</label>
+      <input type="password" id="newPassword" name="newPassword"
+             minlength="8" required placeholder="8文字以上">
+
+      <label for="newPassword2">新しいパスワード（確認）</label>
+      <input type="password" id="newPassword2" name="newPassword2"
+             minlength="8" required placeholder="同じパスワードを再入力">
+
+      <button type="submit">パスワードを変更する</button>
+    </form>
+
+    <div class="auth-links">
+      <a href="forgot.html">← メールアドレスの入力に戻る</a> |
+      <a href="login.html">ログイン画面へ</a>
+    </div>
+  </div>
+
+  <script src="../js/navbar.js"></script>
+  <script>
+    // forgot.html で発行したトークンがない場合は戻す
+    const token = sessionStorage.getItem('pw_reset_token');
+    if (!token) {
+      alert('パスワード再設定の手順を最初からやり直してください。');
+      window.location.href = 'forgot.html';
+    }
+
+    document.getElementById('verifyForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const code = document.getElementById('code').value.trim();
+      const newPassword = document.getElementById('newPassword').value;
+      const newPassword2 = document.getElementById('newPassword2').value;
+
+      if (!/^[0-9]{6}$/.test(code)) {
+        alert('確認コードは6桁の数字で入力してください。');
+        return;
+      }
+
+      if (newPassword.length < 8) {
+        alert('パスワードは8文字以上にしてください。');
+        return;
+      }
+
+      if (newPassword !== newPassword2) {
+        alert('新しいパスワードが一致しません。');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/password/reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pending_token: token,
+            code,
+            newPassword
+          })
+        });
+
+        const data = await res.json();
+        console.log('[reset] response:', data);
+
+        if (!res.ok) {
+          alert(data.error || 'パスワードの変更に失敗しました。');
+          return;
+        }
+
+        if (!data.ok) {
+          alert(data.error || data.message || 'パスワードの変更に失敗しました。');
+          return;
+        }
+
+        // 成功したのでトークンを消す
+        sessionStorage.removeItem('pw_reset_token');
+
+        alert('パスワードを変更しました。新しいパスワードでログインしてください。');
+        window.location.href = 'login.html';
+
+      } catch (err) {
+        console.error('[reset] error:', err);
+        alert('サーバーとの通信に失敗しました。');
+      }
+    });
+  </script>
+</body>
+</html>

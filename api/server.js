@@ -325,7 +325,6 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-
 // me.js や /api/me の中
 app.post('/api/login', async (req, res) => {
   const { identifier, password } = req.body;
@@ -410,7 +409,6 @@ app.post('/api/login', async (req, res) => {
     if (conn) conn.release();
   }
 });
-
 
 
 app.post('/api/logout', (req, res) => {
@@ -1381,7 +1379,7 @@ async function sendSignupVerificationEmail(toEmail, userId, token) {
   const recipients = [new Recipient(toEmail, userId || toEmail)];
 
   // .env にフロントのURLを書いておくと楽 (例: http://localhost:3000)
-  const baseUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
+  const baseUrl = process.env.APP_BASE_URL || 'http://ec2-54-150-237-229.ap-northeast-1.compute.amazonaws.com';
   const verifyUrl = `${baseUrl}/api/email/verify?token=${encodeURIComponent(token)}`;
 
   const emailParams = new EmailParams()

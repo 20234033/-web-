@@ -24,42 +24,52 @@
 
   <script src="../js/navbar.js"></script>
   <script>
-document.getElementById('registerForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
+    document.getElementById('registerForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
 
-  const id = document.getElementById('reg-id').value.trim();
-  const email = document.getElementById('reg-email').value.trim();
-  const pass = document.getElementById('reg-pass').value;
-  const confirm = document.getElementById('reg-confirm').value;
+      const id = document.getElementById('reg-id').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const pass = document.getElementById('reg-pass').value;
+      const confirm = document.getElementById('reg-confirm').value;
 
-  if (pass !== confirm) {
-    alert("パスワードが一致しません。");
-    return;
-  }
+      if (pass !== confirm) {
+        alert("パスワードが一致しません。");
+        return;
+      }
 
-  try {
-    const response = await fetch('/api/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, email, password: pass })
+      try {
+        const res = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, email, password: pass })
+        });
+
+        // まずは素のテキストとして受け取る
+        const text = await res.text();
+        let data = {};
+
+        // JSONパースを試みる（502などでHTMLが返ってきた場合に備える）
+        try {
+          data = text ? JSON.parse(text) : {};
+        } catch (parseErr) {
+          console.error('登録APIからJSON以外が返ってきました:', parseErr, text);
+        }
+
+        if (!res.ok) {
+          const msg = data.error || data.message || `登録に失敗しました。（HTTP ${res.status}）`;
+          alert(msg);
+          return;
+        }
+
+        alert("登録が完了しました。登録したメールアドレスに確認メールを送信しました。メール内のリンクから認証を完了してください。");
+        // login → login.html に修正
+        window.location.href = 'login.html';
+
+      } catch (error) {
+        console.error('登録エラー:', error);
+        alert("サーバーとの通信に失敗しました。");
+      }
     });
-
-    const result = await response.json();
-
-    if (response.ok) {
-      // ★ 文言だけ変更
-      alert("登録が完了しました。登録したメールアドレスに確認メールを送信しました。メール内のリンクから認証を完了してください。");
-      // すぐログイン画面に飛ばすならこんな感じ（好みで）
-      window.location.href = 'login';
-    } else {
-      alert(result.error || "登録に失敗しました。");
-    }
-  } catch (error) {
-    console.error('登録エラー:', error);
-    alert("サーバーとの通信に失敗しました。");
-  }
-});
-</script>
-
+  </script>
 </body>
 </html>

@@ -462,7 +462,7 @@ app.get('/api/email/verify', async (req, res) => {
     );
 
     // 成功したらログイン画面へ
-    const baseUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
+    const baseUrl = process.env.APP_BASE_URL || 'http://ec2-54-150-237-229.ap-northeast-1.compute.amazonaws.com/';
     return res.redirect(`${baseUrl}/auth/login.html?verified=1`);
 
   } catch (err) {

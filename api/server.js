@@ -307,6 +307,19 @@ app.get('/', (req, res) => {
   res.redirect('/auth/login.html');
 });
 
+app.get('/api/check_id', async (req, res) => {
+  const { id } = req.query;
+  if (!id) return res.json({ exists: false });
+
+  try {
+    const rows = await pool.query('SELECT 1 FROM USERS WHERE id = ? LIMIT 1', [id]);
+    return res.json({ exists: rows.length > 0 });
+  } catch (err) {
+    console.error('check_id error:', err);
+    return res.json({ exists: false });
+  }
+});
+
 // 🔐 認証API（仮）
 // 🔐 ユーザー登録（メール認証つき）
 app.post('/api/register', async (req, res) => {
@@ -363,6 +376,9 @@ app.post('/api/register', async (req, res) => {
     if (conn) conn?.release();
   }
 });
+
+
+
 
 // me.js や /api/me の中
 app.post('/api/login', async (req, res) => {

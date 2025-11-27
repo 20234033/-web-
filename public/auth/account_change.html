@@ -14,14 +14,17 @@
     <h1>アカウント情報の変更</h1>
     <p id="statusMsg" class="msg"></p>
 
-    <!-- kind= username / email / password に応じて表示切り替え -->
+    <!-- kind = username / email / password / delete_account に応じて表示切り替え -->
+
+    <!-- ▼ ID変更 -->
     <div id="form-username" class="change-form" style="display:none;">
       <h2>IDの変更</h2>
-      <p>新しいIDを入力してください。</p>
+      <p>新しいIDを入力してください。（英数字とアンダースコアのみ）</p>
       <input id="newUsername" type="text" placeholder="新しいID">
       <button id="submitUsernameBtn">IDを変更する</button>
     </div>
 
+    <!-- ▼ メールアドレス変更 -->
     <div id="form-email" class="change-form" style="display:none;">
       <h2>メールアドレスの変更</h2>
       <p>新しいメールアドレスを入力してください。</p>
@@ -29,12 +32,23 @@
       <button id="submitEmailBtn">メールアドレスを変更する</button>
     </div>
 
+    <!-- ▼ パスワード変更 -->
     <div id="form-password" class="change-form" style="display:none;">
       <h2>パスワードの変更</h2>
-      <p>新しいパスワードを入力してください。</p>
+      <p>新しいパスワードを入力してください。（8文字以上）</p>
       <input id="newPassword" type="password" placeholder="新しいパスワード">
       <input id="newPassword2" type="password" placeholder="新しいパスワード（確認用）">
       <button id="submitPasswordBtn">パスワードを変更する</button>
+    </div>
+
+    <!-- ▼ アカウント削除（kind === delete_account 用） -->
+    <div id="form-delete" class="change-form" style="display:none;">
+      <h2>アカウント削除</h2>
+      <p class="warning">
+        この操作を行うと、アカウントおよび関連するデータが削除される場合があります。<br>
+        元に戻すことはできません。本当に削除してよろしいですか？
+      </p>
+      <button id="submitDeleteBtn" class="danger-btn">アカウントを削除する</button>
     </div>
 
     <p style="margin-top: 16px;">
@@ -55,7 +69,7 @@
       return params.get('token');
     }
 
-    // /api/account/change_info を叩いて kind を取る（username / email / password）
+    // /api/account/change_info を叩いて kind を取る（username / email / password / delete_account）
     async function fetchChangeInfo(token) {
       const res = await fetch(
         '/api/account/change_info?token=' + encodeURIComponent(token)
@@ -81,6 +95,11 @@
       return text;
     }
 
+    // メールの簡易バリデーション
+    function isValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
     document.addEventListener('DOMContentLoaded', async () => {
       const token = getTokenFromQuery();
       if (!token) {
@@ -99,7 +118,7 @@
         return;
       }
 
-      const kind = info.kind; // "username" | "email" | "password"
+      const kind = info.kind; // "username" | "email" | "password" | "delete_account" など
       setMsg('');
 
       // 対応するフォームだけ表示
@@ -109,22 +128,54 @@
         document.getElementById('form-email').style.display = 'block';
       } else if (kind === 'password') {
         document.getElementById('form-password').style.display = 'block';
+      } else if (kind === 'delete_account') {
+        document.getElementById('form-delete').style.display = 'block';
       } else {
         setMsg('不明な変更種別です。リンクが壊れている可能性があります。');
         return;
       }
 
-      // ID 変更
+      // ===== ID 変更 =====
       const submitUsernameBtn = document.getElementById('submitUsernameBtn');
       if (submitUsernameBtn) {
         submitUsernameBtn.addEventListener('click', async () => {
           const newUsername = document
             .getElementById('newUsername')
             .value.trim();
+
           if (!newUsername) {
             setMsg('新しいIDを入力してください。', false);
             return;
           }
+
+          // 英数字 + アンダースコアのみ
+          if (!/^[a-zA-Z0-9_]+$/.test(newUsername)) {
+            setMsg('IDは英数字とアンダースコア（_）のみ使用できます。', false);
+            return;
+          }
+
+          // 事前に重複チェック
+          try {
+            const checkRes = await fetch(
+              '/api/check_id?id=' + encodeURIComponent(newUsername)
+            );
+            let checkData = {};
+            try {
+              checkData = await checkRes.json();
+            } catch (err) {
+              console.error('ID重複チェックのJSONパースに失敗:', err);
+            }
+
+            if (checkData && checkData.exists) {
+              setMsg('このIDはすでに使用されています。別のIDを指定してください。', false);
+              return;
+            }
+          } catch (err) {
+            console.error('ID重複チェックエラー:', err);
+            setMsg('IDの重複チェックに失敗しました。時間をおいて再度お試しください。', false);
+            return;
+          }
+
           try {
             await applyChange({ token, kind: 'username', newUsername });
             setMsg('IDを変更しました。ログインし直してください。', true);
@@ -134,13 +185,17 @@
         });
       }
 
-      // メール変更
+      // ===== メール変更 =====
       const submitEmailBtn = document.getElementById('submitEmailBtn');
       if (submitEmailBtn) {
         submitEmailBtn.addEventListener('click', async () => {
           const newEmail = document.getElementById('newEmail').value.trim();
           if (!newEmail) {
             setMsg('新しいメールアドレスを入力してください。', false);
+            return;
+          }
+          if (!isValidEmail(newEmail)) {
+            setMsg('メールアドレスの形式が正しくありません。', false);
             return;
           }
           try {
@@ -152,12 +207,13 @@
         });
       }
 
-      // パスワード変更
+      // ===== パスワード変更 =====
       const submitPasswordBtn = document.getElementById('submitPasswordBtn');
       if (submitPasswordBtn) {
         submitPasswordBtn.addEventListener('click', async () => {
           const pw1 = document.getElementById('newPassword').value;
           const pw2 = document.getElementById('newPassword2').value;
+
           if (!pw1 || !pw2) {
             setMsg('新しいパスワードを2回入力してください。', false);
             return;
@@ -166,12 +222,33 @@
             setMsg('パスワードが一致していません。', false);
             return;
           }
+          if (pw1.length < 8) {
+            setMsg('パスワードは8文字以上で入力してください。', false);
+            return;
+          }
+
           try {
             await applyChange({ token, kind: 'password', newPassword: pw1 });
             setMsg(
               'パスワードを変更しました。新しいパスワードでログインしてください。',
               true
             );
+          } catch (e) {
+            setMsg(e.message, false);
+          }
+        });
+      }
+
+      // ===== アカウント削除 =====
+      const submitDeleteBtn = document.getElementById('submitDeleteBtn');
+      if (submitDeleteBtn) {
+        submitDeleteBtn.addEventListener('click', async () => {
+          if (!confirm('本当にアカウントを削除してよろしいですか？')) {
+            return;
+          }
+          try {
+            await applyChange({ token, kind: 'delete_account' });
+            setMsg('アカウントを削除しました。ご利用ありがとうございました。', true);
           } catch (e) {
             setMsg(e.message, false);
           }

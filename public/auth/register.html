@@ -13,7 +13,7 @@
     <form id="registerForm">
       <input type="text" id="reg-id" placeholder="ユーザーID" required>
       <input type="email" id="reg-email" placeholder="メールアドレス" required>
-      <input type="password" id="reg-pass" placeholder="パスワード" required>
+      <input type="password" id="reg-pass" placeholder="パスワード（8文字以上）" required>
       <input type="password" id="reg-confirm" placeholder="パスワード確認" required>
       <button type="submit">登録</button>
     </form>
@@ -32,11 +32,45 @@
       const pass = document.getElementById('reg-pass').value;
       const confirm = document.getElementById('reg-confirm').value;
 
+      // ========= ID バリデーション（英数字 + _ のみ） =========
+      if (!/^[a-zA-Z0-9_]+$/.test(id)) {
+        alert("ユーザーIDは英数字と _ のみ使用できます。");
+        return;
+      }
+
+      // ========= パスワード長さ =========
+      if (pass.length < 8) {
+        alert("パスワードは8文字以上で入力してください。");
+        return;
+      }
+
+      // ========= パスワード一致 =========
       if (pass !== confirm) {
         alert("パスワードが一致しません。");
         return;
       }
 
+      // ========= ID 重複チェック（/api/check_id） =========
+      try {
+        const checkRes = await fetch('/api/check_id?id=' + encodeURIComponent(id));
+        let checkData = {};
+        try {
+          checkData = await checkRes.json();
+        } catch (err) {
+          console.error('ID重複チェックのJSONパースに失敗しました:', err);
+        }
+
+        if (checkData && checkData.exists) {
+          alert("このユーザーIDはすでに使用されています。別のIDを入力してください。");
+          return;
+        }
+      } catch (err) {
+        console.error('ID重複チェックエラー:', err);
+        alert("IDの重複チェックに失敗しました。時間を置いて再度お試しください。");
+        return;
+      }
+
+      // ========= 実際の登録リクエスト =========
       try {
         const res = await fetch('/api/register', {
           method: 'POST',
@@ -44,7 +78,6 @@
           body: JSON.stringify({ id, email, password: pass })
         });
 
-        // まずは素のテキストとして受け取る
         const text = await res.text();
         let data = {};
 
@@ -62,7 +95,6 @@
         }
 
         alert("登録が完了しました。登録したメールアドレスに確認メールを送信しました。メール内のリンクから認証を完了してください。");
-        // login → login.html に修正
         window.location.href = 'login.html';
 
       } catch (error) {

@@ -77,7 +77,7 @@ app.use(express.static(publicPath, { extensions: ['html'] }));
 app.use('/image', express.static(path.join(__dirname, '..', 'public', 'image')));
 
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://ec2-54-150-237-229.ap-northeast-1.compute.amazonaws.com'],
+  origin: ['http://ec2-54-150-237-229.ap-northeast-1.compute.amazonaws.com/', 'http://ec2-54-150-237-229.ap-northeast-1.compute.amazonaws.com'],
   credentials: true,
 }));
 
@@ -750,7 +750,7 @@ app.post('/api/account/change_link', authenticate, async (req, res) => {
 
     // メール本文 & リンク
     const baseUrl =
-      process.env.APP_BASE_URL || 'http://localhost:3000';
+      process.env.APP_BASE_URL || 'http://ec2-54-150-237-229.ap-northeast-1.compute.amazonaws.com/';
 
     const path =
       kind === 'delete'

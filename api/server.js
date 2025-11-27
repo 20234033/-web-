@@ -1,16 +1,12 @@
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') }); // ルート固定
 
-
-
-
 const { JWT_SECRET } = require('./config/auth'); 
 
 if (!JWT_SECRET) {
   console.error('[FATAL] JWT_SECRET is empty');
   process.exit(1);
 }
-
 
 console.log('[BOOT] JWT_SECRET length =', String(JWT_SECRET).length);
 const express = require('express');
@@ -26,9 +22,10 @@ const cors = require('cors');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const AWS = require('aws-sdk');
-const { authenticate } = require('./middleware/authenticate.js'); // ← これがあること
-const { MailerSend, EmailParams, Sender, Recipient } = require("mailersend");
 
+const { authenticate } = require('./middleware/authenticate.js'); // ← これがあること
+
+const { MailerSend, EmailParams, Sender, Recipient } = require("mailersend");
 
 const s3 = new AWS.S3({
   region: process.env.AWS_REGION
@@ -141,6 +138,48 @@ async function sendLoginNotificationEmail(toEmail, userId) {
   await mailerSend.email.send(emailParams);
 
   console.log('[MAIL] ログイン通知メール送信完了 →', toEmail);
+}
+async function sendAccountChangeLinkEmail(toEmail, kind, link) {
+  if (!toEmail) {
+    console.warn('[MAIL] account change: toEmail missing');
+    return;
+  }
+
+  const label =
+    kind === 'username'
+      ? 'ID'
+      : kind === 'email'
+      ? 'メールアドレス'
+      : kind === 'password'
+      ? 'パスワード'
+      : 'アカウント情報';
+
+  const recipients = [new Recipient(toEmail, toEmail)];
+
+  const emailParams = new EmailParams()
+    .setFrom(sentFrom)
+    .setTo(recipients)
+    .setReplyTo(sentFrom)
+    .setSubject(`【${label}変更】手続き用リンクのお知らせ`)
+    .setHtml(`
+      <p>${label}の変更手続きを受け付けました。</p>
+      <p>以下のリンクから変更画面にアクセスしてください。（30分間有効）</p>
+      <p><a href="${link}">${link}</a></p>
+      <p>お心当たりがない場合は、このメールを破棄してください。</p>
+    `)
+    .setText(
+      [
+        `${label}の変更手続きを受け付けました。`,
+        '次のURLから変更画面にアクセスしてください。（30分間有効）',
+        '',
+        link,
+        '',
+        'お心当たりがない場合は、このメールを破棄してください。'
+      ].join('\n')
+    );
+
+  console.log('[MAIL] account-change link send →', toEmail, 'kind=', kind);
+  await mailerSend.email.send(emailParams);
 }
 
 
@@ -473,6 +512,61 @@ app.get('/api/email/verify', async (req, res) => {
   }
 });
 
+app.post('/api/account/change_apply', async (req, res) => {
+  const { token, kind, newUsername, newEmail, newPassword } = req.body || {};
+  if (!token || !kind) return res.status(400).send('invalid');
+
+  try {
+    const rows = await pool.query(
+      'SELECT user_uuid, kind, expires_at, consumed FROM account_change_tokens WHERE token = ? LIMIT 1',
+      [token]
+    );
+    const row = rows && rows[0];
+    if (!row) return res.status(404).send('not found');
+    if (row.consumed) return res.status(400).send('already used');
+    if (new Date(row.expires_at) < new Date()) return res.status(400).send('expired');
+    if (row.kind !== kind) return res.status(400).send('kind mismatch');
+
+    const userUuid = row.user_uuid;
+
+    if (kind === 'username') {
+      if (!newUsername) return res.status(400).send('newUsername required');
+      await pool.query('UPDATE USERS SET id = ? WHERE uuid = ?', [
+        newUsername,
+        userUuid,
+      ]);
+    } else if (kind === 'email') {
+      if (!newEmail) return res.status(400).send('newEmail required');
+      await pool.query('UPDATE USERS SET mail_address = ? WHERE uuid = ?', [
+        newEmail,
+        userUuid,
+      ]);
+    } else if (kind === 'password') {
+      if (!newPassword) return res.status(400).send('newPassword required');
+      const hash = await bcrypt.hash(newPassword, 10);
+      await pool.query('UPDATE USERS SET password_hash = ? WHERE uuid = ?', [
+        hash,
+        userUuid,
+      ]);
+    } else if (kind === 'delete') {
+      // ⭐ アカウント削除本体
+      await pool.query('DELETE FROM USERS WHERE uuid = ?', [userUuid]);
+    } else {
+      return res.status(400).send('unknown kind');
+    }
+
+    await pool.query('UPDATE account_change_tokens SET consumed = 1 WHERE token = ?', [
+      token,
+    ]);
+    res.send('OK');
+  } catch (err) {
+    console.error('[account/change_apply error]', err);
+    res.status(500).send('server error');
+  }
+});
+
+
+
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -617,6 +711,117 @@ app.post('/api/update_account', authenticate, async (req, res) => {
     if (conn) conn.release();
   }
 });
+// 変更用リンクをメールで送る
+// 変更用リンク（ID / メール / パスワード / アカウント削除）
+app.post('/api/account/change_link', authenticate, async (req, res) => {
+  const { kind } = req.body || {};
+  const userUuid = req.user?.uuid;
+
+  const allowedKinds = ['username', 'email', 'password', 'delete'];
+  if (!allowedKinds.includes(kind)) {
+    return res.status(400).send('invalid kind');
+  }
+  if (!userUuid) {
+    return res.status(401).send('認証情報が無効です（uuidなし）');
+  }
+
+  let conn;
+  try {
+    conn = await pool.getConnection();
+
+    // ユーザー情報取得
+    const rows = await conn.query(
+      'SELECT uuid, id, mail_address FROM USERS WHERE uuid = ? LIMIT 1',
+      [userUuid]
+    );
+    const user = rows && rows[0];
+    if (!user) {
+      return res.status(404).send('ユーザーが見つかりません');
+    }
+
+    // トークン生成
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 60分有効
+
+    await conn.query(
+      'INSERT INTO account_change_tokens (user_uuid, token, kind, expires_at, consumed) VALUES (?,?,?,?,0)',
+      [user.uuid, token, kind, expiresAt]
+    );
+
+    // メール本文 & リンク
+    const baseUrl =
+      process.env.APP_BASE_URL || 'http://localhost:3000';
+
+    const path =
+      kind === 'delete'
+        ? '/auth/account_delete.html'
+        : '/auth/account_change.html';
+
+    const linkUrl = `${baseUrl}${path}?token=${encodeURIComponent(
+      token
+    )}`;
+
+    let subject;
+    let mainText;
+
+    if (kind === 'username') {
+      subject = '【ID変更】確認リンクのお知らせ';
+      mainText =
+        'IDの変更手続きがリクエストされました。以下のリンクを開き、新しいIDを入力して確定してください。';
+    } else if (kind === 'email') {
+      subject = '【メールアドレス変更】確認リンクのお知らせ';
+      mainText =
+        'メールアドレスの変更手続きがリクエストされました。以下のリンクを開き、新しいメールアドレスを入力して確定してください。';
+    } else if (kind === 'password') {
+      subject = '【パスワード変更】確認リンクのお知らせ';
+      mainText =
+        'パスワードの変更手続きがリクエストされました。以下のリンクを開き、新しいパスワードを入力して確定してください。';
+    } else if (kind === 'delete') {
+      subject = '【アカウント削除】確認リンクのお知らせ';
+      mainText =
+        'アカウント削除の手続きがリクエストされました。以下のリンクを開き、「アカウントを削除する」ボタンを押すと、アカウントが完全に削除されます。\n※この操作は元に戻せません。';
+    }
+
+    const recipients = [new Recipient(user.mail_address, user.id || user.mail_address)];
+
+    const emailParams = new EmailParams()
+      .setFrom(sentFrom)
+      .setTo(recipients)
+      .setReplyTo(sentFrom)
+      .setSubject(subject)
+      .setHtml(
+        `
+        <p>${mainText}</p>
+        <p><a href="${linkUrl}">${linkUrl}</a></p>
+        <p>このリンクの有効期限は 60 分です。</p>
+        `
+      )
+      .setText(
+        [
+          mainText,
+          '',
+          linkUrl,
+          '',
+          'このリンクの有効期限は 60 分です。',
+        ].join('\n')
+      );
+
+    console.log('[MAIL] account-change link send →', user.mail_address, 'kind=', kind);
+    await mailerSend.email.send(emailParams);
+
+    return res.send('OK');
+  } catch (err) {
+    console.error('[account/change_link error]', err);
+    return res.status(500).send('リンク送信に失敗しました');
+  } finally {
+    if (conn) conn?.release();
+  }
+});
+
+
+
+
+
 
 // ③ パスワードリセット用コード発行
 app.post('/api/password/forgot', async (req, res) => {
@@ -763,8 +968,6 @@ app.post('/api/password/reset', async (req, res) => {
     return res.status(500).json({ error: 'サーバーエラーが発生しました。' });
   }
 });
-
-
 
 app.post('/api/force-logout', (req, res) => {
   res.clearCookie('token', {
@@ -1054,7 +1257,6 @@ app.get("/api/directions", async (req, res) => {
 });
 
 // ※ 404/500 ハンドラより前に配置
-
 app.post('/api/ai/spot-suggestion', async (req, res) => {
   try {
     if (!process.env.GEMINI_API_KEY) {
@@ -1169,6 +1371,30 @@ app.post('/api/ai/spot-suggestion', async (req, res) => {
     }
   }
 });
+
+app.get('/api/account/change_info', async (req, res) => {
+  const { token } = req.query;
+  if (!token) return res.status(400).send('token required');
+
+  try {
+    const rows = await pool.query(
+      'SELECT kind, expires_at, consumed FROM account_change_tokens WHERE token = ? LIMIT 1',
+      [token]
+    );
+    const row = rows && rows[0];
+
+    if (!row) return res.status(404).send('not found');
+    if (row.consumed) return res.status(400).send('already used');
+    if (new Date(row.expires_at) < new Date()) return res.status(400).send('expired');
+
+    return res.json({ kind: row.kind });
+  } catch (err) {
+    console.error('[account/change_info error]', err);
+    return res.status(500).send('server error');
+  }
+});
+
+
 
 // ✅ /api/geocode?address=〇〇
 app.get('/api/geocode', async (req, res) => {
@@ -1440,6 +1666,8 @@ async function sendVerificationCodeEmail(toEmail, code, purpose) {
 
 
 
+
+
 // 楽天レスポンス1件分から basic/rating を安全に取り出す
 function pickBasicAndRating(node) {
   if (!node) return { basic: null, rating: null };
@@ -1606,8 +1834,6 @@ app.get("/api/hotels_nearby_rakuten", async (req, res) => {
     res.status(500).json({ success: false, message: "hotels_nearby_rakuten failed" });
   }
 });
-
-
 
 // /api/spots: MariaDBのspotsテーブルから観光地を取得
 app.get('/api/spots', async (req, res) => {

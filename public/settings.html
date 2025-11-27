@@ -18,7 +18,7 @@
 
     <!-- 地図で住所を設定 -->
     <div class="setting-section">
-      <label>📍 住所の設定（地図でピンを動かす） ：</label>
+      <label>📍 住所の設定（地図でピンを動かす）：</label>
       <div id="map" style="height: 400px;"></div>
       <p id="locationDisplay">選択された位置：--</p>
       <button id="confirmLocation">✅ この位置を保存</button>
@@ -26,12 +26,12 @@
 
     <!-- ジオコーディング（住所からピンを動かす） -->
     <div style="margin: 10px 0;">
-    <input
-      type="text"
-      id="addressInput"
-      placeholder="住所を入力してください"
-      style="width: 400px; height: 40px; font-size: 1rem; padding: 6px;"
-    >
+      <input
+        type="text"
+        id="addressInput"
+        placeholder="住所を入力してください"
+        style="width: 400px; height: 40px; font-size: 1rem; padding: 6px;"
+      >
       <button id="geocodeBtn">🔍 ピンを住所に移動</button>
     </div>
 
@@ -43,58 +43,74 @@
         <button id="deleteLocation" class="delete-btn">🗑️ 削除</button>
       </div>
     </div>
-    <!-- アカウント情報（表示＆編集） -->
-<div class="setting-section">
-  <h2>👤 アカウント情報</h2>
 
-  <div class="field-row">
-    <label>現在のID：</label>
-    <span id="currentId">--</span>
-  </div>
-  <div class="field-row">
-    <label>現在のメール：</label>
-    <span id="currentEmail">--</span>
-  </div>
-</div>
+    <!-- アカウント情報（表示） -->
+    <div class="setting-section">
+      <h2>👤 アカウント情報</h2>
 
-<!-- ID / メール変更フォーム -->
-<div class="setting-section">
-  <h3>✏️ ID / メールアドレスの変更</h3>
-  <div class="field-row">
-    <label for="newUsername">新しいID</label>
-    <input id="newUsername" type="text" placeholder="（変更しない場合は空でOK）">
-  </div>
-  <div class="field-row">
-    <label for="newEmail">新しいメール</label>
-    <input id="newEmail" type="email" placeholder="（変更しない場合は空でOK）">
-  </div>
-  <div class="field-row">
-    <label for="currentPasswordForProfile">現在のパスワード</label>
-    <input id="currentPasswordForProfile" type="password" placeholder="確認のため必須">
-  </div>
-  <button id="saveProfileBtn">💾 保存</button>
-  <p id="profileMsg" class="msg"></p>
-</div>
+      <div class="field-row">
+        <label>現在のID：</label>
+        <span id="currentId">--</span>
+      </div>
+      <div class="field-row">
+        <label>現在のメール：</label>
+        <span id="currentEmail">--</span>
+      </div>
+    </div>
 
-<!-- パスワード変更フォーム -->
-<div class="setting-section">
-  <h3>🔒 パスワードの変更</h3>
-  <div class="field-row">
-    <label for="currentPassword">現在のパスワード</label>
-    <input id="currentPassword" type="password" placeholder="現在のパスワード">
-  </div>
-  <div class="field-row">
-    <label for="newPassword">新しいパスワード</label>
-    <input id="newPassword" type="password" placeholder="新しいパスワード">
-  </div>
-  <div class="field-row">
-    <label for="newPassword2">新しいパスワード（確認）</label>
-    <input id="newPassword2" type="password" placeholder="もう一度入力">
-  </div>
-  <button id="changePasswordBtn">🔁 パスワードを変更</button>
-  <p id="passwordMsg" class="msg"></p>
-</div>
+    <!-- メールで送る変更用リンク（ID / メール / パスワード / 削除） -->
+    <div class="setting-section">
+      <h3>✏️ アカウント情報の変更</h3>
 
+      <!-- ID変更リンク -->
+      <div class="row">
+        <div>現在のID：<span id="currentIdDisplayForLink">--</span></div>
+        <button id="sendIdChangeLinkBtn">ID変更用リンクを送信</button>
+      </div>
+      <div id="idChangeMsg" class="msg"></div>
+
+      <!-- メールアドレス変更リンク -->
+      <div class="row" style="margin-top: 8px;">
+        <div>現在のメールアドレス：<span id="currentEmailDisplayForLink">--</span></div>
+        <button id="sendEmailChangeLinkBtn">メール変更用リンクを送信</button>
+      </div>
+      <div id="emailChangeMsg" class="msg"></div>
+
+      <!-- パスワード変更リンク -->
+      <div class="row" style="margin-top: 8px;">
+        <div>現在のパスワード：••••••••</div>
+        <button id="sendPasswordChangeLinkBtn">パスワード変更用リンクを送信</button>
+      </div>
+      <div id="passwordChangeMsg" class="msg"></div>
+
+      <!-- アカウント削除リンク -->
+      <div class="row" style="margin-top: 16px;">
+        <div>アカウントの削除：</div>
+        <button id="sendDeleteAccountLinkBtn" class="danger-btn">
+          アカウント削除用リンクを送信
+        </button>
+      </div>
+      <div id="deleteAccountMsg" class="msg"></div>
+    </div>
   </div>
+
+  <script>
+    // currentId / currentEmail を 2 箇所に反映
+    document.addEventListener('DOMContentLoaded', () => {
+      const mainId = document.getElementById('currentId');
+      const linkId = document.getElementById('currentIdDisplayForLink');
+      const mainEmail = document.getElementById('currentEmail');
+      const linkEmail = document.getElementById('currentEmailDisplayForLink');
+
+      const sync = () => {
+        if (mainId && linkId) linkId.textContent = mainId.textContent;
+        if (mainEmail && linkEmail) linkEmail.textContent = mainEmail.textContent;
+      };
+
+      sync();
+      setTimeout(sync, 500);
+      setTimeout(sync, 1500);
+    });
+  </script>
 </body>
 </html>

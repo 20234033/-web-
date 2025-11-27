@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>アカウント情報の変更 | 旅行先提案Webシステム</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/css/style.css">
+  <script defer src="/js/navbar.js"></script>
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+
+  <div class="auth-container">
+    <h1>アカウント情報の変更</h1>
+    <p id="statusMsg" class="msg"></p>
+
+    <!-- kind= username / email / password に応じて表示切り替え -->
+    <div id="form-username" class="change-form" style="display:none;">
+      <h2>IDの変更</h2>
+      <p>新しいIDを入力してください。</p>
+      <input id="newUsername" type="text" placeholder="新しいID">
+      <button id="submitUsernameBtn">IDを変更する</button>
+    </div>
+
+    <div id="form-email" class="change-form" style="display:none;">
+      <h2>メールアドレスの変更</h2>
+      <p>新しいメールアドレスを入力してください。</p>
+      <input id="newEmail" type="email" placeholder="新しいメールアドレス">
+      <button id="submitEmailBtn">メールアドレスを変更する</button>
+    </div>
+
+    <div id="form-password" class="change-form" style="display:none;">
+      <h2>パスワードの変更</h2>
+      <p>新しいパスワードを入力してください。</p>
+      <input id="newPassword" type="password" placeholder="新しいパスワード">
+      <input id="newPassword2" type="password" placeholder="新しいパスワード（確認用）">
+      <button id="submitPasswordBtn">パスワードを変更する</button>
+    </div>
+
+    <p style="margin-top: 16px;">
+      手続きをやめる場合は <a href="/auth/login.html">ログイン画面</a> に戻ってください。
+    </p>
+  </div>
+
+  <script>
+    function setMsg(text, ok = false) {
+      const el = document.getElementById('statusMsg');
+      if (!el) return;
+      el.className = 'msg ' + (ok ? 'ok' : 'err');
+      el.textContent = text || '';
+    }
+
+    function getTokenFromQuery() {
+      const params = new URLSearchParams(location.search);
+      return params.get('token');
+    }
+
+    // /api/account/change_info を叩いて kind を取る（username / email / password）
+    async function fetchChangeInfo(token) {
+      const res = await fetch(
+        '/api/account/change_info?token=' + encodeURIComponent(token)
+      );
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || 'トークンの確認に失敗しました');
+      }
+      return res.json();
+    }
+
+    // /api/account/change_apply に変更内容を投げる
+    async function applyChange(body) {
+      const res = await fetch('/api/account/change_apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const text = await res.text();
+      if (!res.ok) {
+        throw new Error(text || '変更に失敗しました');
+      }
+      return text;
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const token = getTokenFromQuery();
+      if (!token) {
+        setMsg('トークンが指定されていません。URLを再確認してください。');
+        return;
+      }
+
+      setMsg('トークンを確認しています...', false);
+
+      let info;
+      try {
+        info = await fetchChangeInfo(token);
+      } catch (e) {
+        console.error(e);
+        setMsg(e.message || 'トークンの確認に失敗しました。', false);
+        return;
+      }
+
+      const kind = info.kind; // "username" | "email" | "password"
+      setMsg('');
+
+      // 対応するフォームだけ表示
+      if (kind === 'username') {
+        document.getElementById('form-username').style.display = 'block';
+      } else if (kind === 'email') {
+        document.getElementById('form-email').style.display = 'block';
+      } else if (kind === 'password') {
+        document.getElementById('form-password').style.display = 'block';
+      } else {
+        setMsg('不明な変更種別です。リンクが壊れている可能性があります。');
+        return;
+      }
+
+      // ID 変更
+      const submitUsernameBtn = document.getElementById('submitUsernameBtn');
+      if (submitUsernameBtn) {
+        submitUsernameBtn.addEventListener('click', async () => {
+          const newUsername = document
+            .getElementById('newUsername')
+            .value.trim();
+          if (!newUsername) {
+            setMsg('新しいIDを入力してください。', false);
+            return;
+          }
+          try {
+            await applyChange({ token, kind: 'username', newUsername });
+            setMsg('IDを変更しました。ログインし直してください。', true);
+          } catch (e) {
+            setMsg(e.message, false);
+          }
+        });
+      }
+
+      // メール変更
+      const submitEmailBtn = document.getElementById('submitEmailBtn');
+      if (submitEmailBtn) {
+        submitEmailBtn.addEventListener('click', async () => {
+          const newEmail = document.getElementById('newEmail').value.trim();
+          if (!newEmail) {
+            setMsg('新しいメールアドレスを入力してください。', false);
+            return;
+          }
+          try {
+            await applyChange({ token, kind: 'email', newEmail });
+            setMsg('メールアドレスを変更しました。ログインし直してください。', true);
+          } catch (e) {
+            setMsg(e.message, false);
+          }
+        });
+      }
+
+      // パスワード変更
+      const submitPasswordBtn = document.getElementById('submitPasswordBtn');
+      if (submitPasswordBtn) {
+        submitPasswordBtn.addEventListener('click', async () => {
+          const pw1 = document.getElementById('newPassword').value;
+          const pw2 = document.getElementById('newPassword2').value;
+          if (!pw1 || !pw2) {
+            setMsg('新しいパスワードを2回入力してください。', false);
+            return;
+          }
+          if (pw1 !== pw2) {
+            setMsg('パスワードが一致していません。', false);
+            return;
+          }
+          try {
+            await applyChange({ token, kind: 'password', newPassword: pw1 });
+            setMsg(
+              'パスワードを変更しました。新しいパスワードでログインしてください。',
+              true
+            );
+          } catch (e) {
+            setMsg(e.message, false);
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

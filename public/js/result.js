@@ -1,3 +1,5 @@
+// result.js（全置き換え）
+
 /* ========= 数学ユーティリティ ========= */
 function getDistanceKm(lat1, lon1, lat2, lon2) {
   const R = 6371;
@@ -44,13 +46,7 @@ function measureAndApplyNavHeight() {
   const host = document.getElementById('navbar-placeholder');
   const navEl = (host && host.firstElementChild) ? host.firstElementChild : host;
   const navH = Math.max(0, Math.round((navEl?.getBoundingClientRect().height || 56)));
-
-  // nav の実測高さを CSS 変数に入れる
   document.documentElement.style.setProperty('--nav-h', `${navH}px`);
-
-  // プレースホルダー自体の高さも揃えておく（コンテンツがズレないように）
-  if (host) host.style.height = `${navH}px`;
-
   if (window.resultMap) setTimeout(() => window.resultMap.invalidateSize(), 0);
 }
 
@@ -61,40 +57,25 @@ function isDarkSiteTheme() {
 
 /* ========= メイン ========= */
 document.addEventListener('DOMContentLoaded', async () => {
-  const scoreText  = document.getElementById('scoreText');      // 左パネルの中身
-  const sidebarEl  = document.getElementById('result-sidebar'); // 左パネル（スクロール）
+  const scoreText  = document.getElementById('scoreText');     // 左パネルの中身（オーバーレイ版を利用）
+  const sidebarEl  = document.getElementById('result-sidebar'); // 左パネル（スクロール領域）
   const layout     = document.getElementById('result-layout');  // 2カラム親
   const mapWrapper = document.getElementById('map-wrap');       // 地図ラッパ
   const mapEl      = document.getElementById('result-map');     // 地図DOM
 
-  /* ====== レイアウト（左だけスクロール / 下の空白を出さない） ====== */
+  // レイアウト（左だけスクロール・下の空白ゼロ）
   if (layout) Object.assign(layout.style, {
-    position: 'fixed',
-    top: 'var(--nav-h, 56px)',
-    left: '0',
-    right: '0',
-    bottom: '0',
-    display: 'flex',
-    gap: '12px',
-    alignItems: 'stretch',
-    padding: '8px',
-    boxSizing: 'border-box',
-    overflow: 'hidden',
-    margin: '0'
+    display: 'flex', gap: '12px', alignItems: 'stretch',
+    height: 'calc(100dvh - var(--nav-h, 56px))',
+    padding: '8px', boxSizing: 'border-box', overflow: 'hidden'
   });
   if (sidebarEl) Object.assign(sidebarEl.style, {
-    height: '100%',
-    overflowY: 'auto',
-    overflowX: 'hidden',
-    WebkitOverflowScrolling: 'touch',
-    overscrollBehavior: 'contain',
+    height: '100%', overflowY: 'auto', overflowX: 'hidden',
+    WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain',
     width: 'clamp(260px, 28vw, 340px)'
   });
   if (mapWrapper) Object.assign(mapWrapper.style, {
-    flex: '1 1 auto',
-    minWidth: '0',
-    height: '100%',
-    overflow: 'hidden'
+    flex: '1 1 auto', minWidth: '0', height: '100%', overflow: 'hidden'
   });
   if (mapEl) Object.assign(mapEl.style, { width: '100%', height: '100%' });
 
@@ -108,25 +89,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.addEventListener('resize', measureAndApplyNavHeight);
   window.addEventListener('load', () => setTimeout(measureAndApplyNavHeight, 0));
 
-  /* ====== 地図初期化 ====== */
-  const resultMap = L.map('result-map', { zoomControl: true }).setView([35.7, 139.7], 10);
+  // 地図初期化
+  const resultMap = L.map('result-map', { zoomControl: true }).setView([35.7,139.7], 10);
   window.resultMap = resultMap;
-  const lightTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution:'&copy; OpenStreetMap contributors'
-  });
-  const darkTiles  = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution:'&copy; OpenStreetMap &copy; CARTO'
-  });
+  const lightTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ attribution:'&copy; OpenStreetMap contributors' });
+  const darkTiles  = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{ attribution:'&copy; OpenStreetMap &copy; CARTO' });
 
   function applyTiles() {
     const wantDark = isDarkSiteTheme();
-    if (wantDark) {
-      if (resultMap.hasLayer(lightTiles)) resultMap.removeLayer(lightTiles);
-      if (!resultMap.hasLayer(darkTiles)) darkTiles.addTo(resultMap);
-    } else {
-      if (resultMap.hasLayer(darkTiles)) resultMap.removeLayer(darkTiles);
-      if (!resultMap.hasLayer(lightTiles)) lightTiles.addTo(resultMap);
-    }
+    if (wantDark) { if (resultMap.hasLayer(lightTiles)) resultMap.removeLayer(lightTiles); if (!resultMap.hasLayer(darkTiles)) darkTiles.addTo(resultMap); }
+    else          { if (resultMap.hasLayer(darkTiles))  resultMap.removeLayer(darkTiles);  if (!resultMap.hasLayer(lightTiles)) lightTiles.addTo(resultMap); }
     setTimeout(() => resultMap.invalidateSize(), 0);
   }
   applyTiles();
@@ -135,7 +107,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const bodyObs = new MutationObserver(applyTiles);
   bodyObs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
-  /* ====== 必要データ取得 ====== */
+  // 必要データ
   const correct     = JSON.parse(localStorage.getItem('correctCoords'));
   const answer      = JSON.parse(localStorage.getItem('lastAnswerCoords'));
   const correctSpot = JSON.parse(localStorage.getItem('correctSpot'));
@@ -146,7 +118,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  /* ====== スコア表示 ====== */
+  // スコア + 見出し（上に余白 → タイトル → 数値）
   try {
     const res  = await fetch(`/api/score?SelLat=${answer.lat}&SelLng=${answer.lng}&CorLat=${correct.lat}&CorLng=${correct.lng}`);
     const data = await res.json();
@@ -182,13 +154,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  /* ====== マーカー・線 ====== */
+  // マーカー・線
   L.marker([correct.lat, correct.lng]).addTo(resultMap).bindPopup("🎯 正解地点").openPopup();
   L.marker([answer.lat, answer.lng]).addTo(resultMap).bindPopup("📍 あなたのピン");
-  L.polyline([[answer.lat, answer.lng], [correct.lat, correct.lng]], { color:'red', weight:2 }).addTo(resultMap);
-  resultMap.fitBounds(L.latLngBounds([[answer.lat, answer.lng], [correct.lat, correct.lng]]), { padding:[30,30] });
+  L.polyline([[answer.lat, answer.lng],[correct.lat, correct.lng]], { color:'red', weight:2 }).addTo(resultMap);
+  resultMap.fitBounds(L.latLngBounds([[answer.lat, answer.lng],[correct.lat, correct.lng]]), { padding:[30,30] });
 
-  /* ====== Street View（埋め込み） ====== */
+  // Street View（埋め込み安全化 & フォールバック）
   try {
     let finalUrl = null;
     try {
@@ -222,7 +194,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   } catch (err) { console.warn("Street View 埋め込み処理エラー:", err); }
 
-  /* ====== 自宅 → 観光地：距離・ルート ====== */
+  // 自宅 → 観光地：距離・ルート
   try {
     const locRes = await fetch('/api/has_location', { credentials: 'include' });
     if (!locRes.ok) throw new Error("住所情報取得に失敗");
@@ -276,7 +248,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   } catch (err) { console.warn("移動情報の取得に失敗:", err); }
 
-  /* ====== 楽天ホテル（簡易カード） ====== */
+  // 楽天ホテル（簡易カード）
   try {
     const r = await fetch(`/api/hotels_nearby_rakuten?lat=${correct.lat}&lng=${correct.lng}`);
     const rk = await r.json();

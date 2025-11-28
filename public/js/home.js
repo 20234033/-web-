@@ -100,7 +100,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   const lastRegionEl = document.getElementById('lastRegion');
   const lastPlaceEl  = document.getElementById('lastPlace');
   const lastInfoEl   = document.getElementById('lastInfo');
-  const lastPlayedEl = document.getElementById('lastPlayed');
 
   // 画像の個別フェールセーフ（無限ループ防止版）
   if (lastImageEl) {
@@ -120,7 +119,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     regionLabel: '--',
     title: '--',
     description: '--',
-    playedAt: '--',
     image: NO_IMAGE_DATA_URL
   });
 
@@ -151,7 +149,6 @@ window.addEventListener('DOMContentLoaded', async () => {
       regionLabel,
       title: latest.title || '--',
       description: latest.description || '--',
-      playedAt: new Date(latest.answered_at).toLocaleDateString('ja-JP'),
       image: latest.image_path || NO_IMAGE_DATA_URL
     });
   } catch (e) {
@@ -174,7 +171,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   // ============= 右ペイン描画ヘルパ =============
   function setRightPanel({
-    score, genreLabel, regionLabel, title, description, playedAt, image
+    score, genreLabel, regionLabel, title, description, image
   }) {
     if (lastImageEl && image) lastImageEl.src = image;
     if (lastScoreEl)  lastScoreEl.textContent  = `前回のスコア：${score}`;
@@ -182,7 +179,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (lastRegionEl) lastRegionEl.textContent = `地域：${regionLabel}`;
     if (lastPlaceEl)  lastPlaceEl.textContent  = `観光地：${title}`;
     if (lastInfoEl)   lastInfoEl.textContent   = `説明：${description}`;
-    if (lastPlayedEl) lastPlayedEl.textContent = `最終プレイ日：${playedAt}`;
   }
 
   // ============= モードに応じてセレクト無効化 =============
@@ -197,16 +193,4 @@ window.addEventListener('DOMContentLoaded', async () => {
   updateSelectStates();
   modeSelect?.addEventListener('change', updateSelectStates);
 
-  // ============= 連続ログイン日数 =============
-  const streakEl = document.getElementById('streak');
-  const today = new Date().toISOString().slice(0, 10);
-  const lastLogin = localStorage.getItem('lastLoginDate');
-  let streak = parseInt(localStorage.getItem('streakDays') || '0', 10);
-  if (lastLogin !== today) {
-    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-    streak = lastLogin === yesterday ? streak + 1 : 1;
-    localStorage.setItem('lastLoginDate', today);
-    localStorage.setItem('streakDays', String(streak));
-  }
-  if (streakEl) streakEl.textContent = `連続ログイン日数：${streak}日`;
 });

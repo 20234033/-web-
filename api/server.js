@@ -76,8 +76,25 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(publicPath, { extensions: ['html'] }));
 app.use('/image', express.static(path.join(__dirname, '..', 'public', 'image')));
 
+const allowedOrigins = [
+  'http://ec2-54-150-237-229.ap-northeast-1.compute.amazonaws.com',
+  'http://ec2-54-150-237-229.ap-northeast-1.compute.amazonaws.com/',
+  'http://localhost:3000',
+  'http://localhost:3001',
+];
+
 app.use(cors({
-  origin: ['http://ec2-54-150-237-229.ap-northeast-1.compute.amazonaws.com/', 'http://ec2-54-150-237-229.ap-northeast-1.compute.amazonaws.com'],
+  origin(origin, callback) {
+    // origin が undefined のとき（curl や 直接アクセス）は許可
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    console.warn('[CORS] ブロックされた origin:', origin);
+    return callback(new Error('Not allowed by CORS'), false);
+  },
   credentials: true,
 }));
 
@@ -103,8 +120,6 @@ const storage = multer.diskStorage({
 
 // 🖼 multer 設定（画像保存）
 const upload = multer({ storage });
-
-
 
 async function sendLoginNotificationEmail(toEmail, userId) {
   if (!toEmail) {
@@ -181,9 +196,6 @@ async function sendAccountChangeLinkEmail(toEmail, kind, link) {
   console.log('[MAIL] account-change link send →', toEmail, 'kind=', kind);
   await mailerSend.email.send(emailParams);
 }
-
-
-
 
 async function listGeminiModels() {
   const fetch = (await import('node-fetch')).default;
@@ -296,10 +308,6 @@ app.get("/verify-email", async (req, res) => {
     return res.status(500).send("サーバーエラーが発生しました。");
   }
 });
-
-
-
-
 
 
 // 🔐 初期リダイレクト（例：ログインページ）
@@ -1410,25 +1418,21 @@ app.get('/api/account/change_info', async (req, res) => {
   }
 });
 
-
-
-// ✅ /api/geocode?address=〇〇
 app.get('/api/geocode', async (req, res) => {
   try {
     const q = (req.query.q || req.query.address || '').trim();
     if (!q) return res.json({ success: false, error: 'q/address is required' });
 
-    // ✅ 日本住所・施設名どっちも狙えるように調整
     const nomiUrl = new URL('https://nominatim.openstreetmap.org/search');
     nomiUrl.searchParams.set('format', 'jsonv2');
     nomiUrl.searchParams.set('q', q);
-    nomiUrl.searchParams.set('countrycodes', 'jp');  // ← これ重要
+    nomiUrl.searchParams.set('countrycodes', 'jp');
     nomiUrl.searchParams.set('limit', '1');
     nomiUrl.searchParams.set('addressdetails', '1');
 
     const nomiResp = await fetch(nomiUrl.toString(), {
       headers: {
-        'User-Agent': 'GeoGuess-App/1.0 (contact@example.com)' // 任意
+        'User-Agent': 'GeoGuess-App/1.0 (contact@example.com)'
       }
     });
     const nomi = await nomiResp.json();
@@ -1444,7 +1448,6 @@ app.get('/api/geocode', async (req, res) => {
       });
     }
 
-    // Googleフォールバック（省略）
     return res.json({ success: false, error: 'not found' });
 
   } catch (e) {
@@ -1452,6 +1455,7 @@ app.get('/api/geocode', async (req, res) => {
     res.json({ success: false, error: 'geocode failed' });
   }
 });
+
 
 
 app.get('/api/user_answers', authenticate, async (req, res) => {
@@ -1648,7 +1652,6 @@ async function sendSignupVerificationEmail(toEmail, userId, token) {
   await mailerSend.email.send(emailParams);
   console.log('[MAIL] 登録確認メール送信完了 →', toEmail);
 }
-
 
 async function sendVerificationCodeEmail(toEmail, code, purpose) {
   const purposeLabel = purpose === 'reset_password'
@@ -1883,8 +1886,6 @@ app.get('/api/spots', async (req, res) => {
     if (conn) conn.release();
   }
 });
-
-
 
 // ✅ エラー用HTMLページを返す関数
 const renderErrorPage = (statusCode = 500) => `

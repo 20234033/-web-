@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/user/Desktop/-web-/frontend/app/auth/layout.tsx"],"sourcesContent":["import '../globals.css'; // 共通CSS\r\nimport type { ReactNode } from 'react';\r\n\r\nexport default function AuthLayout({ children }: { children: ReactNode }) {\r\n  return (\r\n    <>\r\n      <link rel=\"stylesheet\" href=\"/css/style.css\" />\r\n      {children}\r\n    </>\r\n  );\r\n}\r\n"],"names":[],"mappings":";;;;;;;AAGe,SAAS,WAAW,EAAE,QAAQ,EAA2B;IACtE,qBACE;;0BACE,0PAAC;gBAAK,KAAI;gBAAa,MAAK;;;;;;YAC3B;;;AAGP"}}]
+}

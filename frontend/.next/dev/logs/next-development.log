@@ -1,0 +1,254 @@
+[00:00:01.369] Server  LOG      ✓ Ready in 973ms
+[00:00:03.522] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:05.044] Server  ERROR   (node:7100) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[00:00:07.234] Browser LOG     レスポンスステータス: 200
+[00:00:07.234] Browser LOG     レスポンスJSON: {"message":"ログイン成功","user":{"avatar_url":null,"id":"a"}}
+[00:00:07.765] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:42.108] Server  LOG      ✓ Compiled in 13ms
+[00:00:47.294] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:53.632] Server  LOG      ✓ Compiled in 12ms
+[00:01:53.333] Server  ERROR    ⨯ ./frontend/app/layout.tsx:1:1
+Module not found: Can't resolve '../globals.css'
+> 1 | import '../globals.css'; // 共通CSS
+    | ^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import type { ReactNode } from 'react';
+  3 |
+  4 | export default function AuthLayout({ children }: { children: ReactNode }) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:01:53.344] Server  ERROR    ⨯ ./frontend/app/layout.tsx:1:1
+Module not found: Can't resolve '../globals.css'
+> 1 | import '../globals.css'; // 共通CSS
+    | ^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import type { ReactNode } from 'react';
+  3 |
+  4 | export default function AuthLayout({ children }: { children: ReactNode }) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:01:53.353] Server  ERROR    ⨯ ./frontend/app/layout.tsx:1:1
+Module not found: Can't resolve '../globals.css'
+> 1 | import '../globals.css'; // 共通CSS
+    | ^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import type { ReactNode } from 'react';
+  3 |
+  4 | export default function AuthLayout({ children }: { children: ReactNode }) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:01:53.357] Server  ERROR    ⨯ ./frontend/app/layout.tsx:1:1
+Module not found: Can't resolve '../globals.css'
+> 1 | import '../globals.css'; // 共通CSS
+    | ^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import type { ReactNode } from 'react';
+  3 |
+  4 | export default function AuthLayout({ children }: { children: ReactNode }) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:01:53.363] Server  ERROR    ⨯ ./frontend/app/layout.tsx:1:1
+Module not found: Can't resolve '../globals.css'
+> 1 | import '../globals.css'; // 共通CSS
+    | ^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import type { ReactNode } from 'react';
+  3 |
+  4 | export default function AuthLayout({ children }: { children: ReactNode }) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:01:53.365] Server  ERROR    ⨯ ./frontend/app/layout.tsx:1:1
+Module not found: Can't resolve '../globals.css'
+> 1 | import '../globals.css'; // 共通CSS
+    | ^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import type { ReactNode } from 'react';
+  3 |
+  4 | export default function AuthLayout({ children }: { children: ReactNode }) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:01:53.417] Server  ERROR    ⨯ ./frontend/app/layout.tsx:1:1
+Module not found: Can't resolve '../globals.css'
+> 1 | import '../globals.css'; // 共通CSS
+    | ^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import type { ReactNode } from 'react';
+  3 |
+  4 | export default function AuthLayout({ children }: { children: ReactNode }) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:01:53.419] Server  ERROR    ⨯ ./frontend/app/layout.tsx:1:1
+Module not found: Can't resolve '../globals.css'
+> 1 | import '../globals.css'; // 共通CSS
+    | ^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import type { ReactNode } from 'react';
+  3 |
+  4 | export default function AuthLayout({ children }: { children: ReactNode }) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:01:53.455] Server  LOG      ✓ Compiled in 132ms
+[00:01:54.360] Browser ERROR   ./frontend/app/layout.tsx:1:1
+Module not found: Can't resolve '../globals.css'
+> 1 | import '../globals.css'; // 共通CSS
+    | ^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import type { ReactNode } from 'react';
+  3 |
+  4 | export default function AuthLayout({ children }: { children: ReactNode }) {
+
+https://nextjs.org/docs/messages/module-not-found
+[00:02:17.879] Server  ERROR    ⨯ ./frontend/app/layout.tsx:1:1
+Module not found: Can't resolve '../globals.css'
+> 1 | import '../globals.css'; // 共通CSS
+    | ^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import type { ReactNode } from 'react';
+  3 |
+  4 | export default function AuthLayout({ children }: { children: ReactNode }) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:02:17.885] Server  ERROR    ⨯ ./frontend/app/layout.tsx:1:1
+Module not found: Can't resolve '../globals.css'
+> 1 | import '../globals.css'; // 共通CSS
+    | ^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import type { ReactNode } from 'react';
+  3 |
+  4 | export default function AuthLayout({ children }: { children: ReactNode }) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:02:17.897] Server  ERROR    ⨯ ./frontend/app/layout.tsx:1:1
+Module not found: Can't resolve '../globals.css'
+> 1 | import '../globals.css'; // 共通CSS
+    | ^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import type { ReactNode } from 'react';
+  3 |
+  4 | export default function AuthLayout({ children }: { children: ReactNode }) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:02:17.899] Server  ERROR    ⨯ ./frontend/app/layout.tsx:1:1
+Module not found: Can't resolve '../globals.css'
+> 1 | import '../globals.css'; // 共通CSS
+    | ^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import type { ReactNode } from 'react';
+  3 |
+  4 | export default function AuthLayout({ children }: { children: ReactNode }) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:02:18.365] Browser ERROR   ./frontend/app/layout.tsx:1:1
+Module not found: Can't resolve '../globals.css'
+> 1 | import '../globals.css'; // 共通CSS
+    | ^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import type { ReactNode } from 'react';
+  3 |
+  4 | export default function AuthLayout({ children }: { children: ReactNode }) {
+
+https://nextjs.org/docs/messages/module-not-found
+[00:02:19.492] Server  ERROR    ⨯ ./frontend/app/layout.tsx:1:1
+Module not found: Can't resolve '../globals.css'
+> 1 | import '../globals.css'; // 共通CSS
+    | ^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import type { ReactNode } from 'react';
+  3 |
+  4 | export default function AuthLayout({ children }: { children: ReactNode }) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:02:19.502] Server  ERROR    ⨯ ./frontend/app/layout.tsx:1:1
+Module not found: Can't resolve '../globals.css'
+> 1 | import '../globals.css'; // 共通CSS
+    | ^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import type { ReactNode } from 'react';
+  3 |
+  4 | export default function AuthLayout({ children }: { children: ReactNode }) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:02:19.503] Server  ERROR    ⨯ ./frontend/app/layout.tsx:1:1
+Module not found: Can't resolve '../globals.css'
+> 1 | import '../globals.css'; // 共通CSS
+    | ^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import type { ReactNode } from 'react';
+  3 |
+  4 | export default function AuthLayout({ children }: { children: ReactNode }) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:02:19.505] Server  ERROR    ⨯ ./frontend/app/layout.tsx:1:1
+Module not found: Can't resolve '../globals.css'
+> 1 | import '../globals.css'; // 共通CSS
+    | ^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import type { ReactNode } from 'react';
+  3 |
+  4 | export default function AuthLayout({ children }: { children: ReactNode }) {
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:02:20.364] Browser ERROR   ./frontend/app/layout.tsx:1:1
+Module not found: Can't resolve '../globals.css'
+> 1 | import '../globals.css'; // 共通CSS
+    | ^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import type { ReactNode } from 'react';
+  3 |
+  4 | export default function AuthLayout({ children }: { children: ReactNode }) {
+
+https://nextjs.org/docs/messages/module-not-found
+[00:03:19.848] Server  WARN     ⚠ Fast Refresh had to perform a full reload when ./frontend/node_modules/next/dist/shared/lib/router/utils/disable-smooth-scroll.js changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+[00:03:20.108] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:07:00.868] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:07:40.840] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:09:12.293] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:09:13.813] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:10:30.401] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:10:46.992] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold

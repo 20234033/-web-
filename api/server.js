@@ -10,7 +10,6 @@ if (!JWT_SECRET) {
 
 console.log('[BOOT] JWT_SECRET length =', String(JWT_SECRET).length);
 const express = require('express');
-const path = require('path');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const fs = require('fs');
@@ -461,14 +460,10 @@ app.post('/api/login', async (req, res) => {
 
     // 🔔 ログイン通知メール（失敗してもログインは成功扱い）
     try {
-      await sendLoginNotificationEmail(user.mail_address, user.id);
+      await sendLoginNotificationEmail(user.mail_address, user.user_name);
     } catch (mailErr) {
       console.error('[MAIL] ログイン通知メール送信エラー:', mailErr);
-    //パスワード比較
-    if (!user.password_hash || !(await bcrypt.compare(password, user.password_hash))) {
-      return res.status(401).json({ error: 'ログイン情報が正しくありません。' });
     }
-
 
     //JWTトークン生成
     const { JWT_SECRET } = require('./config/auth.js');
@@ -476,7 +471,7 @@ app.post('/api/login', async (req, res) => {
     //Cookie にセット
     res.cookie('token', token, {
       httpOnly: true,
-       secure: process.env.NODE_ENV === 'production',
+      secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
@@ -618,8 +613,6 @@ app.post('/api/account/change_apply', async (req, res) => {
     res.status(500).send('server error');
   }
 });
-
-
 
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -1191,7 +1184,6 @@ app.post('/api/answer', authenticate, async (req, res) => {
 });
 
 
-
 app.get('/api/history/:user_id', authenticate, async (req, res) => {
   console.log("📍 /api/history/:user_id called");
   const userUuid = req.user?.user_uuid;
@@ -1348,12 +1340,11 @@ app.get('/api/streetview', async (req, res) => {
   }
 });
 // ✅ /api/directions?fromLat=...&fromLng=...&toLat=...&toLng=...
+// ✅ 正しい構造
 app.get('/api/directions', async (req, res) => {
-  console.log("📍 /api/directions called");
   const { fromLat, fromLng, toLat, toLng } = req.query;
   const apiKey = process.env.GOOGLE_API_KEY;
 
-  // 座標チェック
   if (![fromLat, fromLng, toLat, toLng].every(val => val !== undefined && !isNaN(val))) {
     return res.status(400).json({ success: false, error: '緯度・経度が不正です。' });
   }
@@ -1365,14 +1356,11 @@ app.get('/api/directions', async (req, res) => {
     const response = await fetch(url);
     const data = await response.json();
 
-    // APIレスポンスログ（開発用）
-    console.log('[📦 Directions API status]:', data.status);
     if (data.status !== 'OK') {
       return res.status(502).json({
         success: false,
         error: 'Google Directions API からの応答が OK ではありません。',
         details: data.status,
-        message: data.error_message || null,
       });
     }
 
@@ -1390,31 +1378,8 @@ app.get('/api/directions', async (req, res) => {
       }
     });
   } catch (err) {
-    console.error('[AI suggestion error REST]', err);
-
-    // フォールバック（AI失敗時：ローカル推定）
-    try {
-      const { title } = req.body || {};
-      const t = (title || '').trim();
-      if (!t) throw 0;
-
-      let g = 'culture';
-      if (/城|寺|神社|史|遺産|城郭|古都|寺院/.test(t)) g = 'historic';
-      else if (/公園|山|川|湖|海|自然|滝|渓谷|高原|岬|砂丘|温泉/.test(t)) g = 'nature';
-      else if (/都|市|駅|繁華|タワー|スカイ|街|展望|商店街|みなと|ウォーターフロント/.test(t)) g = 'city';
-
-      return res.status(200).json({
-        success: true,
-        suggestion: {
-          title: t,
-          genre: g,
-          description: '見どころや周辺の雰囲気・歴史・文化が楽しめるスポットです。詳細は追って編集してください。'
-        },
-        fallback: true
-      });
-    } catch {
-      return res.status(500).json({ success: false, error: 'AI生成に失敗しました' });
-    }
+    console.error('[Directions API error]', err);
+    res.status(500).json({ success: false, error: 'ルート取得に失敗しました' });
   }
 });
 

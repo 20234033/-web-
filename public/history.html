@@ -6,19 +6,56 @@
   <link rel="stylesheet" href="css/style.css" />
   <script defer src="js/navbar.js"></script>
   <script defer src="js/history.js"></script>
-
 </head>
 <body>
   <div id="navbar-placeholder"></div>
 
-  <div class="home-layout">
-    <div class="home-left" id="history-list">
-      <button onclick="location.href='home'">🏠 ホームに戻る</button>
+  <div class="home-layout history-layout">
+    <!-- 左：履歴リスト -->
+    <div class="home-left history-list-panel">
+      <button class="back-home-btn" onclick="location.href='home'">🏠 ホームに戻る</button>
       <h2>📜 出題履歴</h2>
+
+      <!-- 履歴リスト本体 -->
       <ul id="history-ul">
-        <!-- JavaScriptで履歴データを挿入 -->
+        <!-- history.js で li を挿入 -->
       </ul>
 
+      <!-- ★ ページネーション（1 2 3 次へ など）が入る場所 -->
+      <div id="history-pager" class="history-pager"></div>
+    </div>
+
+    <!-- 右：詳細パネル -->
+    <div class="home-right history-detail-panel">
+      <h2>🗺 選択した出題の詳細</h2>
+
+      <div id="history-detail-empty">
+        左の「出題履歴」から項目をクリックすると、ここに詳細が表示されます。
+      </div>
+
+      <div id="history-detail" class="history-detail hidden">
+        <!-- 画像 -->
+        <div id="detail-image-wrap" class="detail-image-wrap"></div>
+
+        <!-- テキスト情報 -->
+        <h3 id="detail-title"></h3>
+        <p id="detail-genre" class="detail-genre"></p>
+        <p id="detail-description" class="detail-description"></p>
+
+        <div class="detail-meta">
+          <span id="detail-score"></span>
+          <span id="detail-date"></span>
+        </div>
+
+        <!-- 周辺ホテル情報 -->
+        <div class="detail-hotels">
+          <h3>🏨 周辺ホテル</h3>
+          <p id="hotels-status" class="hotels-status">
+            履歴を選択すると、周辺ホテルを検索します。
+          </p>
+          <ul id="hotels-list"></ul>
+        </div>
+      </div>
     </div>
   </div>
 </body>

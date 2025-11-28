@@ -9,6 +9,7 @@
   --border: #262b36;
   --btn: #1f2430;
   --btn-hover: #2a3140;
+  --nav-h: 60px; /* ナビバーの高さ */
 }
 
 /* ========================================
@@ -56,7 +57,7 @@ button:disabled {
   justify-content: space-between;
   padding: 0 20px;
   z-index: 2000;
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Arial', sans-serif;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
 }
 
@@ -141,6 +142,11 @@ button:disabled {
 .navbar.open .navbar-toggle span:nth-child(3) {
   transform: rotate(-45deg);
   top: 8px;
+}
+
+/* ナビバー全体のフォントを強制統一 */
+.navbar, .navbar * {
+  font-family: 'Arial', sans-serif !important;
 }
 
 /* ========================================
@@ -315,6 +321,9 @@ button:disabled {
   transform: scale(1.05);
 }
 
+.street-view-container 
+  
+
 /* ========================================
    8. 履歴ページ
    ======================================== */
@@ -359,8 +368,8 @@ button:disabled {
   margin: 2em auto;
   padding: 1.5em;
   background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 0 15px rgba(0,0,0,0.05);
+  border-radius: 18px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
 }
 
 .setting-section {
@@ -431,6 +440,11 @@ button:disabled {
   border: 1px solid var(--border);
   margin: 10px 0;
   overflow: hidden;
+}
+
+#map-wrap {
+  margin-top: var(--nav-h, 56px);
+  height: calc(100vh - var(--nav-h, 56px));
 }
 
 #locationDisplay {
@@ -1000,4 +1014,109 @@ body.dark .leaflet-control-attribution {
     margin: 1em;
     padding: 1em;
   }
+}
+
+.btn-row button {
+  width: 100%;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  background: linear-gradient(145deg, #1e90ff, #0066cc);
+  color: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.btn-row button:hover {
+  background: #0052a3;
+  transform: scale(1.03);
+}
+
+#result-layout {
+  position: fixed;
+  top: var(--nav-h, 60px);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  gap: 12px;
+  padding: 8px;
+  box-sizing: border-box;
+  overflow: hidden;
+  margin: 0;
+}
+
+#result-sidebar {
+  width: clamp(260px, 28vw, 340px);
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: visible;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  border-radius: 12px;
+  position: relative;
+}
+
+#result-sidebar img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+#sidebar-resizer {
+  position: fixed;
+  right: calc((100vw - (100vw - 100%)) / 2 - 14px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 40px;
+  cursor: col-resize;
+  background: rgba(156, 163, 175, 0.15);
+  transition: background 0.2s ease;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 2px solid #9ca3af;
+}
+
+#sidebar-resizer:hover {
+  background: rgba(156, 163, 175, 0.3);
+  border-color: #9ca3af;
+}
+
+#sidebar-resizer::after {
+  content: "<>";
+  font-size: 18px;
+  font-weight: bold;
+  color: #9ca3af;
+  opacity: 1;
+  transition: opacity 0.2s ease;
+  user-select: none;
+  pointer-events: none;
+  letter-spacing: -4px;
+}
+
+#sidebar-resizer:hover::after {
+  opacity: 1;
+  color: #d1d5db;
+}
+
+#map-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+#result-map {
+  width: 100%;
+  height: 100%;
 }

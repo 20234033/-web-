@@ -201,15 +201,26 @@ button:disabled {
 }
 
 .home-left select {
-  width: 100%;
-  padding: 10px;
+  width: 100% !important;
+  display: block !important;
+  padding: 10px 32px 10px 10px !important;
   font-size: 0.95rem;
   margin-bottom: 20px;
   border-radius: 10px;
   border: 1px solid #ccc;
-  appearance: none;
+  appearance: none !important;
   outline: none;
   transition: border 0.3s ease;
+  box-sizing: border-box !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 8px center !important;
+  background-size: 18px !important;
+  background-color: white;
+  color: #333;
+  cursor: pointer;
 }
 
 .home-left select:focus {
@@ -516,10 +527,6 @@ button:disabled {
 #control-panel {
   scrollbar-width: thin;
   scrollbar-color: #888 rgba(0,0,0,0.05);
-}
-
-#genre {
-  max-width: 400px;
 }
 
 #description {

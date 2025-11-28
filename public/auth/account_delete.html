@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>アカウント削除 | 旅行先提案Webシステム</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/css/style.css">
+  <script defer src="/js/navbar.js"></script>
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+
+  <div class="auth-container">
+    <h1>アカウント削除</h1>
+    <p id="statusMsg" class="msg"></p>
+
+    <div id="deletePanel" style="display:none;">
+      <p>
+        この操作を実行すると、<strong>アカウントと関連データが削除されます。</strong><br>
+        一度削除すると元に戻すことはできません。本当によろしいですか？
+      </p>
+      <button id="deleteAccountBtn" class="danger-btn">
+        アカウントを削除する
+      </button>
+    </div>
+
+    <p style="margin-top: 16px;">
+      削除をやめる場合は <a href="/auth/login.html">ログイン画面</a> に戻ってください。
+    </p>
+  </div>
+
+  <script>
+    function setMsg(text, ok = false) {
+      const el = document.getElementById('statusMsg');
+      if (!el) return;
+      el.className = 'msg ' + (ok ? 'ok' : 'err');
+      el.textContent = text || '';
+    }
+
+    function getTokenFromQuery() {
+      const params = new URLSearchParams(location.search);
+      return params.get('token');
+    }
+
+    async function fetchChangeInfo(token) {
+      const res = await fetch('/api/account/change_info?token=' + encodeURIComponent(token));
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || 'トークンの確認に失敗しました');
+      }
+      return res.json();
+    }
+
+    async function applyDelete(token) {
+      const res = await fetch('/api/account/change_apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, kind: 'delete' }),
+      });
+      const text = await res.text();
+      if (!res.ok) {
+        throw new Error(text || '削除に失敗しました');
+      }
+      return text;
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const token = getTokenFromQuery();
+      if (!token) {
+        setMsg('トークンが指定されていません。URLを再確認してください。');
+        return;
+      }
+
+      setMsg('トークンを確認しています...', false);
+
+      try {
+        const info = await fetchChangeInfo(token);
+        if (info.kind !== 'delete') {
+          setMsg('このリンクはアカウント削除用ではありません。', false);
+          return;
+        }
+      } catch (e) {
+        console.error(e);
+        setMsg(e.message || 'トークンの確認に失敗しました。', false);
+        return;
+      }
+
+      setMsg('アカウント削除の準備ができました。', true);
+      document.getElementById('deletePanel').style.display = 'block';
+
+      const btn = document.getElementById('deleteAccountBtn');
+      if (btn) {
+        btn.addEventListener('click', async () => {
+          if (!confirm('本当にアカウントを削除しますか？\nこの操作は元に戻せません。')) {
+            return;
+          }
+          try {
+            await applyDelete(token);
+            setMsg('アカウントを削除しました。ご利用ありがとうございました。', true);
+            document.getElementById('deletePanel').style.display = 'none';
+          } catch (e) {
+            console.error(e);
+            setMsg(e.message, false);
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

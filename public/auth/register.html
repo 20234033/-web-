@@ -13,7 +13,7 @@
     <form id="registerForm">
       <input type="text" id="reg-id" placeholder="ユーザーID" required>
       <input type="email" id="reg-email" placeholder="メールアドレス" required>
-      <input type="password" id="reg-pass" placeholder="パスワード" required>
+      <input type="password" id="reg-pass" placeholder="パスワード（8文字以上）" required>
       <input type="password" id="reg-confirm" placeholder="パスワード確認" required>
       <button type="submit">登録</button>
     </form>
@@ -24,40 +24,84 @@
 
   <script src="../js/navbar.js"></script>
   <script>
-document.getElementById('registerForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
+    document.getElementById('registerForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
 
-  const id = document.getElementById('reg-id').value.trim();
-  const email = document.getElementById('reg-email').value.trim();
-  const pass = document.getElementById('reg-pass').value;
-  const confirm = document.getElementById('reg-confirm').value;
+      const id = document.getElementById('reg-id').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const pass = document.getElementById('reg-pass').value;
+      const confirm = document.getElementById('reg-confirm').value;
 
-  if (pass !== confirm) {
-    alert("パスワードが一致しません。");
-    return;
-  }
+      // ========= ID バリデーション（英数字 + _ のみ） =========
+      if (!/^[a-zA-Z0-9_]+$/.test(id)) {
+        alert("ユーザーIDは英数字と _ のみ使用できます。");
+        return;
+      }
 
-  try {
-    const response = await fetch('/api/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, email, password: pass })
+      // ========= パスワード長さ =========
+      if (pass.length < 8) {
+        alert("パスワードは8文字以上で入力してください。");
+        return;
+      }
+
+      // ========= パスワード一致 =========
+      if (pass !== confirm) {
+        alert("パスワードが一致しません。");
+        return;
+      }
+
+      // ========= ID 重複チェック（/api/check_id） =========
+      try {
+        const checkRes = await fetch('/api/check_id?id=' + encodeURIComponent(id));
+        let checkData = {};
+        try {
+          checkData = await checkRes.json();
+        } catch (err) {
+          console.error('ID重複チェックのJSONパースに失敗しました:', err);
+        }
+
+        if (checkData && checkData.exists) {
+          alert("このユーザーIDはすでに使用されています。別のIDを入力してください。");
+          return;
+        }
+      } catch (err) {
+        console.error('ID重複チェックエラー:', err);
+        alert("IDの重複チェックに失敗しました。時間を置いて再度お試しください。");
+        return;
+      }
+
+      // ========= 実際の登録リクエスト =========
+      try {
+        const res = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, email, password: pass })
+        });
+
+        const text = await res.text();
+        let data = {};
+
+        // JSONパースを試みる（502などでHTMLが返ってきた場合に備える）
+        try {
+          data = text ? JSON.parse(text) : {};
+        } catch (parseErr) {
+          console.error('登録APIからJSON以外が返ってきました:', parseErr, text);
+        }
+
+        if (!res.ok) {
+          const msg = data.error || data.message || `登録に失敗しました。（HTTP ${res.status}）`;
+          alert(msg);
+          return;
+        }
+
+        alert("登録が完了しました。登録したメールアドレスに確認メールを送信しました。メール内のリンクから認証を完了してください。");
+        window.location.href = 'login.html';
+
+      } catch (error) {
+        console.error('登録エラー:', error);
+        alert("サーバーとの通信に失敗しました。");
+      }
     });
-
-    const result = await response.json();
-
-    if (response.ok) {
-      alert("登録が完了しました。ログイン画面へ移動します。");
-      window.location.href = 'login';
-    } else {
-      alert(result.error || "登録に失敗しました。");
-    }
-  } catch (error) {
-    console.error('登録エラー:', error);
-    alert("サーバーとの通信に失敗しました。");
-  }
-});
-
   </script>
 </body>
 </html>

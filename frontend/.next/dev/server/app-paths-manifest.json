@@ -1,7 +1,9 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
+  "/auth/account_delete/page": "app/auth/account_delete/page.js",
+  "/auth/contact/page": "app/auth/contact/page.js",
   "/auth/forgot/page": "app/auth/forgot/page.js",
   "/auth/login/page": "app/auth/login/page.js",
-  "/auth/register/page": "app/auth/register/page.js",
-  "/home/page": "app/home/page.js"
+  "/home/page": "app/home/page.js",
+  "/settings/page": "app/settings/page.js"
 }

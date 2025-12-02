@@ -23,89 +23,45 @@ async function loadMe() {
   }
 }
 
-// ========== ID/メール変更 ==========
-async function saveProfile() {
-  const username = (document.getElementById('newUsername')?.value || '').trim();
-  const email = (document.getElementById('newEmail')?.value || '').trim();
-  const currentPassword = document.getElementById('currentPasswordForProfile')?.value || '';
-  const msg = document.getElementById('profileMsg');
+// ========== 変更用リンク送信（ID / メール / パスワード / 削除） ==========
+async function requestChangeLink(kind) {
+  // kind: 'username' | 'email' | 'password' | 'delete'
+  const msgIdMap = {
+    username: 'idChangeMsg',
+    email: 'emailChangeMsg',
+    password: 'passwordChangeMsg',
+    delete: 'deleteAccountMsg', // ★ アカウント削除用
+  };
 
-  setMsg(msg, '');
-
-  if (!username && !email) {
-    return setMsg(msg, '変更項目がありません。', false);
+  const msgEl = document.getElementById(msgIdMap[kind]);
+  if (!msgEl) {
+    console.warn('[requestChangeLink] msg element not found for kind=', kind);
+    return;
   }
-  if (!currentPassword) {
-    return setMsg(msg, '現在のパスワードを入力してください。', false);
-  }
+  setMsg(msgEl, '');
 
   try {
-    const res = await fetch('/api/update_account', {
+    const res = await fetch('/api/account/change_link', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username: username || undefined,
-        email: email || undefined,
-        currentPassword
-      }),
+      body: JSON.stringify({ kind }),
     });
 
     const text = await res.text();
     if (!res.ok) {
-      return setMsg(msg, text || '更新に失敗しました。', false);
+      return setMsg(msgEl, text || 'メール送信に失敗しました。', false);
     }
 
-    setMsg(msg, 'アカウント情報を更新しました。', true);
-    await loadMe();
-    if (document.getElementById('newUsername')) document.getElementById('newUsername').value = '';
-    if (document.getElementById('newEmail')) document.getElementById('newEmail').value = '';
-    if (document.getElementById('currentPasswordForProfile')) document.getElementById('currentPasswordForProfile').value = '';
+    const successText =
+      kind === 'delete'
+        ? '登録メールアドレス宛にアカウント削除用リンクを送信しました。メールをご確認ください。'
+        : '登録メールアドレス宛に変更用リンクを送信しました。メールをご確認ください。';
+
+    setMsg(msgEl, successText, true);
   } catch (e) {
-    console.error('[saveProfile] error:', e);
-    setMsg(msg, '通信エラーが発生しました。', false);
-  }
-}
-
-// ========== パスワード変更 ==========
-async function changePassword() {
-  const currentPassword = document.getElementById('currentPassword')?.value || '';
-  const newPassword = document.getElementById('newPassword')?.value || '';
-  const newPassword2 = document.getElementById('newPassword2')?.value || '';
-  const msg = document.getElementById('passwordMsg');
-
-  setMsg(msg, '');
-
-  if (!currentPassword || !newPassword || !newPassword2) {
-    return setMsg(msg, '全ての項目を入力してください。', false);
-  }
-  if (newPassword !== newPassword2) {
-    return setMsg(msg, '新しいパスワードが一致しません。', false);
-  }
-
-  try {
-    const res = await fetch('/api/update_account', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        currentPassword,
-        newPassword
-      }),
-    });
-
-    const text = await res.text();
-    if (!res.ok) {
-      return setMsg(msg, text || '変更に失敗しました。', false);
-    }
-
-    setMsg(msg, 'パスワードを変更しました。', true);
-    if (document.getElementById('currentPassword')) document.getElementById('currentPassword').value = '';
-    if (document.getElementById('newPassword')) document.getElementById('newPassword').value = '';
-    if (document.getElementById('newPassword2')) document.getElementById('newPassword2').value = '';
-  } catch (e) {
-    console.error('[changePassword] error:', e);
-    setMsg(msg, '通信エラーが発生しました。', false);
+    console.error('[requestChangeLink] error:', e);
+    setMsg(msgEl, '通信エラーが発生しました。', false);
   }
 }
 
@@ -133,10 +89,12 @@ function initMapFeatures() {
     try {
       const res = await fetch('/api/user_location', { credentials: 'include' });
       const data = await res.json();
-      if (data?.address_lat != null && data?.address_lng != null) {
-        currentLatLng = [Number(data.address_lat), Number(data.address_lng)];
-        if (savedLocationEl) savedLocationEl.textContent =
-          `${Number(data.address_lat).toFixed(5)}, ${Number(data.address_lng).toFixed(5)}`;
+      if (data?.lat != null && data?.lng != null) {
+        currentLatLng = [Number(data.lat), Number(data.lng)];
+        if (savedLocationEl) {
+          savedLocationEl.textContent =
+            `${Number(data.lat).toFixed(5)}, ${Number(data.lng).toFixed(5)}`;
+        }
       } else {
         if (savedLocationEl) savedLocationEl.textContent = '未設定';
       }
@@ -153,7 +111,8 @@ function initMapFeatures() {
   // マーカー移動で表示更新
   function updateDisplay([lat, lng]) {
     if (locationDisplay) {
-      locationDisplay.textContent = `選択された位置：${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)}`;
+      locationDisplay.textContent =
+        `選択された位置：${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)}`;
     }
   }
 
@@ -166,15 +125,14 @@ function initMapFeatures() {
       updateDisplay([e.latlng.lat, e.latlng.lng]);
     });
   }
-  // ドラッグ
-  // Leaflet は marker 生成後でOK
+
+  // ドラッグ（marker生成後にハンドラを付与）
   const attachDragHandler = () => {
     if (!marker) return;
     marker.on('move', (e) => {
       updateDisplay([e.latlng.lat, e.latlng.lng]);
     });
   };
-  // 生成後にアタッチ
   const markerTimer = setInterval(() => {
     if (marker) {
       attachDragHandler();
@@ -196,8 +154,10 @@ function initMapFeatures() {
         });
         if (!res.ok) throw new Error('保存失敗');
         alert('住所を保存しました！');
-        if (savedLocationEl) savedLocationEl.textContent =
-          `${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
+        if (savedLocationEl) {
+          savedLocationEl.textContent =
+            `${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
+        }
       } catch (err) {
         alert('保存に失敗しました。');
         console.error(err);
@@ -269,12 +229,26 @@ window.addEventListener('DOMContentLoaded', async () => {
   // アカウント情報の表示
   await loadMe();
 
-  // ボタンのイベントバインド（あれば）
-  const saveBtn = document.getElementById('saveProfileBtn');
-  if (saveBtn) saveBtn.addEventListener('click', saveProfile);
+  // 変更用リンク送信ボタンのイベントバインド
+  const idBtn = document.getElementById('sendIdChangeLinkBtn');
+  if (idBtn) idBtn.addEventListener('click', () => requestChangeLink('username'));
 
-  const changeBtn = document.getElementById('changePasswordBtn');
-  if (changeBtn) changeBtn.addEventListener('click', changePassword);
+  const emailBtn = document.getElementById('sendEmailChangeLinkBtn');
+  if (emailBtn) emailBtn.addEventListener('click', () => requestChangeLink('email'));
+
+  const pwBtn = document.getElementById('sendPasswordChangeLinkBtn');
+  if (pwBtn) pwBtn.addEventListener('click', () => requestChangeLink('password'));
+
+  // ★ アカウント削除用リンク送信ボタン
+  const delBtn = document.getElementById('sendDeleteAccountLinkBtn');
+  if (delBtn) {
+    delBtn.addEventListener('click', () => {
+      if (!confirm('本当にアカウント削除用リンクを送信しますか？\nこの後の操作は元に戻せません。')) {
+        return;
+      }
+      requestChangeLink('delete');
+    });
+  }
 
   // 地図機能の初期化
   initMapFeatures();

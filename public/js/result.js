@@ -63,21 +63,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const mapWrapper = document.getElementById('map-wrap');       // 地図ラッパ
   const mapEl      = document.getElementById('result-map');     // 地図DOM
 
-  // レイアウト（左だけスクロール・下の空白ゼロ）
-  if (layout) Object.assign(layout.style, {
-    display: 'flex', gap: '12px', alignItems: 'stretch',
-    height: 'calc(100dvh - var(--nav-h, 56px))',
-    padding: '8px', boxSizing: 'border-box', overflow: 'hidden'
-  });
-  if (sidebarEl) Object.assign(sidebarEl.style, {
-    height: '100%', overflowY: 'auto', overflowX: 'hidden',
-    WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain',
-    width: 'clamp(260px, 28vw, 340px)'
-  });
-  if (mapWrapper) Object.assign(mapWrapper.style, {
-    flex: '1 1 auto', minWidth: '0', height: '100%', overflow: 'hidden'
-  });
-  if (mapEl) Object.assign(mapEl.style, { width: '100%', height: '100%' });
+  // ... 既存コード ...
 
   // ナビ高さの初期測定 & 監視
   measureAndApplyNavHeight();
@@ -300,7 +286,68 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   injectBottomButtons(sidebarEl);
+  
+  // ========= サイドバーのリサイザー機能 =========
+  initSidebarResizer(sidebarEl);
 });
+
+/* ========= サイドバー横幅リサイザー ========= */
+function initSidebarResizer(sidebarEl) {
+  if (!sidebarEl) return;
+  
+  // リサイザーDOMを作成（sidebarの子要素として追加）
+  const resizer = document.createElement('div');
+  resizer.id = 'sidebar-resizer';
+  sidebarEl.appendChild(resizer);
+  
+  // ローカルストレージから保存幅を取得
+  const savedWidth = localStorage.getItem('sidebarWidth');
+  if (savedWidth) {
+    sidebarEl.style.width = `${savedWidth}px`;
+  }
+  
+  let isResizing = false;
+  let startX = 0;
+  let startWidth = 0;
+  
+  const onMouseDown = (e) => {
+    isResizing = true;
+    startX = e.clientX;
+    startWidth = sidebarEl.offsetWidth;
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'col-resize';
+    e.preventDefault();
+  };
+  
+  const onMouseMove = (e) => {
+    if (!isResizing) return;
+    
+    const delta = e.clientX - startX;
+    const newWidth = startWidth + delta;
+    
+    // 最小幅: 260px, 最大幅: 600px
+    const constrainedWidth = Math.max(260, Math.min(600, newWidth));
+    
+    sidebarEl.style.width = `${constrainedWidth}px`;
+  };
+  
+  const onMouseUp = (e) => {
+    if (!isResizing) return;
+    
+    isResizing = false;
+    document.body.style.userSelect = 'auto';
+    document.body.style.cursor = 'auto';
+    
+    // 幅をローカルストレージに保存
+    const finalWidth = sidebarEl.offsetWidth;
+    localStorage.setItem('sidebarWidth', String(finalWidth));
+  };
+  
+  // イベントリスナーを複数回利用できるようにする
+  resizer.addEventListener('mousedown', onMouseDown);
+  document.addEventListener('mousemove', onMouseMove, false);
+  document.addEventListener('mouseup', onMouseUp, false);
+}
 
 /* ========= 左パネル下のボタン ========= */
 function injectBottomButtons(sidebarEl){
@@ -310,7 +357,7 @@ function injectBottomButtons(sidebarEl){
   actions.className = 'sidebar-actions';
   actions.innerHTML = `
     <div class="btn-row" style="display:flex;gap:8px;flex-wrap:wrap">
-      <button type="button" class="btn" onclick="retry()">もう一度<br>プレイ</button>
+      <button type="button" class="btn" onclick="retry()">もう一度プレイ</button>
       <button type="button" class="btn primary" onclick="goHome()">ホームへ</button>
     </div>
   `;

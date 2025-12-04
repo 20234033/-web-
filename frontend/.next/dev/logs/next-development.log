@@ -1,0 +1,21 @@
+[00:00:01.808] Server  LOG      ✓ Ready in 1232ms
+[00:00:06.732] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:26.574] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:29.355] Server  ERROR   (node:60068) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[00:00:32.294] Browser LOG     [forgot] response: {"message":"パスワード再設定用の確認コードをメールで送信しました。","ok":true,"pending_token":"0b1d51488d135ad8f8671fdcc7963e0607e12b44e580ba30ce0712d60b249bd1"}
+[00:00:33.644] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:52.612] Browser LOG     [reset] response: {"message":"パスワードを更新しました。新しいパスワードでログインしてください。","ok":true}
+[00:00:54.033] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:58.926] Browser LOG     レスポンスステータス: 200
+[00:00:58.926] Browser LOG     レスポンスJSON: {"message":"ログイン成功","user":{"avatar_url":null,"id":"a"}}
+[00:01:00.030] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:01:07.132] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:01:52.862] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:02:04.732] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:02:10.901] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:02:14.641] Browser LOG     レスポンスステータス: 401
+[00:02:14.641] Browser LOG     レスポンスJSON: {"error":"ログイン情報が正しくありません。"}
+[00:02:26.739] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:02:29.922] Browser LOG     レスポンスステータス: 401
+[00:02:29.922] Browser LOG     レスポンスJSON: {"error":"ログイン情報が正しくありません。"}

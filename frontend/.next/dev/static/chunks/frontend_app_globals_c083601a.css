@@ -1,0 +1,1271 @@
+/* [project]/frontend/app/globals.css [app-client] (css) */
+html, body {
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 60px 0 0;
+  font-family: Orbitron, Arial, sans-serif;
+  transition: background-color .3s, color .3s;
+  overflow-x: hidden;
+}
+
+*, :before, :after {
+  box-sizing: inherit;
+}
+
+body.dark {
+  color: #e0e0e0;
+  background-color: #0e1a2b;
+}
+
+body.dark .home-left, body.dark .home-right, body.dark .result-info, body.dark .result-container {
+  color: #f5f5f5;
+  background: linear-gradient(145deg, #1e2a38, #121a26);
+}
+
+body.dark .home-left select {
+  color: #fff;
+  background-color: #1c2c3a;
+}
+
+body.light {
+  color: #222;
+  background-color: #f4f4f4;
+}
+
+body.light .home-left, body.light .home-right, body.light .result-info, body.light .result-container {
+  color: #222;
+  background: linear-gradient(145deg, #fff, #ddd);
+}
+
+body.light .home-left select {
+  color: #000;
+  background-color: #fff;
+}
+
+.navbar {
+  z-index: 1000;
+  justify-content: space-between;
+  align-items: center;
+  height: 60px;
+  padding: 0 24px;
+  transition: background .3s, color .3s;
+  display: flex;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  box-shadow: 0 2px 6px #0006;
+}
+
+body.dark .navbar {
+  color: #f5f5f5;
+  background: linear-gradient(90deg, #0f2027, #203a43, #2c5364);
+}
+
+.navbar a, .navbar button {
+  color: inherit;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: color .3s;
+}
+
+.navbar a:hover, .navbar button:hover {
+  color: #1abc9c;
+}
+
+.home-layout {
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 40px;
+  width: 100%;
+  max-width: 1200px;
+  min-height: calc(100vh - 60px);
+  margin: 0 auto;
+  padding: 40px 24px;
+  display: flex;
+}
+
+.home-left, .home-right {
+  border-radius: 18px;
+  flex: 1;
+  min-width: 280px;
+  max-width: 500px;
+  padding: 32px;
+  box-shadow: 0 10px 20px #0006;
+}
+
+.home-left button {
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(145deg, #1e90ff, #06c);
+  border: none;
+  border-radius: 12px;
+  width: 100%;
+  margin-bottom: 1.25rem;
+  padding: 1.25rem;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: background .3s, transform .2s;
+  box-shadow: 0 4px 8px #0000004d;
+}
+
+.home-left button:hover {
+  background: #0052a3;
+  transform: scale(1.03);
+}
+
+.home-left label {
+  text-align: left;
+  margin-bottom: 8px;
+  font-size: .95rem;
+  font-weight: bold;
+  display: block;
+}
+
+.home-left select {
+  appearance: none;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  outline: none;
+  width: 100%;
+  margin-bottom: 20px;
+  padding: 10px;
+  font-size: .95rem;
+  transition: border .3s;
+}
+
+.home-left select:focus {
+  border-color: #1abc9c;
+}
+
+#historyButton {
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(145deg, #ff9800, #e65100);
+  border: none;
+  border-radius: 12px;
+  width: 100%;
+  margin-top: 20px;
+  padding: 1.25rem;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: background .3s, transform .2s;
+  box-shadow: 0 4px 8px #0000004d;
+}
+
+#historyButton:hover {
+  background: #bf360c;
+  transform: scale(1.03);
+}
+
+button {
+  font-family: Orbitron, sans-serif;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: .6;
+  background-color: #555;
+}
+
+.score-info span {
+  color: #00e676;
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.result-info, .result-container {
+  text-align: center;
+  border-radius: 18px;
+  width: 100%;
+  padding: 30px;
+  font-size: 1rem;
+  box-shadow: 0 10px 20px #0006;
+}
+
+.result-map-box {
+  border-radius: 16px;
+  flex: 1;
+  width: 100%;
+  overflow: hidden;
+  box-shadow: 0 8px 20px #0000004d;
+}
+
+.result-overlay {
+  z-index: 1000;
+  background: #000000bf;
+  border-radius: 12px;
+  padding: 16px 24px;
+  font-size: 18px;
+  transition: background .3s;
+  position: absolute;
+  top: 80px;
+  left: 20px;
+}
+
+body.light .result-overlay {
+  color: #222;
+  background: #ffffffd9;
+}
+
+.result-buttons {
+  z-index: 1000;
+  gap: 12px;
+  display: flex;
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+}
+
+.result-buttons button {
+  color: #fff;
+  cursor: pointer;
+  background-color: #1976d2;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  transition: background .3s, transform .2s;
+}
+
+.result-buttons button:hover {
+  background-color: #1565c0;
+  transform: scale(1.05);
+}
+
+@media screen and (max-width: 768px) {
+  .home-layout, .result-layout {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .home-left, .home-right, .result-info, .result-map-box {
+    width: 100%;
+    margin-bottom: 20px;
+  }
+
+  .navbar nav {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+#history-list ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#history-list li {
+  background-color: #ffffff0d;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  padding: 16px;
+  line-height: 1.6;
+  transition: background-color .3s;
+}
+
+#history-list li small {
+  color: #aaa;
+  min-width: 80px;
+  display: inline-block;
+}
+
+body.light #history-list li {
+  color: #222;
+  background-color: #0000000d;
+}
+
+body.light #history-list li strong {
+  color: #00796b;
+}
+
+body.light #history-list li small {
+  color: #555;
+}
+
+#history-list ul {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+
+#history-list li {
+  color: #f0f0f0;
+  background-color: #1e2a38;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  padding: 16px;
+  font-size: .95rem;
+  box-shadow: 0 4px 10px #0000004d;
+}
+
+#history-list li div {
+  margin-bottom: 4px;
+}
+
+#history-list li strong {
+  color: #00e676;
+  font-size: 1.05rem;
+}
+
+#history-list li small {
+  color: #aaa;
+}
+
+.settings-container {
+  background: #fff;
+  border-radius: 10px;
+  max-width: 700px;
+  margin: 2em auto;
+  padding: 1.5em;
+  box-shadow: 0 0 15px #0000000d;
+}
+
+.setting-section label {
+  margin-bottom: .5em;
+  font-size: 1.1em;
+  font-weight: bold;
+  display: block;
+}
+
+#map {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  width: 100%;
+  height: 300px;
+}
+
+#locationDisplay {
+  color: #555;
+  margin-top: .5em;
+  font-size: .95em;
+}
+
+@media (max-width: 600px) {
+  .settings-container {
+    margin: 1em;
+    padding: 1em;
+  }
+}
+
+.setting-section select {
+  box-sizing: border-box;
+  cursor: pointer;
+  background-color: #f9f9f9;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  width: 100%;
+  max-width: 200px;
+  padding: 10px 14px;
+  font-size: 1rem;
+  transition: border .2s, box-shadow .2s;
+}
+
+.setting-section select:focus {
+  border-color: #3498db;
+  outline: none;
+  box-shadow: 0 0 5px #3498db66;
+}
+
+#confirmLocation {
+  color: #fff;
+  cursor: pointer;
+  background-color: #4caf50;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 18px;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: background-color .3s, transform .2s;
+}
+
+#confirmLocation:hover {
+  background-color: #45a049;
+  transform: scale(1.03);
+}
+
+#confirmLocation:active {
+  background-color: #3e8e41;
+}
+
+body.dark .settings-container {
+  color: #f1f1f1;
+  background: #1e1e1e;
+  box-shadow: 0 0 20px #ffffff0d;
+}
+
+body.dark .setting-section select {
+  color: #f1f1f1;
+  background-color: #2c2c2c;
+  border: 1px solid #444;
+}
+
+body.dark .setting-section select:focus {
+  border-color: #90caf9;
+  box-shadow: 0 0 5px #90caf966;
+}
+
+body.dark #map {
+  filter: grayscale() brightness(.8);
+}
+
+body.dark #locationDisplay {
+  color: #ccc;
+}
+
+body.dark #confirmLocation {
+  background-color: #388e3c;
+}
+
+body.dark #confirmLocation:hover {
+  background-color: #2e7d32;
+}
+
+body.dark #confirmLocation:active {
+  background-color: #1b5e20;
+}
+
+.setting-section input[type="range"] {
+  width: 100%;
+  max-width: 100%;
+  margin-top: 6px;
+}
+
+#volumeValue {
+  color: inherit;
+  margin-left: 10px;
+  font-weight: bold;
+  display: inline-block;
+}
+
+.info-box {
+  z-index: 1001;
+  background: #fffffff2;
+  border-radius: 12px;
+  width: 320px;
+  padding: 16px;
+  position: absolute;
+  top: 80px;
+  right: 20px;
+  box-shadow: 0 4px 16px #0000004d;
+}
+
+.setting-section {
+  margin-bottom: 20px;
+}
+
+#map {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  height: 300px;
+  margin: 10px 0;
+}
+
+#control-panel {
+  z-index: 1001;
+  color: #000;
+  background-color: #fff;
+  border-radius: 10px;
+  flex-direction: column;
+  max-width: 300px;
+  max-height: calc(100vh - 100px);
+  padding: 12px;
+  transition: background-color .3s, color .3s;
+  display: flex;
+  position: absolute;
+  top: 70px;
+  left: 20px;
+  overflow-y: auto;
+  box-shadow: 0 0 10px #0003;
+}
+
+#control-panel input[type="text"], #control-panel textarea, #control-panel select {
+  box-sizing: border-box;
+  color: #000;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  width: 100%;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  padding: 6px;
+  font-size: 1rem;
+}
+
+#control-panel {
+  z-index: 1001;
+  border-radius: 10px;
+  max-width: 400px;
+  max-height: 90vh;
+  padding: 12px;
+  position: absolute;
+  top: 125px;
+  left: 20px;
+  overflow-y: auto;
+  box-shadow: 0 0 10px #0003;
+}
+
+body.light #control-panel {
+  color: #000;
+  background: #fffffff2;
+}
+
+body.light #control-panel input, body.light #control-panel textarea, body.light #control-panel select {
+  color: #000;
+  background-color: #fff;
+  border: 1px solid #ccc;
+}
+
+body.light label, body.light .location-text, body.light #fileNameDisplay {
+  color: #000;
+}
+
+body.dark #control-panel {
+  color: #f0f0f0;
+  background: #1e1e1ef2;
+}
+
+body.dark #control-panel input, body.dark #control-panel textarea, body.dark #control-panel select {
+  color: #fff;
+  background-color: #2a2a2a;
+  border: 1px solid #555;
+}
+
+body.dark label, body.dark .location-text, body.dark #fileNameDisplay {
+  color: #ccc;
+}
+
+label {
+  margin: 16px 0 6px;
+  font-size: 1rem;
+  font-weight: bold;
+  display: block;
+}
+
+.location-display-row {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  display: flex;
+}
+
+.location-text {
+  margin: 0;
+  font-size: 1rem;
+}
+
+button, #geocodeBtn, .custom-file-upload {
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  padding: 6px 12px;
+  font-size: .9rem;
+  font-weight: bold;
+  transition: background-color .2s;
+}
+
+#geocodeBtn {
+  color: #fff;
+  background-color: #007bff;
+  margin-right: 8px;
+}
+
+#geocodeBtn:hover {
+  background-color: #0056b3;
+}
+
+#deleteImage {
+  color: #fff;
+  background-color: #e74c3c;
+  margin-top: 4px;
+  display: none;
+}
+
+#deleteImage:hover {
+  background-color: #c0392b;
+}
+
+#confirmBtn {
+  color: #fff;
+  background-color: #4caf50;
+  margin-top: 10px;
+  padding: 10px 20px;
+}
+
+#confirmBtn:hover {
+  background-color: #45a049;
+}
+
+#genre {
+  max-width: 400px;
+}
+
+#description {
+  resize: vertical;
+  max-width: 600px;
+  height: 120px;
+  padding: 10px 14px;
+  line-height: 1.5;
+}
+
+.custom-file-upload {
+  color: #fff;
+  background-color: #3498db;
+  margin-top: 6px;
+  display: inline-block;
+}
+
+.custom-file-upload:hover {
+  background-color: #2980b9;
+}
+
+.custom-file-upload input[type="file"] {
+  display: none;
+}
+
+#fileNameDisplay {
+  vertical-align: middle;
+  margin-left: 10px;
+  font-size: .9rem;
+  display: inline-block;
+}
+
+#preview {
+  border-radius: 6px;
+  max-width: 100%;
+  margin-top: 8px;
+  display: none;
+}
+
+.delete-btn {
+  color: #fff;
+  cursor: pointer;
+  background-color: #e74c3c;
+  border: none;
+  border-radius: 5px;
+  padding: 6px 12px;
+  font-size: .9rem;
+}
+
+.delete-btn:hover {
+  background-color: #c0392b;
+}
+
+#control-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+#control-panel::-webkit-scrollbar-track {
+  background: #0000000d;
+}
+
+#control-panel::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 4px;
+}
+
+#control-panel::-webkit-scrollbar-thumb:hover {
+  background-color: #555;
+}
+
+#control-panel {
+  scrollbar-width: thin;
+  scrollbar-color: #888 #0000000d;
+}
+
+.setting-section {
+  background: #f9f9f9;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  margin: 30px 0;
+  padding: 15px;
+}
+
+.setting-section label {
+  margin-top: 10px;
+  font-weight: bold;
+  display: block;
+}
+
+.setting-section input {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 400px;
+  margin-top: 4px;
+  padding: 6px;
+}
+
+.setting-section button {
+  margin-top: 15px;
+  padding: 8px 16px;
+}
+
+:root {
+  --bg: #0f1115;
+  --panel: #171a21;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  --border: #262b36;
+  --btn: #1f2430;
+  --btn-hover: #2a3140;
+  --accent: #60a5fa;
+}
+
+body.dark {
+  background: var(--bg);
+  color: var(--text);
+}
+
+body.dark .setting-section {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+body.dark .setting-section input[type="text"], body.dark .setting-section input[type="email"], body.dark .setting-section input[type="password"], body.dark .setting-section button {
+  background: var(--btn);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+body.dark .leaflet-container {
+  background: var(--panel);
+}
+
+body.dark .leaflet-control a {
+  background: var(--btn);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+body.dark .leaflet-control a:hover {
+  background: var(--btn-hover);
+}
+
+body.dark .leaflet-control-attribution {
+  background: var(--btn);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+#map {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+@media (prefers-color-scheme: dark) {
+  body:not(.light) {
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  body:not(.light) .setting-section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  body:not(.light) .setting-section input[type="text"], body:not(.light) .setting-section input[type="email"], body:not(.light) .setting-section input[type="password"], body:not(.light) .setting-section button {
+    background: var(--btn);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  body:not(.light) .leaflet-container {
+    background: var(--panel);
+  }
+
+  body:not(.light) .leaflet-control a {
+    background: var(--btn);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  body:not(.light) .leaflet-control a:hover {
+    background: var(--btn-hover);
+  }
+
+  body:not(.light) .leaflet-control-attribution {
+    background: var(--btn);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+}
+
+.history-item {
+  cursor: pointer;
+  border-bottom: 1px solid #ddd;
+  padding: 8px 10px;
+}
+
+.history-item:hover {
+  background: #0000000a;
+}
+
+.history-detail-panel {
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+}
+
+.detail-image-wrap img {
+  border-radius: 6px;
+  max-width: 100%;
+  margin-bottom: 8px;
+}
+
+.detail-meta {
+  color: #666;
+  margin-top: 8px;
+  font-size: .85rem;
+}
+
+.detail-meta span + span {
+  margin-left: 12px;
+}
+
+.hotels-status {
+  color: #666;
+  font-size: .85rem;
+}
+
+#hotels-list {
+  margin-top: 4px;
+  padding: 0;
+  list-style: none;
+}
+
+#hotels-list li {
+  margin-bottom: 6px;
+  font-size: .9rem;
+}
+
+.history-layout {
+  grid-template-columns: 320px 1fr;
+  gap: 12px;
+  display: grid;
+}
+
+.history-list-panel, .history-detail-panel {
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+}
+
+#history-ul {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.history-item {
+  cursor: pointer;
+  border-bottom: 1px solid #ddd;
+  padding: 8px 10px;
+  transition: background .15s, transform .1s;
+}
+
+.history-item:hover {
+  background: #0000000a;
+  transform: translateX(2px);
+}
+
+.history-item.active {
+  background: #2563eb14;
+  border-left: 3px solid #2563eb;
+}
+
+.history-item-title {
+  font-weight: 600;
+  display: block;
+}
+
+.history-item-sub {
+  color: #666;
+  font-size: .85rem;
+}
+
+.hidden {
+  display: none;
+}
+
+.detail-image-wrap img {
+  object-fit: cover;
+  border-radius: 8px;
+  width: 100%;
+  max-height: 260px;
+  margin-bottom: 8px;
+}
+
+.detail-genre {
+  color: #555;
+  font-size: .9rem;
+}
+
+.detail-description {
+  margin-top: 6px;
+  line-height: 1.6;
+}
+
+.detail-meta {
+  color: #666;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: .85rem;
+  display: flex;
+}
+
+.detail-hotels {
+  margin-top: 16px;
+}
+
+.hotels-status {
+  color: #666;
+  margin-bottom: 6px;
+  font-size: .85rem;
+}
+
+#hotels-list {
+  flex-direction: column;
+  gap: 10px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+}
+
+.hotel-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  gap: 10px;
+  padding: 8px;
+  display: flex;
+  box-shadow: 0 1px 2px #0f172a0f;
+}
+
+.hotel-card-thumb {
+  background: #e5e7eb;
+  border-radius: 6px;
+  flex: 0 0 90px;
+  height: 70px;
+  overflow: hidden;
+}
+
+.hotel-card-thumb img {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
+
+.hotel-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.hotel-card-name {
+  margin-bottom: 4px;
+  font-size: .95rem;
+  font-weight: 600;
+}
+
+.hotel-card-meta {
+  color: #555;
+  margin-bottom: 4px;
+  font-size: .8rem;
+}
+
+.hotel-card-meta span + span {
+  margin-left: 8px;
+}
+
+.hotel-card-actions {
+  margin-top: 4px;
+}
+
+.hotel-link-btn {
+  color: #fff;
+  cursor: pointer;
+  background: #2563eb;
+  border: 1px solid #2563eb;
+  border-radius: 999px;
+  justify-content: center;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: .8rem;
+  text-decoration: none;
+  transition: background .15s, color .15s, box-shadow .15s;
+  display: inline-flex;
+}
+
+.hotel-link-btn:hover {
+  background: #1d4ed8;
+  box-shadow: 0 1px 3px #2563eb66;
+}
+
+@media (max-width: 768px) {
+  .history-layout {
+    display: block;
+  }
+
+  .history-list-panel, .history-detail-panel {
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  .history-list-panel {
+    margin-bottom: 16px;
+  }
+
+  .hotel-card {
+    flex-direction: row;
+  }
+
+  .hotel-card-thumb {
+    flex: 0 0 80px;
+    height: 60px;
+  }
+
+  .detail-image-wrap img {
+    max-height: 200px;
+  }
+}
+
+#history-pager.history-pager {
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 14px;
+  display: flex;
+}
+
+.history-page-link, .history-page-nav {
+  cursor: pointer;
+  border-radius: 3px;
+  padding: 2px 6px;
+}
+
+.history-page-link.active {
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+.history-page-nav.disabled {
+  opacity: .4;
+  cursor: default;
+}
+
+.navbar {
+  color: #fff;
+  z-index: 2000;
+  background: linear-gradient(90deg, #0f2027, #203a43, #2c5364);
+  justify-content: space-between;
+  align-items: center;
+  height: 60px;
+  padding: 0 20px;
+  font-family: Orbitron, sans-serif;
+  display: flex;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  box-shadow: 0 3px 8px #0003;
+}
+
+.navbar .brand {
+  align-items: center;
+  gap: 8px;
+  font-size: 20px;
+  font-weight: bold;
+  display: flex;
+}
+
+.navbar .brand:before {
+  content: "🌍 旅行先提案Webシステム";
+  font-size: 22px;
+}
+
+.navbar nav {
+  align-items: center;
+  gap: 16px;
+  transition: right .3s;
+  display: flex;
+}
+
+.navbar nav a, .navbar nav button {
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 6px 8px;
+  font-size: 16px;
+  font-weight: bold;
+  text-decoration: none;
+  transition: color .3s;
+}
+
+.navbar nav a:hover, .navbar nav button:hover {
+  color: #1abc9c;
+}
+
+.navbar-toggle {
+  cursor: pointer;
+  z-index: 2001;
+  width: 30px;
+  height: 20px;
+  display: none;
+  position: relative;
+}
+
+.navbar-toggle span {
+  background-color: #fff;
+  border-radius: 2px;
+  width: 100%;
+  height: 3px;
+  transition: all .3s;
+  position: absolute;
+  left: 0;
+}
+
+.navbar-toggle span:first-child {
+  top: 0;
+}
+
+.navbar-toggle span:nth-child(2) {
+  top: 8px;
+}
+
+.navbar-toggle span:nth-child(3) {
+  top: 16px;
+}
+
+.navbar.open .navbar-toggle span:first-child {
+  top: 8px;
+  transform: rotate(45deg);
+}
+
+.navbar.open .navbar-toggle span:nth-child(2) {
+  opacity: 0;
+}
+
+.navbar.open .navbar-toggle span:nth-child(3) {
+  top: 8px;
+  transform: rotate(-45deg);
+}
+
+@media screen and (max-width: 890px) {
+  .navbar nav {
+    z-index: 1998;
+    background-color: #1e2a38;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    width: 250px;
+    height: 100%;
+    padding: 20px;
+    position: fixed;
+    top: 60px;
+    right: -300px;
+  }
+
+  .navbar.open nav {
+    right: 0;
+  }
+
+  .navbar-toggle {
+    flex-direction: column;
+    justify-content: center;
+    display: flex;
+  }
+
+  .navbar nav a, .navbar nav button {
+    text-align: left;
+    width: 100%;
+    padding: 10px;
+    font-size: 18px;
+  }
+
+  body.dark .navbar nav a, body.dark .navbar nav button {
+    color: #fff;
+    background-color: #ffffff0d;
+    border-radius: 6px;
+  }
+
+  body.light .navbar nav a, body.light .navbar nav button {
+    color: #000;
+    background-color: #0000000d;
+    border-radius: 6px;
+  }
+
+  body.dark .navbar nav a:hover, body.dark .navbar nav button:hover {
+    background-color: #ffffff1a;
+  }
+
+  body.light .navbar nav a:hover, body.light .navbar nav button:hover {
+    background-color: #3498db1a;
+  }
+}
+
+body.light .navbar {
+  color: #000;
+  background: linear-gradient(90deg, #f0f0f0, #fff);
+}
+
+body.light .navbar nav a, body.light .navbar nav button {
+  color: #000;
+}
+
+body.light .navbar nav a:hover, body.light .navbar nav button:hover {
+  color: #3498db;
+}
+
+body.light .navbar nav {
+  background-color: #0000;
+  border-left: none;
+}
+
+body.dark .navbar nav, body.dark .navbar nav a, body.dark .navbar nav button {
+  color: #fff;
+}
+
+body.dark .navbar nav a:hover, body.dark .navbar nav button:hover {
+  color: #1abc9c;
+}
+
+body.light .navbar-toggle span {
+  background-color: #000;
+}
+
+#location-alert-bar {
+  color: #fff;
+  text-align: center;
+  z-index: 1999;
+  background-color: #e74c3c;
+  border-bottom: 2px solid #c0392b;
+  padding: 10px;
+  font-family: Orbitron, sans-serif;
+  font-weight: bold;
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  box-shadow: 0 2px 5px #0003;
+}
+
+.last-image {
+  object-fit: contain;
+  background: #f4f4f4;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+  max-height: 260px;
+}
+
+/*# sourceMappingURL=frontend_app_globals_c083601a.css.map*/

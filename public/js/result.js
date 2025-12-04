@@ -319,7 +319,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         travelInfo.innerHTML = `
           <hr style="margin: 20px 0;">
           <h4>🧭 自宅からの移動情報</h4>
-          <p>
+          <p style="margin-bottom: 0;">
             🏠 登録住所 ➡ ${correctSpot.title || "目的地"}（観光地）<br>
             直線距離: 約 <strong>${d.toFixed(1)} km</strong><br>
             🚗 車（概算）: 約 <strong>${carH} 時間</strong><br>
@@ -335,12 +335,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         const routeLine = L.polyline(points, { color: 'blue', weight: 4 }).addTo(resultMap).bindPopup("🚗 推奨ルート");
         resultMap.fitBounds(routeLine.getBounds(), { padding: [30, 30] });
 
-        const minutes = Math.round((dir.route.duration || 0) / 60);
-        const km = (dir.route.distance || 0) / 1000;
+        let durationSec = 0;
+        let distanceMeters = 0;
+        if (dir.route.legs && dir.route.legs.length > 0) {
+          // legs[0] に全体の距離・時間が含まれる（経由地がない場合）
+          durationSec = dir.route.legs[0].duration?.value || 0;
+          distanceMeters = dir.route.legs[0].distance?.value || 0;
+        }
+
+        const minutes = Math.round(durationSec / 60);
+        const km = distanceMeters / 1000;
         if (scoreText) {
           const routeInfo = document.createElement('div');
-          routeInfo.style.marginTop = "8px";
-          routeInfo.innerHTML = `<p>🗺️ 経路（実測）: 距離 約 <strong>${km.toFixed(1)} km</strong>・所要 約 <strong>${minutes} 分</strong></p>`;
+          // routeInfo.style.marginTop = "8px";
+          routeInfo.innerHTML = `<p style="margin-top: 4px;">🗺️ 経路（実測）: 距離 約 <strong>${km.toFixed(1)} km</strong>・所要 約 <strong>${minutes} 分</strong></p>`;
           scoreText.appendChild(routeInfo);
         }
       } else {
@@ -410,8 +418,8 @@ function injectBottomButtons(sidebarEl) {
   const actions = document.createElement('div');
   actions.className = 'sidebar-actions';
   actions.innerHTML = `
-    <div class="btn-row" style="display:flex;gap:8px;flex-wrap:wrap">
-      <button type="button" class="btn" onclick="retry()">もう一度<br>プレイ</button>
+    <div class="btn-row" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:12px;">
+      <button type="button" class="btn" onclick="retry()">もう一度プレイ</button>
       <button type="button" class="btn primary" onclick="goHome()">ホームへ</button>
     </div>
   `;

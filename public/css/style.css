@@ -9,13 +9,15 @@
   --border: #262b36;
   --btn: #1f2430;
   --btn-hover: #2a3140;
-  --nav-h: 60px; /* ナビバーの高さ */
+  --nav-h: 60px;
+  /* ナビバーの高さ */
 }
 
 /* ========================================
    2. 基本レイアウトと全体設定
    ======================================== */
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   height: 100%;
@@ -27,7 +29,9 @@ html, body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: inherit;
 }
 
@@ -145,7 +149,8 @@ button:disabled {
 }
 
 /* ナビバー全体のフォントを強制統一 */
-.navbar, .navbar * {
+.navbar,
+.navbar * {
   font-family: 'Arial', sans-serif !important;
 }
 
@@ -321,8 +326,7 @@ button:disabled {
   transform: scale(1.05);
 }
 
-.street-view-container 
-  
+.street-view-container
 
 /* ========================================
    8. 履歴ページ
@@ -339,7 +343,7 @@ button:disabled {
   border-radius: 12px;
   margin-bottom: 12px;
   color: #f0f0f0;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
   font-size: 0.95rem;
   line-height: 1.6;
   transition: background-color 0.3s ease;
@@ -540,7 +544,7 @@ button:disabled {
 
 #control-panel {
   scrollbar-width: thin;
-  scrollbar-color: #888 rgba(0,0,0,0.05);
+  scrollbar-color: #888 rgba(0, 0, 0, 0.05);
 }
 
 #description {
@@ -773,7 +777,8 @@ body.dark .navbar nav button {
 }
 
 body.dark .navbar nav a:hover,
-body.dark .navbar nav button:hover {  /*マウスカーソルを合わせたとき*/
+body.dark .navbar nav button:hover {
+  /*マウスカーソルを合わせたとき*/
   color: #1abc9c;
 }
 
@@ -793,7 +798,7 @@ body.dark .home-left select {
 body.dark .settings-container {
   background: #1e1e1e;
   color: #f1f1f1;
-  box-shadow: 0 0 20px rgba(255,255,255,0.05);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
 }
 
 body.dark .setting-section {
@@ -890,13 +895,13 @@ body.dark .leaflet-control-attribution {
     background: var(--bg);
     color: var(--text);
   }
-  
+
   body:not(.light) .setting-section {
     background: var(--panel);
     border: 1px solid var(--border);
     color: var(--text);
   }
-  
+
   body:not(.light) .setting-section input[type="text"],
   body:not(.light) .setting-section input[type="email"],
   body:not(.light) .setting-section input[type="password"] {
@@ -904,37 +909,39 @@ body.dark .leaflet-control-attribution {
     color: var(--text);
     border: 1px solid var(--border);
   }
-  
+
   body:not(.light) .setting-section button {
     background: var(--btn);
     color: var(--text);
     border: 1px solid var(--border);
   }
-  
+
   body:not(.light) .leaflet-container {
     background: var(--panel);
   }
-  
+
   body:not(.light) .leaflet-control a {
     background: var(--btn);
     color: var(--text);
     border: 1px solid var(--border);
   }
-  
+
   body:not(.light) .leaflet-control a:hover {
     background: var(--btn-hover);
   }
-  
+
   body:not(.light) .leaflet-control-attribution {
     background: var(--btn);
     color: var(--muted);
     border: 1px solid var(--border);
   }
 }
+
 /* 履歴ページ用の微調整 */
 .history-layout {
   display: grid;
-  grid-template-columns: 320px 1fr; /* 左：細め / 右：広め */
+  grid-template-columns: 320px 1fr;
+  /* 左：細め / 右：広め */
   gap: 12px;
 }
 
@@ -957,7 +964,7 @@ body.dark .leaflet-control-attribution {
 }
 
 .history-item:hover {
-  background: rgba(0,0,0,0.04);
+  background: rgba(0, 0, 0, 0.04);
 }
 
 .history-item-title {
@@ -997,7 +1004,7 @@ body.dark .leaflet-control-attribution {
   color: #666;
 }
 
-.detail-meta span + span {
+.detail-meta span+span {
   margin-left: 12px;
 }
 
@@ -1016,10 +1023,12 @@ body.dark .leaflet-control-attribution {
   margin-bottom: 6px;
   font-size: 0.9rem;
 }
+
 /* ======= 履歴ページ用レイアウト ======= */
 .history-layout {
   display: grid;
-  grid-template-columns: 320px 1fr; /* 左：履歴 / 右：詳細 */
+  grid-template-columns: 320px 1fr;
+  /* 左：履歴 / 右：詳細 */
   gap: 12px;
 }
 
@@ -1055,7 +1064,8 @@ body.dark .leaflet-control-attribution {
 }
 
 .history-item.active {
-  background: rgba(37, 99, 235, 0.08); /* primaryっぽい色でハイライト */
+  background: rgba(37, 99, 235, 0.08);
+  /* primaryっぽい色でハイライト */
   border-left: 3px solid #2563eb;
 }
 
@@ -1166,7 +1176,7 @@ body.dark .leaflet-control-attribution {
   margin-bottom: 4px;
 }
 
-.hotel-card-meta span + span {
+.hotel-card-meta span+span {
   margin-left: 8px;
 }
 
@@ -1224,6 +1234,7 @@ body.dark .leaflet-control-attribution {
     max-height: 200px;
   }
 }
+
 #history-pager.history-pager {
   display: flex;
   justify-content: center;
@@ -1314,6 +1325,7 @@ body.dark .leaflet-control-attribution {
 }
 
 @media screen and (max-width: 768px) {
+
   .home-layout,
   .result-layout {
     flex-direction: column;
@@ -1356,30 +1368,122 @@ body.dark .leaflet-control-attribution {
   transform: scale(1.03);
 }
 
+/* ========================================
+   16. 結果画面（result.html）専用スタイル
+   ======================================== */
+/* navbarの高さは60pxで固定（navbar.jsで定義） */
+html.result-page {
+  --nav-h: 60px;
+  /* navbar.jsの高さと一致させる */
+}
+
+/* result.html 専用の html, body スタイル */
+html.result-page,
+body.result-page {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  font-family: 'Orbitron', sans-serif;
+}
+
+html.result-page {
+  overflow: hidden;
+  /* ページ全体のスクロールはさせない */
+}
+
+body.result-page {
+  overflow: hidden;
+  /* ページ全体のスクロールはさせない */
+}
+
+#navbar-placeholder {
+  z-index: 2000;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  /* navbar.jsの高さと一致させる初期値 */
+  /* navbar.js 側で nav の高さに合わせて調整される想定 */
+}
+
 #result-layout {
   position: fixed;
+  /* ナビの下からスタート（高さは CSS 変数で制御） */
   top: var(--nav-h, 60px);
+  /* フォールバック値を60pxに変更 */
   left: 0;
   right: 0;
   bottom: 0;
   display: flex;
   gap: 12px;
+  align-items: stretch;
   padding: 8px;
   box-sizing: border-box;
   overflow: hidden;
+  /* ここではみ出さない → 下に余白が出ない */
   margin: 0;
 }
 
 #result-sidebar {
   width: clamp(260px, 28vw, 340px);
+  min-width: 200px;
+  max-width: 50vw;
   height: 100%;
   min-height: 0;
   overflow-y: auto;
-  overflow-x: visible;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  padding-right: 6px;
+  padding-top: var(--sidebar-pad, 14px);
   border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+}
+
+/* リサイズハンドル */
+#sidebar-resize-handle {
+  width: 4px;
+  min-width: 4px;
+  background: transparent;
+  cursor: col-resize;
   position: relative;
+  user-select: none;
+  transition: background-color 0.2s ease;
+}
+
+#sidebar-resize-handle:hover {
+  background: rgba(128, 128, 128, 0.3);
+}
+
+#sidebar-resize-handle:active {
+  background: rgba(128, 128, 128, 0.5);
+}
+
+#sidebar-resize-handle::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  transform: translateX(-50%);
+  background: currentColor;
+  opacity: 0.2;
+}
+
+#sidebar-resize-handle:hover::before {
+  opacity: 0.4;
+}
+
+#scoreText {
+  padding: 12px;
+}
+
+#place-info {
+  margin-top: 16px;
 }
 
 #result-sidebar img {
@@ -1433,10 +1537,25 @@ body.dark .leaflet-control-attribution {
   flex: 1 1 auto;
   min-width: 0;
   height: 100%;
+  min-height: 0;
   overflow: hidden;
+  margin-top: 0;
 }
 
 #result-map {
   width: 100%;
   height: 100%;
+}
+
+/* Street View iframe */
+.streetview-frame {
+  width: 100%;
+  height: 200px;
+  border: 0;
+  border-radius: 12px;
+  transition: transform .2s ease;
+}
+
+.streetview-frame:hover {
+  transform: scale(1.02);
 }

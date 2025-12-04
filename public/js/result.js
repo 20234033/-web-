@@ -4,23 +4,23 @@ function getDistanceKm(lat1, lon1, lat2, lon2) {
   const toRad = d => d * (Math.PI / 180);
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
-  const a = Math.sin(dLat/2) ** 2 +
-            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-            Math.sin(dLon/2) ** 2;
-  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 function decodePolyline(encoded) {
-  const pts = []; let i=0, lat=0, lng=0;
+  const pts = []; let i = 0, lat = 0, lng = 0;
   while (i < encoded.length) {
-    let b, shift=0, result=0;
+    let b, shift = 0, result = 0;
     do { b = encoded.charCodeAt(i++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
     const dlat = (result & 1) ? ~(result >> 1) : (result >> 1);
     lat += dlat;
-    shift=0; result=0;
+    shift = 0; result = 0;
     do { b = encoded.charCodeAt(i++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
     const dlng = (result & 1) ? ~(result >> 1) : (result >> 1);
     lng += dlng;
-    pts.push([lat/1e5, lng/1e5]);
+    pts.push([lat / 1e5, lng / 1e5]);
   }
   return pts;
 }
@@ -35,15 +35,18 @@ function isEmbeddableGoogleURL(url) {
   try {
     const u = new URL(url);
     return u.hostname.endsWith('google.com') &&
-           (u.pathname.includes('/maps/embed') || u.searchParams.get('output') === 'svembed');
+      (u.pathname.includes('/maps/embed') || u.searchParams.get('output') === 'svembed');
   } catch { return false; }
 }
 
 /* ========= ナビ高さを CSS 変数へ反映 ========= */
+let mapInitialized = false; // マップが初期化されたかどうか
+
 function measureAndApplyNavHeight() {
   const host = document.getElementById('navbar-placeholder');
   const navEl = (host && host.firstElementChild) ? host.firstElementChild : host;
-  const navH = Math.max(0, Math.round((navEl?.getBoundingClientRect().height || 56)));
+  // navbar.jsでは60pxで固定されているが、実測値を優先
+  const navH = Math.max(0, Math.round((navEl?.getBoundingClientRect().height || 60)));
 
   // nav の実測高さを CSS 変数に入れる
   document.documentElement.style.setProperty('--nav-h', `${navH}px`);
@@ -51,7 +54,16 @@ function measureAndApplyNavHeight() {
   // プレースホルダー自体の高さも揃えておく（コンテンツがズレないように）
   if (host) host.style.height = `${navH}px`;
 
-  if (window.resultMap) setTimeout(() => window.resultMap.invalidateSize(), 0);
+  // マップが初期化され、レイアウトが安定した後にのみinvalidateSize()を呼ぶ
+  // 初期化前やレイアウト変更中に呼ぶと、レイアウトの再計算を引き起こす可能性がある
+  if (window.resultMap && mapInitialized) {
+    // レイアウトが安定するまで待ってから実行
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.resultMap.invalidateSize();
+      });
+    });
+  }
 }
 
 /* ========= タイルテーマ適用（bodyのクラスに追従） ========= */
@@ -61,61 +73,119 @@ function isDarkSiteTheme() {
 
 /* ========= メイン ========= */
 document.addEventListener('DOMContentLoaded', async () => {
-  const scoreText  = document.getElementById('scoreText');      // 左パネルの中身
-  const sidebarEl  = document.getElementById('result-sidebar'); // 左パネル（スクロール）
-  const layout     = document.getElementById('result-layout');  // 2カラム親
+  const scoreText = document.getElementById('scoreText');      // 左パネルの中身
+  const sidebarEl = document.getElementById('result-sidebar'); // 左パネル（スクロール）
+  const layout = document.getElementById('result-layout');  // 2カラム親
   const mapWrapper = document.getElementById('map-wrap');       // 地図ラッパ
-  const mapEl      = document.getElementById('result-map');     // 地図DOM
+  const mapEl = document.getElementById('result-map');     // 地図DOM
 
-  /* ====== レイアウト（左だけスクロール / 下の空白を出さない） ====== */
-  if (layout) Object.assign(layout.style, {
-    position: 'fixed',
-    top: 'var(--nav-h, 56px)',
-    left: '0',
-    right: '0',
-    bottom: '0',
-    display: 'flex',
-    gap: '12px',
-    alignItems: 'stretch',
-    padding: '8px',
-    boxSizing: 'border-box',
-    overflow: 'hidden',
-    margin: '0'
-  });
-  if (sidebarEl) Object.assign(sidebarEl.style, {
-    height: '100%',
-    overflowY: 'auto',
-    overflowX: 'hidden',
-    WebkitOverflowScrolling: 'touch',
-    overscrollBehavior: 'contain',
-    width: 'clamp(260px, 28vw, 340px)'
-  });
-  if (mapWrapper) Object.assign(mapWrapper.style, {
-    flex: '1 1 auto',
-    minWidth: '0',
-    height: '100%',
-    overflow: 'hidden'
-  });
-  if (mapEl) Object.assign(mapEl.style, { width: '100%', height: '100%' });
+  /* ====== レイアウト（CSSで定義済み、動的な幅のみ設定） ====== */
+  // 保存されたサイドバー幅を読み込む
+  const savedWidth = localStorage.getItem('sidebar-width');
+  if (savedWidth && sidebarEl) {
+    sidebarEl.style.width = `${savedWidth}px`;
+  }
 
   // ナビ高さの初期測定 & 監視
-  measureAndApplyNavHeight();
   const navHost = document.getElementById('navbar-placeholder');
-  if (navHost) {
-    const obs = new MutationObserver(measureAndApplyNavHeight);
-    obs.observe(navHost, { childList: true, subtree: true });
+
+  // 即座に初期値を設定（CSSで60pxが設定されているが、実測値で上書き）
+  const applyNavHeight = () => {
+    measureAndApplyNavHeight();
+  };
+
+  // 複数回実行して確実に設定
+  applyNavHeight();
+
+  // navbarが準備できるまで待つ
+  const initNavHeight = () => {
+    applyNavHeight();
+    if (navHost) {
+      const obs = new MutationObserver(() => {
+        applyNavHeight();
+      });
+      obs.observe(navHost, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] });
+    }
+  };
+
+  // navbar-readyイベントを待つ（navbar.jsが発火）
+  const handleNavbarReady = () => {
+    // 複数回実行して確実に設定
+    requestAnimationFrame(() => {
+      applyNavHeight();
+      requestAnimationFrame(() => {
+        initNavHeight();
+      });
+    });
+  };
+
+  if (navHost?.firstElementChild) {
+    // 既にnavbarが存在する場合は即座に実行
+    handleNavbarReady();
+  } else {
+    // navbarがまだない場合はイベントを待つ（複数回発火される可能性があるので、once: false）
+    window.addEventListener('navbar-ready', handleNavbarReady);
   }
-  window.addEventListener('resize', measureAndApplyNavHeight);
-  window.addEventListener('load', () => setTimeout(measureAndApplyNavHeight, 0));
+
+  window.addEventListener('resize', applyNavHeight);
+  // フォールバック: loadイベントでも実行
+  window.addEventListener('load', () => {
+    setTimeout(applyNavHeight, 0);
+    setTimeout(applyNavHeight, 100);
+  });
+
+  /* ====== サイドバーリサイズ機能 ====== */
+  const resizeHandle = document.getElementById('sidebar-resize-handle');
+  if (resizeHandle && sidebarEl) {
+    let isResizing = false;
+    let startX = 0;
+    let startWidth = 0;
+
+    const startResize = (e) => {
+      isResizing = true;
+      startX = e.clientX;
+      startWidth = sidebarEl.getBoundingClientRect().width;
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+      e.preventDefault();
+    };
+
+    const doResize = (e) => {
+      if (!isResizing) return;
+      const deltaX = e.clientX - startX;
+      const newWidth = Math.max(200, Math.min(window.innerWidth * 0.5, startWidth + deltaX));
+      sidebarEl.style.width = `${newWidth}px`;
+      // 地図のサイズを更新
+      if (window.resultMap) setTimeout(() => window.resultMap.invalidateSize(), 0);
+    };
+
+    const stopResize = () => {
+      if (!isResizing) return;
+      isResizing = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      // 現在の幅を保存
+      const currentWidth = sidebarEl.getBoundingClientRect().width;
+      localStorage.setItem('sidebar-width', Math.round(currentWidth));
+    };
+
+    resizeHandle.addEventListener('mousedown', startResize);
+    document.addEventListener('mousemove', doResize);
+    document.addEventListener('mouseup', stopResize);
+    // マウスがウィンドウ外に出た場合も停止
+    document.addEventListener('mouseleave', stopResize);
+  }
 
   /* ====== 地図初期化 ====== */
   const resultMap = L.map('result-map', { zoomControl: true }).setView([35.7, 139.7], 10);
   window.resultMap = resultMap;
+  mapInitialized = true; // マップ初期化完了をマーク
+
   const lightTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution:'&copy; OpenStreetMap contributors'
+    attribution: '&copy; OpenStreetMap contributors'
   });
-  const darkTiles  = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution:'&copy; OpenStreetMap &copy; CARTO'
+  const darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap &copy; CARTO'
   });
 
   function applyTiles() {
@@ -127,7 +197,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (resultMap.hasLayer(darkTiles)) resultMap.removeLayer(darkTiles);
       if (!resultMap.hasLayer(lightTiles)) lightTiles.addTo(resultMap);
     }
-    setTimeout(() => resultMap.invalidateSize(), 0);
+    // レイアウトが安定してからサイズを再計算
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        resultMap.invalidateSize();
+      });
+    });
   }
   applyTiles();
 
@@ -136,8 +211,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   bodyObs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
   /* ====== 必要データ取得 ====== */
-  const correct     = JSON.parse(localStorage.getItem('correctCoords'));
-  const answer      = JSON.parse(localStorage.getItem('lastAnswerCoords'));
+  const correct = JSON.parse(localStorage.getItem('correctCoords'));
+  const answer = JSON.parse(localStorage.getItem('lastAnswerCoords'));
   const correctSpot = JSON.parse(localStorage.getItem('correctSpot'));
 
   if (!correct || !answer || !correctSpot) {
@@ -148,20 +223,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   /* ====== スコア表示 ====== */
   try {
-    const res  = await fetch(`/api/score?SelLat=${answer.lat}&SelLng=${answer.lng}&CorLat=${correct.lat}&CorLng=${correct.lng}`);
+    const res = await fetch(`/api/score?SelLat=${answer.lat}&SelLng=${answer.lng}&CorLat=${correct.lat}&CorLng=${correct.lng}`);
     const data = await res.json();
     if (!data.success) throw new Error("スコア取得に失敗");
     const distanceKm = Number(data.Distance || 0);
-    const score      = Number(data.score || 0);
+    const score = Number(data.score || 0);
     localStorage.setItem('lastScore', String(score));
 
     if (scoreText) {
       const title = correctSpot.title || "観光地";
-      const desc  = correctSpot.description || "";
-      const img   = correctSpot.image_path || "";
-
+      const desc = correctSpot.description || "";
+      const img = correctSpot.image_path || "";
       scoreText.innerHTML = `
-        <div style="height: var(--sidebar-pad, 32px);"></div>
         <h2 style="margin:0 0 12px 0; font-size:1.2rem; font-weight:700;">${title}</h2>
         距離: <span>${distanceKm.toFixed(1)}km</span><br>
         スコア: <span>${score}</span> / 100
@@ -185,8 +258,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   /* ====== マーカー・線 ====== */
   L.marker([correct.lat, correct.lng]).addTo(resultMap).bindPopup("🎯 正解地点").openPopup();
   L.marker([answer.lat, answer.lng]).addTo(resultMap).bindPopup("📍 あなたのピン");
-  L.polyline([[answer.lat, answer.lng], [correct.lat, correct.lng]], { color:'red', weight:2 }).addTo(resultMap);
-  resultMap.fitBounds(L.latLngBounds([[answer.lat, answer.lng], [correct.lat, correct.lng]]), { padding:[30,30] });
+  L.polyline([[answer.lat, answer.lng], [correct.lat, correct.lng]], { color: 'red', weight: 2 }).addTo(resultMap);
+  resultMap.fitBounds(L.latLngBounds([[answer.lat, answer.lng], [correct.lat, correct.lng]]), { padding: [30, 30] });
 
   /* ====== Street View（埋め込み） ====== */
   try {
@@ -195,7 +268,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const r = await fetch(`/api/streetview-url?lat=${correct.lat}&lng=${correct.lng}`);
       const j = await r.json();
       if (j?.success && j?.url) finalUrl = isEmbeddableGoogleURL(j.url) ? j.url : null;
-    } catch {}
+    } catch { }
     if (!finalUrl) finalUrl = buildStreetViewEmbedURL(correct.lat, correct.lng);
 
     if (sidebarEl) {
@@ -232,14 +305,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       const userLat = Number(locData.lat), userLng = Number(locData.lng);
       const houseIcon = L.icon({
         iconUrl: 'https://cdn-icons-png.flaticon.com/512/25/25694.png',
-        iconSize: [32,32], iconAnchor: [16,32], popupAnchor: [0,-30]
+        iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -30]
       });
       L.marker([userLat, userLng], { icon: houseIcon }).addTo(resultMap).bindPopup("🏠 自宅");
 
       const d = getDistanceKm(userLat, userLng, correct.lat, correct.lng);
-      const carH   = (d / 60).toFixed(1);
+      const carH = (d / 60).toFixed(1);
       const trainH = (d / 80).toFixed(1);
-      const cost   = Math.round(d * 15);
+      const cost = Math.round(d * 15);
 
       if (scoreText) {
         const travelInfo = document.createElement('div');
@@ -258,12 +331,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       const directionsRes = await fetch(`/api/directions?fromLat=${userLat}&fromLng=${userLng}&toLat=${correct.lat}&toLng=${correct.lng}&mode=driving`);
       const dir = await directionsRes.json();
       if (dir.success && dir.route?.overview_polyline?.points) {
-        const points   = decodePolyline(dir.route.overview_polyline.points);
-        const routeLine = L.polyline(points, { color:'blue', weight:4 }).addTo(resultMap).bindPopup("🚗 推奨ルート");
-        resultMap.fitBounds(routeLine.getBounds(), { padding:[30,30] });
+        const points = decodePolyline(dir.route.overview_polyline.points);
+        const routeLine = L.polyline(points, { color: 'blue', weight: 4 }).addTo(resultMap).bindPopup("🚗 推奨ルート");
+        resultMap.fitBounds(routeLine.getBounds(), { padding: [30, 30] });
 
         const minutes = Math.round((dir.route.duration || 0) / 60);
-        const km      = (dir.route.distance || 0) / 1000;
+        const km = (dir.route.distance || 0) / 1000;
         if (scoreText) {
           const routeInfo = document.createElement('div');
           routeInfo.style.marginTop = "8px";
@@ -295,7 +368,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const card = document.createElement("div");
         card.className = 'card';
         const priceText = (h.minCharge != null) ? `最安目安: ¥${Number(h.minCharge).toLocaleString()}` : "";
-        const rateText  = (h.reviewAverage != null && h.reviewCount != null) ? `評価 ${h.reviewAverage} / 5（${h.reviewCount}件）` : "";
+        const rateText = (h.reviewAverage != null && h.reviewCount != null) ? `評価 ${h.reviewAverage} / 5（${h.reviewCount}件）` : "";
         card.innerHTML = `
           ${h.thumbnail ? `<img src="${h.thumbnail}" alt="${h.name || ''}" style="width:100%;height:140px;object-fit:cover;border-radius:8px;margin-bottom:8px;">` : ""}
           ${h.name ? `<div style="font-weight:600;margin-bottom:4px;">${h.name}</div>` : ""}
@@ -331,7 +404,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 /* ========= 左パネル下のボタン ========= */
-function injectBottomButtons(sidebarEl){
+function injectBottomButtons(sidebarEl) {
   if (!sidebarEl) return;
   if (sidebarEl.querySelector('.sidebar-actions')) return;
   const actions = document.createElement('div');

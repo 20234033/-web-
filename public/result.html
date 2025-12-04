@@ -1,100 +1,12 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" class="result-page">
 <head>
   <meta charset="UTF-8">
   <title>結果 | 旅行先提案Webシステム</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
-  <style>
-    /* ====== 全体基礎 ====== */
-    :root {
-      /* ナビの実測値を result.js から上書き */
-      --nav-h: 56px;
-    }
-
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      width: 100%;
-      font-family: 'Orbitron', sans-serif;
-      overflow: hidden; /* ページ全体のスクロールはさせない */
-    }
-
-    #navbar-placeholder {
-      z-index: 2000;
-      /* navbar.js 側で nav の高さに合わせて調整される想定 */
-    }
-
-    /* ====== メインレイアウト（ここが「メインの部分」） ====== */
-    #result-layout {
-      position: fixed;
-      /* ナビの下からスタート（高さは CSS 変数で制御） */
-      top: var(--nav-h, 56px);
-      left: 0;
-      right: 0;
-      bottom: 0;
-
-      display: flex;
-      gap: 12px;
-      align-items: stretch;
-
-      padding: 8px;
-      box-sizing: border-box;
-      overflow: hidden; /* ここではみ出さない → 下に余白が出ない */
-      margin: 0;
-    }
-
-    /* ====== サイドバー ====== */
-    #result-sidebar {
-      width: clamp(260px, 28vw, 340px);
-      height: 100%;
-      min-height: 0;
-      overflow-y: auto;
-      overflow-x: hidden;
-      -webkit-overflow-scrolling: touch;
-      overscroll-behavior: contain;
-
-      padding-right: 6px;
-      padding-top: var(--sidebar-pad, 14px);
-
-      border-radius: 12px;
-      border: 1px solid transparent;
-      background: transparent;
-    }
-
-    #scoreText { padding: 12px; }
-    #place-info { margin-top: 16px; }
-
-    /* ====== マップ ====== */
-    #map-wrap {
-      flex: 1 1 auto;
-      min-width: 0;
-      height: 100%;
-      min-height: 0;
-      overflow: hidden;
-    }
-
-    #result-map {
-      width: 100%;
-      height: 100%;
-    }
-
-    /* ====== Street View iframe ====== */
-    .streetview-frame {
-      width: 100%;
-      height: 200px;
-      border: 0;
-      border-radius: 12px;
-      transition: transform .2s ease;
-    }
-    .streetview-frame:hover {
-      transform: scale(1.02);
-    }
-  </style>
 </head>
-<body>
+<body class="result-page">
   <div id="navbar-placeholder"></div>
 
   <main id="result-layout">
@@ -103,6 +15,8 @@
       <div id="place-info"></div>
       <!-- 既存ボタンは result.js の injectBottomButtons() がここに追加 -->
     </aside>
+
+    <div id="sidebar-resize-handle"></div>
 
     <section id="map-wrap">
       <div id="result-map"></div>

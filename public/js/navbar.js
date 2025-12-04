@@ -219,7 +219,21 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 `;
 
-  document.getElementById("navbar-placeholder").innerHTML = navbarHTML;
+  const placeholder = document.getElementById("navbar-placeholder");
+  if (placeholder) {
+    placeholder.innerHTML = navbarHTML;
+    
+    // navbarが挿入されたことを通知するカスタムイベントを発火
+    // 即座に発火し、その後もレンダリング完了後に再発火
+    window.dispatchEvent(new CustomEvent('navbar-ready'));
+    
+    // レンダリング完了後にも再発火（より確実なため）
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.dispatchEvent(new CustomEvent('navbar-ready'));
+      });
+    });
+  }
 
   const toggle = document.getElementById("navbarToggle");
   const navbar = document.getElementById("navbar");

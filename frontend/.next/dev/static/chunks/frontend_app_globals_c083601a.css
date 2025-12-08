@@ -1,15 +1,4 @@
 /* [project]/frontend/app/globals.css [app-client] (css) */
-html, body {
-  box-sizing: border-box;
-  height: 100%;
-  min-height: 100vh;
-  margin: 0;
-  padding: 60px 0 0;
-  font-family: Orbitron, Arial, sans-serif;
-  transition: background-color .3s, color .3s;
-  overflow-x: hidden;
-}
-
 *, :before, :after {
   box-sizing: inherit;
 }
@@ -52,7 +41,7 @@ body.light .home-left select {
   padding: 0 24px;
   transition: background .3s, color .3s;
   display: flex;
-  position: fixed;
+  position: sticky;
   top: 0;
   left: 0;
   right: 0;
@@ -1266,6 +1255,43 @@ body.light .navbar-toggle span {
   max-width: 360px;
   height: auto;
   max-height: 260px;
+}
+
+html, body, #__next, main {
+  height: auto !important;
+  min-height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: hidden !important;
+}
+
+.navbar {
+  z-index: 2000;
+  height: 60px;
+  top: 0;
+  left: 0;
+  right: 0;
+  position: fixed !important;
+}
+
+html {
+  box-sizing: border-box;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  font-family: Orbitron, Arial, sans-serif;
+  transition: background-color .3s, color .3s;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+.page-root {
+  padding-top: 60px !important;
 }
 
 /*# sourceMappingURL=frontend_app_globals_c083601a.css.map*/

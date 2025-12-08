@@ -12,12 +12,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ja">
       <head>
-        {/* ここで public/css/style.css を読み込む */}
         <link rel="stylesheet" href="/css/style.css" />
       </head>
       <body>
         <Navbar />
-        <div>{children}</div>
+        {/* ここに page-root クラス付き main */}
+        <main className="page-root">
+          {children}
+        </main>
       </body>
     </html>
   );

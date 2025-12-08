@@ -3,7 +3,6 @@
 import { FormEvent } from 'react';
 
 export default function RegisterPage() {
-
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -56,14 +55,22 @@ export default function RegisterPage() {
         body: JSON.stringify({ id, email, password: pass }),
       });
 
-      const data = await res.json();
+      let data: any = null;
+      try {
+        data = await res.json();
+      } catch (jsonErr) {
+        console.warn('register: JSON ではないレスポンス', jsonErr);
+      }
 
-      if (!res.ok || !data?.ok) {
-        alert(data.error || '登録に失敗しました。');
+      if (!res.ok) {
+        alert(data?.error || '登録に失敗しました。');
         return;
       }
 
-      alert('登録が完了しました！メールを確認して認証を行ってください。');
+      alert(
+        data?.message ||
+          '登録が完了しました！メールを確認して認証を行ってください。'
+      );
       window.location.href = '/auth/login';
     } catch (err) {
       console.error('登録エラー:', err);
@@ -72,43 +79,29 @@ export default function RegisterPage() {
   };
 
   return (
-    <>
+    <div className="auth-container">
+      <h2>新規登録</h2>
+      <form id="registerForm" onSubmit={handleSubmit}>
+        <input type="text" name="id" placeholder="ユーザーID" required />
+        <input type="email" name="email" placeholder="メールアドレス" required />
+        <input
+          type="password"
+          name="pass"
+          placeholder="パスワード（8文字以上）"
+          required
+        />
+        <input
+          type="password"
+          name="confirm"
+          placeholder="パスワード確認"
+          required
+        />
+        <button type="submit">登録</button>
+      </form>
 
-      {/* auth container */}
-      <div className="auth-container">
-        <h2>新規登録</h2>
-        <form id="registerForm" onSubmit={handleSubmit}>
-          <input
-            type="text"
-            name="id"
-            placeholder="ユーザーID"
-            required
-          />
-          <input
-            type="email"
-            name="email"
-            placeholder="メールアドレス"
-            required
-          />
-          <input
-            type="password"
-            name="pass"
-            placeholder="パスワード（8文字以上）"
-            required
-          />
-          <input
-            type="password"
-            name="confirm"
-            placeholder="パスワード確認"
-            required
-          />
-          <button type="submit">登録</button>
-        </form>
-
-        <div className="auth-links">
-          <a href="/auth/login">ログインへ戻る</a>
-        </div>
+      <div className="auth-links">
+        <a href="/auth/login">ログインへ戻る</a>
       </div>
-    </>
+    </div>
   );
 }

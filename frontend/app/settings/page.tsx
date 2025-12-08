@@ -39,7 +39,7 @@ export default function SettingPage() {
         username: 'idChangeMsg',
         email: 'emailChangeMsg',
         password: 'passwordChangeMsg',
-        delete: 'deleteAccountMsg', // ★ アカウント削除用
+        delete: 'deleteAccountMsg',
       };
 
       const msgEl = document.getElementById(msgIdMap[kind]);
@@ -107,7 +107,7 @@ export default function SettingPage() {
       const L: any = (leafletModule as any).default ?? leafletModule;
 
       // 地図の初期化
-      const defaultLatLng: [number, number] = [36.2048, 138.2529]; // Japan center-ish
+      const defaultLatLng: [number, number] = [36.2048, 138.2529];
       const map = L.map('map').setView(defaultLatLng, 5);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors',
@@ -143,7 +143,6 @@ export default function SettingPage() {
         updateDisplay(currentLatLng);
       })();
 
-      // マーカー移動で表示更新
       function updateDisplay([lat, lng]: [number, number]) {
         if (locationDisplay) {
           locationDisplay.textContent = `選択された位置：${Number(
@@ -152,7 +151,6 @@ export default function SettingPage() {
         }
       }
 
-      // マーカー手動移動
       if (map) {
         map.on('click', (e: any) => {
           if (!marker) return;
@@ -161,7 +159,6 @@ export default function SettingPage() {
         });
       }
 
-      // ドラッグ（marker生成後にハンドラを付与）
       const attachDragHandler = () => {
         if (!marker) return;
         marker.on('move', (e: any) => {
@@ -175,7 +172,6 @@ export default function SettingPage() {
         }
       }, 50);
 
-      // 住所の保存
       if (confirmBtn) {
         confirmBtn.addEventListener('click', async () => {
           if (!marker) return;
@@ -204,7 +200,6 @@ export default function SettingPage() {
         });
       }
 
-      // 住所の削除
       if (deleteLocationBtn) {
         deleteLocationBtn.addEventListener('click', async () => {
           if (!confirm('本当に住所を削除しますか？')) return;
@@ -223,7 +218,6 @@ export default function SettingPage() {
         });
       }
 
-      // ジオコーディング（住所 → 緯度経度）
       if (geocodeBtn) {
         geocodeBtn.addEventListener('click', async () => {
           const address = (addressInput?.value || '').trim();
@@ -257,23 +251,20 @@ export default function SettingPage() {
       }
     }
 
-    // ========== 初期化（元の window.addEventListener('DOMContentLoaded', ...) 相当） ==========
     (async () => {
       // 認証チェック
       try {
         const res = await fetch('/api/me', { credentials: 'include' });
         if (!res.ok) throw new Error('認証失敗');
-        await res.json(); // ここでは取得のみ
+        await res.json();
       } catch (err) {
         alert('ログインが必要です。ログインページへ移動します。');
         window.location.href = 'auth/login';
         return;
       }
 
-      // アカウント情報の表示
       await loadMe();
 
-      // 変更用リンク送信ボタンのイベントバインド
       const idBtn = document.getElementById(
         'sendIdChangeLinkBtn',
       ) as HTMLButtonElement | null;
@@ -298,7 +289,6 @@ export default function SettingPage() {
           requestChangeLink('password'),
         );
 
-      // ★ アカウント削除用リンク送信ボタン
       const delBtn = document.getElementById(
         'sendDeleteAccountLinkBtn',
       ) as HTMLButtonElement | null;
@@ -315,7 +305,6 @@ export default function SettingPage() {
         });
       }
 
-      // currentId / currentEmail を 2 箇所に反映（元HTMLの <script> 部分）
       const mainId = document.getElementById(
         'currentId',
       ) as HTMLElement | null;
@@ -339,124 +328,110 @@ export default function SettingPage() {
       setTimeout(sync, 500);
       setTimeout(sync, 1500);
 
-      // 地図機能の初期化
       await initMapFeatures();
     })();
   }, []);
 
-  // JSX 側はほぼ元HTMLそのまま
   return (
     <>
       <div id="navbar-placeholder"></div>
 
-      <div className="settings-container">
-        <h1>⚙ 設定</h1>
+      {/* ★ ナビバー高さ分の余白をとるラッパ */}
+      <div className="settings-page-root">
+        <div className="settings-container">
+          <h1>⚙ 設定</h1>
 
-        {/* 地図で住所を設定 */}
-        <div className="setting-section">
-          <label>📍 住所の設定（地図でピンを動かす）：</label>
-          <div id="map" style={{ height: 400 }}></div>
-          <p id="locationDisplay">選択された位置：--</p>
-          <button id="confirmLocation">✅ この位置を保存</button>
-        </div>
-
-        {/* ジオコーディング（住所からピンを動かす） */}
-        <div style={{ margin: '10px 0' }}>
-          <input
-            type="text"
-            id="addressInput"
-            placeholder="住所を入力してください"
-            style={{
-              width: 400,
-              height: 40,
-              fontSize: '1rem',
-              padding: 6,
-            }}
-          />
-          <button id="geocodeBtn">🔍 ピンを住所に移動</button>
-        </div>
-
-        {/* 現在保存されている住所表示と削除 */}
-        <div className="setting-section">
-          <label>📍 現在設定されている住所：</label>
-          <div className="location-display-row">
-            <p
-              id="savedLocationDisplay"
-              className="location-text"
-            >
-              --
-            </p>
-            <button
-              id="deleteLocation"
-              className="delete-btn"
-            >
-              🗑️ 削除
-            </button>
+          <div className="setting-section">
+            <label>📍 住所の設定（地図でピンを動かす）：</label>
+            <div id="map" style={{ height: 400 }}></div>
+            <p id="locationDisplay">選択された位置：--</p>
+            <button id="confirmLocation">✅ この位置を保存</button>
           </div>
-        </div>
 
-        {/* アカウント情報（表示） */}
-        <div className="setting-section">
-          <h2>👤 アカウント情報</h2>
-
-          <div className="field-row">
-            <label>現在のID：</label>
-            <span id="currentId">--</span>
+          <div style={{ margin: '10px 0' }}>
+            <input
+              type="text"
+              id="addressInput"
+              placeholder="住所を入力してください"
+              style={{
+                width: 400,
+                height: 40,
+                fontSize: '1rem',
+                padding: 6,
+              }}
+            />
+            <button id="geocodeBtn">🔍 ピンを住所に移動</button>
           </div>
-          <div className="field-row">
-            <label>現在のメール：</label>
-            <span id="currentEmail">--</span>
-          </div>
-        </div>
 
-        {/* メールで送る変更用リンク（ID / メール / パスワード / 削除） */}
-        <div className="setting-section">
-          <h3>✏️ アカウント情報の変更</h3>
-
-          {/* ID変更リンク */}
-          <div className="row">
-            <div>
-              現在のID：
-              <span id="currentIdDisplayForLink">--</span>
+          <div className="setting-section">
+            <label>📍 現在設定されている住所：</label>
+            <div className="location-display-row">
+              <p id="savedLocationDisplay" className="location-text">
+                --
+              </p>
+              <button id="deleteLocation" className="delete-btn">
+                🗑️ 削除
+              </button>
             </div>
-            <button id="sendIdChangeLinkBtn">
-              ID変更用リンクを送信
-            </button>
           </div>
-          <div id="idChangeMsg" className="msg"></div>
 
-          {/* メールアドレス変更リンク */}
-          <div className="row" style={{ marginTop: 8 }}>
-            <div>
-              現在のメールアドレス：
-              <span id="currentEmailDisplayForLink">--</span>
+          <div className="setting-section">
+            <h2>👤 アカウント情報</h2>
+
+            <div className="field-row">
+              <label>現在のID：</label>
+              <span id="currentId">--</span>
             </div>
-            <button id="sendEmailChangeLinkBtn">
-              メール変更用リンクを送信
-            </button>
+            <div className="field-row">
+              <label>現在のメール：</label>
+              <span id="currentEmail">--</span>
+            </div>
           </div>
-          <div id="emailChangeMsg" className="msg"></div>
 
-          {/* パスワード変更リンク */}
-          <div className="row" style={{ marginTop: 8 }}>
-            <div>現在のパスワード：••••••••</div>
-            <button id="sendPasswordChangeLinkBtn">
-              パスワード変更用リンクを送信
-            </button>
-          </div>
-          <div id="passwordChangeMsg" className="msg"></div>
+          <div className="setting-section">
+            <h3>✏️ アカウント情報の変更</h3>
 
-          {/* アカウント削除リンク */}
-          <div className="row" style={{ marginTop: 16 }}>
-            <div>アカウントの削除：</div>
-            <button
-              id="sendDeleteAccountLinkBtn"
-              className="danger-btn"
-            >
-              アカウント削除用リンクを送信
-            </button>
+            <div className="row">
+              <div>
+                現在のID：
+                <span id="currentIdDisplayForLink">--</span>
+              </div>
+              <button id="sendIdChangeLinkBtn">
+                ID変更用リンクを送信
+              </button>
+            </div>
+            <div id="idChangeMsg" className="msg"></div>
+
+            <div className="row" style={{ marginTop: 8 }}>
+              <div>
+                現在のメールアドレス：
+                <span id="currentEmailDisplayForLink">--</span>
+              </div>
+              <button id="sendEmailChangeLinkBtn">
+                メール変更用リンクを送信
+              </button>
+            </div>
+            <div id="emailChangeMsg" className="msg"></div>
+
+            <div className="row" style={{ marginTop: 8 }}>
+              <div>現在のパスワード：••••••••</div>
+              <button id="sendPasswordChangeLinkBtn">
+                パスワード変更用リンクを送信
+              </button>
+            </div>
+            <div id="passwordChangeMsg" className="msg"></div>
+
+            <div className="row" style={{ marginTop: 16 }}>
+              <div>アカウントの削除：</div>
+              <button
+                id="sendDeleteAccountLinkBtn"
+                className="danger-btn"
+              >
+                アカウント削除用リンクを送信
+              </button>
+            </div>
+            <div id="deleteAccountMsg" className="msg"></div>
           </div>
-          <div id="deleteAccountMsg" className="msg"></div>
         </div>
       </div>
     </>

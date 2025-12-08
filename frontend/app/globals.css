@@ -1,14 +1,19 @@
 /* === 基本レイアウトと全体設定 === */
-html, body {
+html {
   margin: 0;
   padding: 0;
-  height: 100%;
   min-height: 100vh;
   font-family: 'Orbitron', 'Arial', sans-serif;
   box-sizing: border-box;
-  padding-top: 60px; /* ナビバー高さ */
   overflow-x: hidden;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ★ body にも一切 padding-top は付けない */
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
 }
 
 /* === すべてに border-box を適用 === */
@@ -56,7 +61,7 @@ body.light .home-left select {
 
 /* === ナビバー === */
 .navbar {
-  position: fixed;
+  position: sticky;
   top: 0;
   left: 0;
   right: 0;
@@ -1390,3 +1395,51 @@ body.light .navbar-toggle span {
   background: #f4f4f4;
 }
 
+/* ========= スクロール・レイアウト強制リセット ========= */
+
+/* スクロールしている要素まわりを一回まっさらにする */
+html,
+body,
+#__next,
+main {
+  margin: 0 !important;
+  padding: 0 !important;
+  height: auto !important;
+  min-height: 100vh !important;
+  overflow-x: hidden !important;
+}
+
+/* ページ本体はナビバーの高さぶんだけ下げる */
+.page-root {
+  padding-top: 60px; /* Navbar の高さと揃える */
+}
+
+/* Navbar は画面上部に固定（ここを基準にする） */
+.navbar {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  z-index: 2000;
+}
+/* === 基本レイアウトと全体設定 === */
+html {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  font-family: 'Orbitron', 'Arial', sans-serif;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+/* 全ページのコンテンツをナビバーの高さぶん下げる */
+.page-root {
+  padding-top: 60px !important; /* ← 好きな値に変えてOK */
+}

@@ -1,21 +1,885 @@
-[00:00:01.808] Server  LOG      ✓ Ready in 1232ms
-[00:00:06.732] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:26.574] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:29.355] Server  ERROR   (node:60068) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+[00:00:01.346] Server  LOG      ✓ Ready in 891ms
+[00:00:03.502] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:03.569] Server  ERROR   (node:8720) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
-[00:00:32.294] Browser LOG     [forgot] response: {"message":"パスワード再設定用の確認コードをメールで送信しました。","ok":true,"pending_token":"0b1d51488d135ad8f8671fdcc7963e0607e12b44e580ba30ce0712d60b249bd1"}
-[00:00:33.644] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:52.612] Browser LOG     [reset] response: {"message":"パスワードを更新しました。新しいパスワードでログインしてください。","ok":true}
-[00:00:54.033] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:58.926] Browser LOG     レスポンスステータス: 200
-[00:00:58.926] Browser LOG     レスポンスJSON: {"message":"ログイン成功","user":{"avatar_url":null,"id":"a"}}
-[00:01:00.030] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:01:07.132] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:01:52.862] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:02:04.732] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:02:10.901] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:02:14.641] Browser LOG     レスポンスステータス: 401
-[00:02:14.641] Browser LOG     レスポンスJSON: {"error":"ログイン情報が正しくありません。"}
-[00:02:26.739] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:02:29.922] Browser LOG     レスポンスステータス: 401
-[00:02:29.922] Browser LOG     レスポンスJSON: {"error":"ログイン情報が正しくありません。"}
+[00:00:03.718] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:03.733] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:28.920] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:54.883] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:04:25.659] Server  LOG      ✓ Compiled in 10ms
+[00:04:34.729] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:04:35.629] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:04:39.982] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:07:18.291] Browser ERROR   unhandledRejection: Error: Map container is already initialized.
+[00:07:25.179] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:08:08.397] Server  LOG      ✓ Compiled in 24ms
+[00:08:13.319] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:08:31.788] Browser LOG     🔍 条件: {"genreParam":"null","regionParam":"null"}
+[00:08:40.829] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:09:14.028] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:09:17.126] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:09:27.037] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:12:09.020] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:12:39.006] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:12:54.656] Browser LOG     レスポンスステータス: 200
+[00:12:54.656] Browser LOG     レスポンスJSON: {"message":"ログイン成功","user":{"avatar_url":null,"id":"gmail"}}
+[00:12:54.859] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:13:48.797] Server  LOG      ✓ Compiled in 12ms
+[00:14:00.652] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:14:03.556] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:14:39.657] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:14:39.657] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:14:51.387] Server  LOG      ✓ Compiled in 15ms
+[00:14:51.653] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:14:51.653] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:02.185] Server  LOG      ✓ Compiled in 12ms
+[00:15:02.652] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:02.652] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:15.517] Server  LOG      ✓ Compiled in 18ms
+[00:15:15.651] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:15.651] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:26.296] Server  ERROR    ⨯ ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+
+
+[00:15:26.664] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:26.664] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:27.396] Browser ERROR   uncaughtError: Error: ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+
+
+[00:15:27.601] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:27.601] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:27.601] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:27.601] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:27.601] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:27.601] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:27.601] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:27.601] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:27.653] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:27.653] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:27.653] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:27.653] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:27.654] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:27.654] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:27.654] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:27.654] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:34.605] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:34.652] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:34.653] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:38.220] Server  ERROR    ⨯ ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+
+
+[00:15:38.322] Browser ERROR   uncaughtError: Error: ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+
+
+[00:15:38.464] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:38.464] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:38.464] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:38.464] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:38.464] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:38.464] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:38.464] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:38.465] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:38.665] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:38.665] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:38.665] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:38.665] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:39.227] Server  ERROR    ⨯ ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+
+
+[00:15:39.322] Browser ERROR   uncaughtError: Error: ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+
+
+[00:15:39.478] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:39.478] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:39.478] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:39.478] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:39.478] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:39.478] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:39.478] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:39.478] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:39.650] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:39.650] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:39.650] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:39.650] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:54.585] Server  ERROR    ⨯ ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+
+
+[00:15:54.685] Browser ERROR   uncaughtError: Error: ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+
+
+[00:15:54.849] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:54.849] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:54.849] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:54.849] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:54.849] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:54.849] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:54.849] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:54.849] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:54.849] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:55.653] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:55.653] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:55.653] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:15:55.653] Browser ERROR   ./frontend/app/layout.tsx:28:1
+Parsing ecmascript source code failed
+  26 | }
+  27 | /* 全ページのコンテンツをナビバーの高さぶん下げる */
+> 28 | .page-root {
+     | ^
+  29 |   padding-top: 60px;  /* navbar の height と同じ */
+  30 | }
+  31 |
+
+Expression expected
+[00:16:13.967] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:16:24.195] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:16:39.879] Server  LOG      ✓ Compiled in 13ms
+[00:16:42.408] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:17:34.214] Server  LOG      ✓ Compiled in 15ms
+[00:17:36.681] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:18:01.116] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:18:20.796] Server  LOG      ✓ Compiled in 13ms
+[00:18:27.995] Server  LOG      ✓ Compiled in 10ms
+[00:18:37.187] Server  LOG      ✓ Compiled in 11ms
+[00:18:47.316] Server  LOG      ✓ Compiled in 12ms
+[00:18:51.650] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:18:52.683] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:18:55.089] Browser LOG     🔍 条件: {"genreParam":"null","regionParam":"null"}
+[00:19:00.320] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:19:00.447] Browser LOG     🔍 条件: {"genreParam":"null","regionParam":"null"}
+[00:19:06.649] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:19:10.382] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:19:12.222] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:19:16.485] Browser LOG     🔍 条件: {"genreParam":"null","regionParam":"null"}
+[00:19:21.045] Browser LOG     🔍 条件: {"genreParam":"null","regionParam":"null"}
+[00:30:53.954] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:31:46.639] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold

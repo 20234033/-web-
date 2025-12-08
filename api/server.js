@@ -328,7 +328,7 @@ app.get('/api/check_id', async (req, res) => {
   }
 });
 
-// 🔐 認証API（仮）
+
 // 🔐 ユーザー登録（メール認証つき）
 app.post('/api/register', async (req, res) => {
   const { id, email, password } = req.body;
@@ -525,7 +525,7 @@ app.get('/api/email/verify', async (req, res) => {
     );
 
     // 成功したらログイン画面へ
-    const baseUrl = process.env.APP_BASE_URL || 'http://ec2-54-150-237-229.ap-northeast-1.compute.amazonaws.com/';
+    const baseUrl = process.env.APP_BASE_URL || 'http://localhost:3000/';
     return res.redirect(`${baseUrl}/auth/login.html?verified=1`);
 
   } catch (err) {
@@ -774,7 +774,7 @@ app.post('/api/account/change_link', authenticate, async (req, res) => {
 
     // メール本文 & リンク
     const baseUrl =
-      process.env.APP_BASE_URL || 'http://ec2-54-150-237-229.ap-northeast-1.compute.amazonaws.com/';
+      process.env.APP_BASE_URL || 'http://localhost:3000/';
 
     const path =
       kind === 'delete'
@@ -1419,6 +1419,7 @@ app.get('/api/account/change_info', async (req, res) => {
 });
 
 app.get('/api/geocode', async (req, res) => {
+  console.log("📍 /api/geocode called");
   try {
     const q = (req.query.q || req.query.address || '').trim();
     if (!q) return res.json({ success: false, error: 'q/address is required' });
@@ -1455,7 +1456,6 @@ app.get('/api/geocode', async (req, res) => {
     res.json({ success: false, error: 'geocode failed' });
   }
 });
-
 
 
 app.get('/api/user_answers', authenticate, async (req, res) => {
@@ -1625,7 +1625,7 @@ async function sendSignupVerificationEmail(toEmail, userId, token) {
   const recipients = [new Recipient(toEmail, userId || toEmail)];
 
   // .env にフロントのURLを書いておくと楽 (例: http://localhost:3000)
-  const baseUrl = process.env.APP_BASE_URL || 'http://ec2-54-150-237-229.ap-northeast-1.compute.amazonaws.com';
+  const baseUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
   const verifyUrl = `${baseUrl}/api/email/verify?token=${encodeURIComponent(token)}`;
 
   const emailParams = new EmailParams()

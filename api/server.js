@@ -72,6 +72,11 @@ const MODEL_CANDIDATES = [
   'gemini-2.5-pro',
 ];
 
+function getBaseUrl() {
+  return (process.env.APP_BASE_URL || 'http://localhost:3000').replace(/\/+$/, '');
+}
+
+
 
 const pool = require('./db'); 
 const db = pool;
@@ -95,27 +100,37 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(publicPath, { extensions: ['html'] }));
 app.use('/image', express.static(path.join(__dirname, '..', 'public', 'image')));
 
+function normalizeOrigin(s) {
+  return String(s || '').trim().replace(/\/+$/, '');
+}
+
 const allowedOrigins = [
-  'http://ec2-54-150-237-229.ap-northeast-1.compute.amazonaws.com',
-  'http://ec2-54-150-237-229.ap-northeast-1.compute.amazonaws.com/',
-  'http://localhost:3000',
-  'http://localhost:3001',
+  'http://localhost:3000'
 ];
+
+// ✅ APP_BASE_URL をCORS許可に自動追加（https://www.24san.org など）
+if (process.env.APP_BASE_URL) {
+  allowedOrigins.push(normalizeOrigin(process.env.APP_BASE_URL));
+}
 
 app.use(cors({
   origin(origin, callback) {
     // origin が undefined のとき（curl や 直接アクセス）は許可
     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
+    const o = normalizeOrigin(origin);
+
+    // ✅ 末尾 / の差で弾かれない
+    const ok = allowedOrigins.map(normalizeOrigin).includes(o);
+
+    if (ok) return callback(null, true);
 
     console.warn('[CORS] ブロックされた origin:', origin);
     return callback(new Error('Not allowed by CORS'), false);
   },
   credentials: true,
 }));
+
 
 app.get('/api/debug/gemini-models', async (req, res) => {
   try {

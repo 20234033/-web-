@@ -30,9 +30,24 @@ const { MailerSend, EmailParams, Sender, Recipient } = require("mailersend");
 const s3 = new AWS.S3({
   region: process.env.AWS_REGION
 });
+const geocodeCache = new Map(); // key -> { value, expiresAt }
+function cacheGet(key) {
+  const v = geocodeCache.get(key);
+  if (!v) return null;
+  if (Date.now() > v.expiresAt) { geocodeCache.delete(key); return null; }
+  return v.value;
+}
+function cacheSet(key, value, ttlMs = 1000 * 60 * 60) { // 1h
+  geocodeCache.set(key, { value, expiresAt: Date.now() + ttlMs });
+}
+
 const mailerSend = new MailerSend({
   apiKey: process.env.MAILERSEND_API_KEY,
 });
+console.log('[ENV] MAILERSEND_API_KEY present =', !!process.env.MAILERSEND_API_KEY);
+console.log('[ENV] MAILERSEND_API_KEY length  =', (process.env.MAILERSEND_API_KEY || '').trim().length);
+console.log('[ENV] VERIFY_FROM_EMAIL         =', process.env.VERIFY_FROM_EMAIL);
+
 
 const sentFrom = new Sender(
   process.env.VERIFY_FROM_EMAIL,      // 例: "no-reply@xxxxx"
@@ -48,11 +63,15 @@ if (GEMINI_API_KEY) {
   genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 }
 const MODEL_CANDIDATES = [
+  'gemini-2.0-flash-001',
   'gemini-2.0-flash',
+  'gemini-2.0-flash-lite-001',
   'gemini-2.0-flash-lite',
-  'gemini-1.5-flash',
-  'gemini-1.5-flash-8b'
+  'gemini-2.5-flash-lite',
+  'gemini-2.5-flash',
+  'gemini-2.5-pro',
 ];
+
 
 const pool = require('./db'); 
 const db = pool;
@@ -97,6 +116,21 @@ app.use(cors({
   },
   credentials: true,
 }));
+
+app.get('/api/debug/gemini-models', async (req, res) => {
+  try {
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({ ok: false, error: 'GEMINI_API_KEY missing' });
+    }
+    const models = await listGeminiModels();
+    return res.json({ ok: true, models });
+  } catch (e) {
+    console.error('[gemini-models] error', e);
+    return res.status(500).json({ ok: false, error: String(e?.message || e) });
+  }
+});
+
+
 
 
 // ✅ APIルート読み込み（cookieParserの後に）
@@ -197,6 +231,30 @@ async function sendAccountChangeLinkEmail(toEmail, kind, link) {
   await mailerSend.email.send(emailParams);
 }
 
+async function initGeminiCandidates() {
+  if (!process.env.GEMINI_API_KEY) return;
+
+  try {
+    const models = await listGeminiModels(); // { models: [...] } が返る想定
+    const names = (models.models || [])
+      .map(m => m.name)          // "models/gemini-1.5-flash" 形式
+      .filter(Boolean)
+      .map(n => n.replace(/^models\//, '')); // "gemini-1.5-flash"
+
+    // generateContent に対応してそうなものだけ軽く絞る（雑でOK）
+    const picked = names.filter(n =>
+      n.includes('gemini') && !n.includes('vision') // 好みで
+    );
+
+    if (picked.length) {
+      MODEL_CANDIDATES = picked;
+      console.log('[GEMINI] available models =', MODEL_CANDIDATES);
+    }
+  } catch (e) {
+    console.warn('[GEMINI] list models failed:', e?.message || e);
+  }
+}
+
 async function listGeminiModels() {
   const fetch = (await import('node-fetch')).default;
   const r = await fetch(`https://generativelanguage.googleapis.com/v1/models?key=${process.env.GEMINI_API_KEY}`);
@@ -236,19 +294,58 @@ async function callGeminiGenerate(model, prompt) {
   return text.trim();
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function parseRetryDelayMs(errText) {
+  if (!errText) return null;
+
+  const s = String(errText);
+
+  // "retryDelay": "20s"
+  let m = s.match(/"retryDelay"\s*:\s*"(\d+(?:\.\d+)?)s"/);
+  if (m) return Math.ceil(Number(m[1]) * 1000);
+
+  // Please retry in 20.921s
+  m = s.match(/Please retry in\s+([\d.]+)s/i);
+  if (m) return Math.ceil(Number(m[1]) * 1000);
+
+  return null;
+}
+
+
 async function generateWithGeminiFallback(prompt) {
+  console.log('[DEBUG] typeof parseRetryDelayMs =', typeof parseRetryDelayMs);
+
   let lastError;
+
   for (const m of MODEL_CANDIDATES) {
-    try {
-      return await callGeminiGenerate(m, prompt);
-    } catch (e) {
-      // 404/400 はモデル非対応のことが多い→次の候補へ
-      if (e.status !== 404 && e.status !== 400) lastError = e;
-      continue;
+    // 429 は “同じモデルで数回リトライ”
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        return await callGeminiGenerate(m, prompt);
+      } catch (e) {
+        lastError = e;
+
+        if (e.status === 429) {
+          const waitMs = parseRetryDelayMs(e.bodyText) ?? (1000 * Math.pow(2, attempt));
+          await sleep(waitMs + Math.floor(Math.random() * 250)); // ちょいジッタ
+          continue;
+        }
+
+        // 404/400 はモデル非対応の可能性が高いので次へ
+        if (e.status === 404 || e.status === 400) break;
+
+        // その他は次モデルへ
+        break;
+      }
     }
   }
+
   throw lastError || new Error('No Gemini model worked');
 }
+
 // 住所ヒントが未実装ならこれも追加（既に同名関数があれば不要）
 async function reverseGeocode(lat, lng) {
   const apiKey = process.env.GOOGLE_API_KEY;
@@ -1419,43 +1516,77 @@ app.get('/api/account/change_info', async (req, res) => {
 });
 
 app.get('/api/geocode', async (req, res) => {
-  console.log("📍 /api/geocode called");
   try {
-    const q = (req.query.q || req.query.address || '').trim();
+    const q = String(req.query.q || req.query.address || '').trim();
     if (!q) return res.json({ success: false, error: 'q/address is required' });
 
-    const nomiUrl = new URL('https://nominatim.openstreetmap.org/search');
-    nomiUrl.searchParams.set('format', 'jsonv2');
-    nomiUrl.searchParams.set('q', q);
-    nomiUrl.searchParams.set('countrycodes', 'jp');
-    nomiUrl.searchParams.set('limit', '1');
-    nomiUrl.searchParams.set('addressdetails', '1');
+    // キャッシュ
+    const cacheKey = `photon:${q}`;
+    const cached = cacheGet(cacheKey);
+    if (cached) return res.json({ success: true, ...cached, cached: true });
 
-    const nomiResp = await fetch(nomiUrl.toString(), {
+    const url = new URL('https://photon.komoot.io/api/');
+    url.searchParams.set('q', q);
+    url.searchParams.set('limit', '1');
+
+    // 日本を優先したいなら “バイアス” を入れる（絶対に日本に限定ではない）
+    // 例: 名古屋あたりを優先
+    // url.searchParams.set('lat', '35.1815');
+    // url.searchParams.set('lon', '136.9066');
+
+    const r = await fetch(url.toString(), {
       headers: {
-        'User-Agent': 'GeoGuess-App/1.0 (contact@example.com)'
+        // Photonは必須要件が明記されてないが、識別のため入れておくのが無難
+        'User-Agent': 'GeoGuess-App/1.0 (contact: you@example.com)',
+        'Accept': 'application/json',
       }
     });
-    const nomi = await nomiResp.json();
 
-    if (Array.isArray(nomi) && nomi.length > 0) {
-      const top = nomi[0];
-      return res.json({
-        success: true,
-        lat: parseFloat(top.lat),
-        lng: parseFloat(top.lon),
-        display_name: top.display_name,
-        provider: 'nominatim'
-      });
+    const text = await r.text();
+    if (!r.ok) {
+      return res.json({ success: false, error: 'geocode http error', status: r.status, body: text.slice(0, 200) });
     }
 
-    return res.json({ success: false, error: 'not found' });
+    let json;
+    try { json = JSON.parse(text); }
+    catch {
+      return res.json({ success: false, error: 'geocode json parse error' });
+    }
 
+    const feature = json?.features?.[0];
+    const coords = feature?.geometry?.coordinates; // [lon, lat]
+    if (!Array.isArray(coords) || coords.length < 2) {
+      return res.json({ success: false, error: 'not found' });
+    }
+
+    const lng = Number(coords[0]);
+    const lat = Number(coords[1]);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      return res.json({ success: false, error: 'invalid coords' });
+    }
+
+    const display_name =
+      feature?.properties?.name
+        ? [
+            feature.properties.name,
+            feature.properties.city,
+            feature.properties.state,
+            feature.properties.country
+          ].filter(Boolean).join(', ')
+        : null;
+
+    const payload = { lat, lng, display_name, provider: 'photon' };
+    cacheSet(cacheKey, payload);
+
+    return res.json({ success: true, ...payload });
   } catch (e) {
     console.error('[geocode] error', e);
-    res.json({ success: false, error: 'geocode failed' });
+    return res.json({ success: false, error: 'geocode failed' });
   }
 });
+
+
+
 
 
 app.get('/api/user_answers', authenticate, async (req, res) => {
@@ -1920,6 +2051,8 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send(renderErrorPage(500));
 });
+
+
 
 // 🚀 サーバー起動
 app.listen(PORT, () => {

@@ -108,7 +108,6 @@ const allowedOrigins = [
   'http://localhost:3000'
 ];
 
-// ✅ APP_BASE_URL をCORS許可に自動追加（https://www.24san.org など）
 if (process.env.APP_BASE_URL) {
   allowedOrigins.push(normalizeOrigin(process.env.APP_BASE_URL));
 }
@@ -1770,7 +1769,6 @@ async function sendSignupVerificationEmail(toEmail, userId, token) {
 
   const recipients = [new Recipient(toEmail, userId || toEmail)];
 
-  // .env にフロントのURLを書いておくと楽 (例: http://localhost:3000)
   const baseUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
   const verifyUrl = `${baseUrl}/api/email/verify?token=${encodeURIComponent(token)}`;
 
@@ -2010,7 +2008,6 @@ app.get('/api/spots', async (req, res) => {
       'SELECT spot_id as id, title, genre, description, lat, lng, image_path FROM spots'
     );
 
-    // ✅ ローカルの image_path をフルURLに変換（例: http://localhost:3000/image/xxx.jpg）
     const BASE_URL = `${req.protocol}://${req.get('host')}/`;
 
     const processedRows = rows.map(row => ({

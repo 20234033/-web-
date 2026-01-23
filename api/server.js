@@ -420,7 +420,6 @@ app.get("/verify-email", async (req, res) => {
   }
 });
 
-
 // 🔐 初期リダイレクト（例：ログインページ）
 app.get('/', (req, res) => {
   res.redirect('/auth/login.html');
@@ -438,7 +437,6 @@ app.get('/api/check_id', async (req, res) => {
     return res.json({ exists: false });
   }
 });
-
 
 // 🔐 ユーザー登録（メール認証つき）
 app.post('/api/register', async (req, res) => {
@@ -495,9 +493,6 @@ app.post('/api/register', async (req, res) => {
     if (conn) conn?.release();
   }
 });
-
-
-
 
 // me.js や /api/me の中
 app.post('/api/login', async (req, res) => {
@@ -583,7 +578,6 @@ app.post('/api/login', async (req, res) => {
     if (conn) conn.release();
   }
 });
-
 
 app.post('/api/logout', (req, res) => {
   res.clearCookie('token', {
@@ -699,9 +693,6 @@ app.post('/api/account/change_apply', async (req, res) => {
     res.status(500).send('server error');
   }
 });
-
-
-
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -846,8 +837,7 @@ app.post('/api/update_account', authenticate, async (req, res) => {
     if (conn) conn.release();
   }
 });
-// 変更用リンクをメールで送る
-// 変更用リンク（ID / メール / パスワード / アカウント削除）
+// 変更用リンクをメールで送る）
 app.post('/api/account/change_link', authenticate, async (req, res) => {
   const { kind } = req.body || {};
   const userUuid = req.user?.uuid;
@@ -952,11 +942,6 @@ app.post('/api/account/change_link', authenticate, async (req, res) => {
     if (conn) conn?.release();
   }
 });
-
-
-
-
-
 
 // ③ パスワードリセット用コード発行
 app.post('/api/password/forgot', async (req, res) => {
@@ -1166,7 +1151,6 @@ app.post('/api/save-spot', upload.single('image'), async (req, res) => {
     if (conn) conn.release();
   }
 });
-// これより上に authenticate を定義しておく必要があります
 
 app.get('/api/has_location', authenticate, async (req, res) => {
   console.log("📍 /api/has_location called");
@@ -1350,7 +1334,7 @@ app.get('/api/streetview', async (req, res) => {
     res.status(500).json({ error: 'StreetView取得中にエラーが発生しました。' });
   }
 });
-// ✅ /api/directions?fromLat=...&fromLng=...&toLat=...&toLng=...
+
 app.get("/api/directions", async (req, res) => {
   try {
     const { fromLat, fromLng, toLat, toLng, mode = "driving" } = req.query;
@@ -1358,7 +1342,6 @@ app.get("/api/directions", async (req, res) => {
       return res.status(400).json({ success: false, message: "missing params" });
     }
 
-    // OSRM (無料) — polyline(=5桁精度) を取得
     const url = `https://router.project-osrm.org/route/v1/${mode}/${fromLng},${fromLat};${toLng},${toLat}?overview=full&geometries=polyline&alternatives=false&steps=true`;
     const r = await fetch(url);
     if (!r.ok) throw new Error(`OSRM ${r.status}`);
@@ -1543,14 +1526,9 @@ app.get('/api/geocode', async (req, res) => {
     url.searchParams.set('q', q);
     url.searchParams.set('limit', '1');
 
-    // 日本を優先したいなら “バイアス” を入れる（絶対に日本に限定ではない）
-    // 例: 名古屋あたりを優先
-    // url.searchParams.set('lat', '35.1815');
-    // url.searchParams.set('lon', '136.9066');
 
     const r = await fetch(url.toString(), {
       headers: {
-        // Photonは必須要件が明記されてないが、識別のため入れておくのが無難
         'User-Agent': 'GeoGuess-App/1.0 (contact: you@example.com)',
         'Accept': 'application/json',
       }
@@ -1692,9 +1670,7 @@ app.get('/api/score', (req, res) => {
       });
   });
 
-  // --- 楽天トラベル 近隣ホテル検索（配列の配列フォーマット対応・整形つき） ---
 
-// 目に見えないゼロ幅文字や前後空白を除去
 function sanitizeAppId(raw) {
   return (raw || "").trim().replace(/[\u200B-\u200D\uFEFF]/g, "");
 }
@@ -1826,10 +1802,6 @@ async function sendVerificationCodeEmail(toEmail, code, purpose) {
   await mailerSend.email.send(emailParams);
   console.log('[MAIL] 確認コード送信完了 →', toEmail);
 }
-
-
-
-
 
 // 楽天レスポンス1件分から basic/rating を安全に取り出す
 function pickBasicAndRating(node) {
@@ -2030,7 +2002,6 @@ app.get('/api/spots', async (req, res) => {
   }
 });
 
-// ✅ エラー用HTMLページを返す関数
 const renderErrorPage = (statusCode = 500) => `
 <!DOCTYPE html>
 <html lang="ja">
